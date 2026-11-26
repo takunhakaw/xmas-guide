@@ -6,6 +6,17 @@
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <script>
+    /* 系統資訊關閉時，載入瞬間就先套用歡迎介面，避免完整手冊閃一下 */
+    (function () {
+      try {
+        var projector = new URLSearchParams(location.search).get('projector') === '1';
+        var open = localStorage.getItem('xmas2026_stage_info_open') === 'true';
+        var admin = sessionStorage.getItem('xmas2026_admin_authorized') === 'true';
+        if (!open && !admin && !projector) document.documentElement.classList.add('welcome-mode');
+      } catch (e) {}
+    })();
+  </script>
   <title>2026 聖誕跨世代同樂日｜年輕人專屬活動手冊與布達</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -48,6 +59,16 @@
       height: 100%;
       pointer-events: none;
       z-index: 40;
+    }
+
+    /* 系統資訊關閉：只留標題倒數、歡迎介面與頁尾（後台入口） */
+    html.welcome-mode #main-nav,
+    html.welcome-mode #official-marquee-section,
+    html.welcome-mode main {
+      display: none !important;
+    }
+    html:not(.welcome-mode) #welcome-panel {
+      display: none !important;
     }
 
     /* 主分頁隱藏捲軸 */
@@ -274,6 +295,34 @@
           稍後
         </button>
       </div>
+    </div>
+  </div>
+
+  <!-- 懸浮時程視窗：系統資訊開啟後，各時段時間改以此視窗呈現 -->
+  <div id="stage-float" class="fixed right-3 z-40 hidden w-[min(19rem,calc(100vw-1.5rem))]" style="bottom: calc(env(safe-area-inset-bottom, 0px) + 0.75rem)">
+    <div class="overflow-hidden rounded-2xl border-2 border-amber-300 bg-white shadow-2xl">
+      <button onclick="toggleStageFloat()" class="flex w-full items-center gap-2 bg-gradient-to-r from-xmas-darkred to-xmas-red px-3 py-2 text-left text-white">
+        <span>⏱</span>
+        <span class="min-w-0 flex-1">
+          <span class="block text-[10px] font-bold text-amber-200">下一階段</span>
+          <span id="stage-float-now" class="block truncate text-xs font-black"></span>
+        </span>
+        <span id="stage-float-count" class="shrink-0 font-mono text-sm font-black text-amber-200"></span>
+        <span id="stage-float-arrow" class="shrink-0 text-[10px]">▲</span>
+      </button>
+      <div id="stage-float-list" class="hidden max-h-64 space-y-1 overflow-y-auto p-2.5"></div>
+    </div>
+  </div>
+
+  <!-- 時段提醒懸浮視窗（開始前 10 分鐘與準時各提醒一次） -->
+  <div id="stage-reminder" class="fixed left-1/2 z-50 hidden w-[94%] max-w-md -translate-x-1/2 rounded-2xl border-2 border-amber-300 bg-white p-3.5 shadow-2xl" style="bottom: calc(env(safe-area-inset-bottom, 0px) + 5rem)" role="alert">
+    <div class="flex items-start gap-3">
+      <div id="stage-reminder-icon" class="text-2xl">⏰</div>
+      <div class="min-w-0 flex-1">
+        <div id="stage-reminder-kicker" class="text-[11px] font-black text-xmas-red"></div>
+        <div id="stage-reminder-title" class="mt-0.5 text-sm font-black text-gray-900"></div>
+      </div>
+      <button onclick="hideStageReminder()" class="shrink-0 rounded-lg bg-xmas-red px-2.5 py-1 text-xs font-black text-white hover:bg-xmas-darkred">知道了</button>
     </div>
   </div>
 
@@ -513,8 +562,46 @@
     </div>
   </header>
 
+  <!-- 歡迎介面：系統資訊關閉時顯示（只有倒數與地點）；開啟後自動隱藏 -->
+  <section id="welcome-panel" class="mx-auto max-w-5xl px-4 py-6 sm:px-6" aria-label="歡迎">
+    <div class="rounded-3xl border-2 border-amber-300 bg-white p-5 shadow-md sm:p-7">
+      <div class="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-3 py-1 text-xs font-black text-xmas-red">🎄 歡迎光臨</div>
+      <h2 class="mt-3 text-xl font-black text-gray-900 sm:text-2xl">2026 聖誕跨世代同樂日</h2>
+      <p class="mt-1 text-sm font-bold text-gray-600">2026 年 12 月 6 日（星期日）09:00 開始</p>
+      <p class="mt-3 rounded-xl bg-amber-50 px-3.5 py-2.5 text-xs font-bold leading-relaxed text-amber-950 ring-1 ring-amber-200">
+        完整活動手冊（重要布達、流程、上午禮拜 PPT、競賽、心得）將於活動當天由大會開放，開放後本頁會自動切換，不需要重新整理。
+      </p>
+      <h3 class="mt-5 text-sm font-black text-gray-900">📍 集合與活動地點</h3>
+      <div class="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div class="rounded-2xl border border-amber-200 bg-amber-50/50 p-3.5">
+          <div class="text-[11px] font-black text-xmas-red">09:00 上午禮拜</div>
+          <div class="mt-0.5 text-base font-black text-gray-900">羅浮國小</div>
+          <p class="mt-1 text-xs leading-relaxed text-gray-600">成人、青年與長輩：主日禮拜</p>
+          <a href="https://www.google.com/maps/search/?api=1&query=復興區羅浮國小" target="_blank" rel="noopener" class="mt-2.5 inline-flex items-center gap-1 rounded-lg bg-white px-2.5 py-1.5 text-xs font-black text-xmas-darkred ring-1 ring-amber-300 hover:bg-amber-100">📍 在地圖開啟</a>
+        </div>
+        <div class="rounded-2xl border border-amber-200 bg-amber-50/50 p-3.5">
+          <div class="text-[11px] font-black text-xmas-red">09:00 兒童主日學</div>
+          <div class="mt-0.5 text-base font-black text-gray-900">羅浮高中</div>
+          <p class="mt-1 text-xs leading-relaxed text-gray-600">國小以下兒童與兒主同工：直接前往羅浮高中教室報到</p>
+          <a href="https://www.google.com/maps/search/?api=1&query=復興區羅浮高中" target="_blank" rel="noopener" class="mt-2.5 inline-flex items-center gap-1 rounded-lg bg-white px-2.5 py-1.5 text-xs font-black text-xmas-darkred ring-1 ring-amber-300 hover:bg-amber-100">📍 在地圖開啟</a>
+        </div>
+        <div class="rounded-2xl border border-amber-200 bg-amber-50/50 p-3.5">
+          <div class="text-[11px] font-black text-xmas-red">13:00 下午競賽</div>
+          <div class="mt-0.5 text-base font-black text-gray-900">羅浮高中運動場</div>
+          <p class="mt-1 text-xs leading-relaxed text-gray-600">跨世代趣味競賽，請著運動鞋與保暖層次穿搭</p>
+          <a href="https://www.google.com/maps/search/?api=1&query=復興區羅浮高中運動場" target="_blank" rel="noopener" class="mt-2.5 inline-flex items-center gap-1 rounded-lg bg-white px-2.5 py-1.5 text-xs font-black text-xmas-darkred ring-1 ring-amber-300 hover:bg-amber-100">📍 在地圖開啟</a>
+        </div>
+      </div>
+      <p class="mt-3 text-xs font-bold text-xmas-darkred">⚠️ 09:00 兩校同步開始，請勿走錯校門。</p>
+      <div class="mt-4 flex flex-wrap items-center gap-2 border-t border-gray-100 pt-3">
+        <button onclick="pollLiveState()" class="rounded-lg bg-gray-100 px-3 py-1.5 text-xs font-black text-gray-700 hover:bg-gray-200">🔄 立即檢查是否已開放</button>
+        <span id="welcome-sync-status" class="text-[11px] font-bold text-gray-500"></span>
+      </div>
+    </div>
+  </section>
+
   <!-- 黏性主分頁導覽列 (重要布達公告置頂第一個) -->
-  <nav class="sticky top-0 z-30 border-b border-amber-200/80 bg-xmas-cream/95 shadow-sm backdrop-blur-md">
+  <nav id="main-nav" class="sticky top-0 z-30 border-b border-amber-200/80 bg-xmas-cream/95 shadow-sm backdrop-blur-md">
     <div class="mx-auto max-w-5xl px-2 sm:px-6">
       <div id="main-tabs" class="no-scrollbar flex items-center gap-1.5 overflow-x-auto py-2.5">
         <button
@@ -558,7 +645,7 @@
   </nav>
 
   <!-- 大會官方快拍自動橫移展示牆 -->
-  <section aria-label="大會官方快拍橫移展示" class="border-b border-amber-200/70 bg-gradient-to-r from-amber-50/90 via-white to-red-50/80 py-3">
+  <section id="official-marquee-section" aria-label="大會官方快拍橫移展示" class="border-b border-amber-200/70 bg-gradient-to-r from-amber-50/90 via-white to-red-50/80 py-3">
     <div class="mx-auto mb-2 flex max-w-5xl items-center justify-between px-4 sm:px-6">
       <div class="flex items-center gap-2">
         <span class="inline-flex h-2 w-2 animate-ping rounded-full bg-xmas-red"></span>
@@ -1174,11 +1261,15 @@
           </div>
           <div class="mt-2.5 flex justify-end">
             <button
-              onclick="publishLiveNotice()"
+              id="publish-notice-btn" onclick="publishLiveNotice()"
               class="rounded-xl bg-xmas-red px-4 py-2 text-xs font-black text-white shadow hover:bg-xmas-darkred"
             >
               🚀 立即發布並同步推播至所有畫面
             </button>
+          </div>
+          <div class="mt-3 border-t border-red-200/70 pt-3">
+            <div class="text-xs font-black text-xmas-darkred">🗑️ 已發布的即時公告（可個別刪除，手機約 6 秒內同步移除）</div>
+            <div id="live-admin-list" class="mt-2 space-y-1.5"></div>
           </div>
         </div>
 
@@ -1225,8 +1316,8 @@
         <div class="rounded-2xl border border-amber-200 bg-amber-50/40 p-4">
           <div class="flex flex-wrap items-center justify-between gap-2">
             <div>
-              <h5 class="text-sm font-black text-amber-950">⏱️ 全天分段倒數開放控制與時程設定</h5>
-              <p class="text-[11px] text-gray-600">未開放前僅顯示純倒數數字；按下開放後，使用者畫面才會顯示現場進行中場次與階段倒數。</p>
+              <h5 class="text-sm font-black text-amber-950">🌐 系統資訊開關（開啟／關閉）與全天時程設定</h5>
+              <p class="text-[11px] text-gray-600"><b>關閉</b>：手機只顯示活動倒數與集合地點的歡迎介面。<b>開啟</b>：關閉歡迎介面、投放全部活動資訊與功能，各時段時間改以懸浮視窗提醒。開關與時程會同步到所有手機。</p>
             </div>
             <button
               id="toggle-stage-open-btn"
@@ -1238,6 +1329,9 @@
           </div>
           <div id="stage-schedule-inputs" class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2"></div>
           <div class="mt-2.5 flex flex-wrap justify-end gap-2">
+            <button onclick="testStageReminder()" class="rounded-xl border border-amber-300 bg-white px-3 py-1.5 text-xs font-bold text-amber-900 hover:bg-amber-50">
+              🔔 預覽提醒視窗
+            </button>
             <button onclick="resetStageSchedule()" class="rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-xs font-bold text-gray-600 hover:bg-gray-50">
               恢復預設時程
             </button>
@@ -1245,6 +1339,7 @@
               ✓ 套用並即時同步時程
             </button>
           </div>
+          <p id="sysinfo-status" class="mt-2 text-[11px] font-bold text-amber-950"></p>
         </div>
 
         <!-- 區塊 D：祝福彈幕留言審核佇列（先審後上彈幕 + 已上牆管理） -->
@@ -1672,24 +1767,121 @@
       renderStageScheduleInputs();
     }
 
-    function toggleStageInfoOpen() {
-      isStageInfoOpen = !isStageInfoOpen;
+    /* ---- 系統資訊開關（開啟＝完整手冊＋懸浮時程提醒；關閉＝歡迎介面，只有倒數與地點） ---- */
+    let sysInfoBusy = false;
+    let lastWelcomeState = null;
+
+    function isReceiverMode() {
+      return !!(isProjectorReceiver || window.__FORCE_PROJECTOR_RECEIVER);
+    }
+
+    // 會眾端在「系統資訊關閉」時只看到歡迎介面；管理員登入後永遠看得到完整內容以便設定
+    function isWelcomeMode() {
+      return !isStageInfoOpen && !isAdminAuthorized && !isReceiverMode();
+    }
+
+    function syncErrText(res) {
+      if (!res) return '無法連線';
+      if (res.error === '未知的 action') return 'Apps Script 尚未重新部署新版';
+      if (res.error === 'NO_API') return '尚未設定 API_URL';
+      return res.error || '未知錯誤';
+    }
+
+    function nowHMS() {
+      const t = new Date();
+      return [t.getHours(), t.getMinutes(), t.getSeconds()].map(n => String(n).padStart(2, '0')).join(':');
+    }
+
+    function setSysInfoStatus(msg) {
+      const el = document.getElementById('sysinfo-status');
+      if (el) el.textContent = msg;
+    }
+
+    function updateWelcomeStatus(msg) {
+      const el = document.getElementById('welcome-sync-status');
+      if (el) el.textContent = msg;
+    }
+
+    function applySystemInfoView() {
+      const welcome = isWelcomeMode();
+      document.documentElement.classList.toggle('welcome-mode', welcome);
+      const fl = document.getElementById('stage-float');
+      if (fl) fl.classList.toggle('hidden', welcome || !isStageInfoOpen);
+      if (welcome) hideStageReminder();
+      // 由「關閉」切到「開啟」：關閉歡迎介面，並讓尚未確認的重要布達跳出
+      if (lastWelcomeState === true && !welcome && !isAdminAuthorized) {
+        window.scrollTo(0, 0);
+        checkMandatoryNotice();
+      }
+      lastWelcomeState = welcome;
+    }
+
+    async function toggleStageInfoOpen() {
+      const next = !isStageInfoOpen;
+      if (API_URL) {
+        const code = sessionStorage.getItem(ADMIN_CODE_SESSION_KEY);
+        if (!code) {
+          setSysInfoStatus('⚠️ 找不到管理員驗證資訊，請鎖定後重新登入');
+          showToast('⚠️ 找不到管理員驗證資訊，請鎖定後重新登入');
+          return;
+        }
+        sysInfoBusy = true;
+        setSysInfoStatus('⏳ 同步中…');
+        const res = await apiPost({ action: 'setSystemInfo', adminPasscode: code, open: next, schedule: stageSchedule });
+        sysInfoBusy = false;
+        if (!res || !res.ok) {
+          setSysInfoStatus('❌ 同步失敗：' + syncErrText(res));
+          showToast('❌ 系統資訊切換失敗：' + syncErrText(res));
+          return;
+        }
+        setSysInfoStatus(`✅ 已同步到手機（${nowHMS()}）：系統資訊${next ? '開啟' : '關閉'}`);
+      } else {
+        setSysInfoStatus('⚠️ 尚未設定 API_URL：僅此瀏覽器生效，手機收不到');
+      }
+      isStageInfoOpen = next;
       localStorage.setItem(STAGE_OPEN_KEY, String(isStageInfoOpen));
       updateStageOpenButtonUI();
       updateCountdownTick();
       broadcastSync('STAGE_UPDATE', { isStageInfoOpen });
-      showToast(isStageInfoOpen ? '📡 已開放現場分段倒數資訊！' : '🔒 已關閉現場資訊，僅顯示純倒數時間');
+      showToast(isStageInfoOpen ? '🌐 系統資訊已開啟：全部活動資訊與功能已投放' : '🔒 系統資訊已關閉：手機只顯示倒數與地點');
     }
 
     function updateStageOpenButtonUI() {
       const btn = document.getElementById('toggle-stage-open-btn');
-      if (!btn) return;
-      if (isStageInfoOpen) {
-        btn.className = 'rounded-xl bg-xmas-green px-3.5 py-2 text-xs font-black text-white shadow transition';
-        btn.textContent = '📡 已開放現場進度資訊（點擊收回）';
-      } else {
-        btn.className = 'rounded-xl bg-gray-800 px-3.5 py-2 text-xs font-black text-white shadow transition';
-        btn.textContent = '🔒 目前未開放（點擊立即開放現場資訊）';
+      if (btn) {
+        if (isStageInfoOpen) {
+          btn.className = 'rounded-xl bg-xmas-green px-3.5 py-2 text-xs font-black text-white shadow transition';
+          btn.textContent = '🌐 系統資訊：已開啟（點擊關閉）';
+        } else {
+          btn.className = 'rounded-xl bg-gray-800 px-3.5 py-2 text-xs font-black text-white shadow transition';
+          btn.textContent = '🔒 系統資訊：已關閉（點擊開啟）';
+        }
+      }
+      applySystemInfoView();
+    }
+
+    // 後端 → 本機：以後端為準（管理員正在送出時略過，避免被舊資料蓋回）
+    function applySystemInfoFromServer(si) {
+      if (!si || sysInfoBusy) return;
+      let changed = false;
+      const open = !!si.open;
+      if (open !== isStageInfoOpen) {
+        isStageInfoOpen = open;
+        localStorage.setItem(STAGE_OPEN_KEY, String(open));
+        changed = true;
+      }
+      if (Array.isArray(si.schedule) && si.schedule.length) {
+        const str = JSON.stringify(si.schedule);
+        if (str !== JSON.stringify(stageSchedule)) {
+          stageSchedule = si.schedule;
+          localStorage.setItem(STAGE_SCHEDULE_KEY, str);
+          changed = true;
+        }
+      }
+      if (changed) {
+        updateStageOpenButtonUI();
+        renderStageScheduleInputs();
+        updateCountdownTick();
       }
     }
 
@@ -1708,25 +1900,58 @@
         .join('');
     }
 
-    function saveStageSchedule() {
+    async function saveStageSchedule() {
       stageSchedule = stageSchedule.map((st, i) => ({
         ...st,
         time: document.getElementById(`st-time-${i}`)?.value || st.time,
         title: document.getElementById(`st-title-${i}`)?.value.trim() || st.title
       }));
-      localStorage.setItem(STAGE_SCHEDULE_KEY, JSON.stringify(stageSchedule));
-      updateCountdownTick();
-      broadcastSync('STAGE_UPDATE', { stageSchedule });
-      showToast('已套用並即時同步最新倒數時程！');
+      await pushStageSchedule('已套用並即時同步最新倒數時程！');
     }
 
     function resetStageSchedule() {
       stageSchedule = JSON.parse(JSON.stringify(DEFAULT_SCHEDULE));
-      localStorage.setItem(STAGE_SCHEDULE_KEY, JSON.stringify(stageSchedule));
       renderStageScheduleInputs();
+      pushStageSchedule('已恢復預設活動時程');
+    }
+
+    async function pushStageSchedule(okMsg) {
+      localStorage.setItem(STAGE_SCHEDULE_KEY, JSON.stringify(stageSchedule));
       updateCountdownTick();
       broadcastSync('STAGE_UPDATE', { stageSchedule });
-      showToast('已恢復預設活動時程');
+      if (!API_URL) {
+        setSysInfoStatus('⚠️ 尚未設定 API_URL：僅此瀏覽器可見，手機收不到');
+        showToast(okMsg);
+        return;
+      }
+      const code = sessionStorage.getItem(ADMIN_CODE_SESSION_KEY);
+      if (!code) {
+        setSysInfoStatus('⚠️ 找不到管理員驗證資訊，請鎖定後重新登入');
+        return;
+      }
+      sysInfoBusy = true;
+      setSysInfoStatus('⏳ 同步中…');
+      const res = await apiPost({ action: 'setSystemInfo', adminPasscode: code, schedule: stageSchedule });
+      sysInfoBusy = false;
+      if (res && res.ok) {
+        setSysInfoStatus(`✅ 時程已同步到手機（${nowHMS()}）`);
+        showToast(okMsg);
+      } else {
+        setSysInfoStatus('❌ 同步失敗：' + syncErrText(res));
+        showToast('❌ 時程同步失敗：' + syncErrText(res));
+      }
+    }
+
+    function fmtCountdown(ms) {
+      const total = Math.max(0, Math.floor(ms / 1000));
+      const d = Math.floor(total / 86400);
+      const h = Math.floor((total % 86400) / 3600);
+      const m = Math.floor((total % 3600) / 60);
+      const sec = total % 60;
+      const p = n => String(n).padStart(2, '0');
+      if (d > 0) return `${d}天${h}時`;
+      if (h > 0) return `${h}:${p(m)}:${p(sec)}`;
+      return `${p(m)}:${p(sec)}`;
     }
 
     function updateCountdownTick() {
@@ -1741,20 +1966,23 @@
       const badgeText = document.getElementById('live-stage-badge-text');
       const statusEl = document.getElementById('countdown-status');
       const defaultLabel = document.getElementById('countdown-default-label');
+      const grid = document.getElementById('countdown-grid');
 
-      // 未開放現場資訊時：僅純粹顯示距離活動開始的倒數時間
+      // 系統資訊關閉：標題只顯示距離活動開始的純倒數
       if (!isStageInfoOpen) {
         badgeWrap.classList.add('hidden');
         statusEl.classList.add('hidden');
         defaultLabel.classList.remove('hidden');
+        grid.classList.remove('hidden');
         const firstTarget = nodes[0]?.ts || new Date('2026-12-06T09:00:00+08:00').getTime();
-        const diff = Math.max(0, firstTarget - now);
-        renderDigits(diff);
+        renderDigits(Math.max(0, firstTarget - now));
+        renderStageFloat(nodes, now, 0, false);
         return;
       }
 
-      // 已開放現場資訊：顯示目前階段徽章與下一階段分段倒數
+      // 系統資訊開啟：標題改顯示目前階段，各時段時間移到懸浮視窗並於時間到前提醒
       defaultLabel.classList.add('hidden');
+      grid.classList.add('hidden');
       badgeWrap.classList.remove('hidden');
       statusEl.classList.remove('hidden');
 
@@ -1762,7 +1990,7 @@
       if (now >= lastNode.ts) {
         badgeText.textContent = lastNode.activeBadge;
         statusEl.textContent = '感謝所有青年同工、長輩與孩童的熱情參與！';
-        ['cd-days', 'cd-hours', 'cd-mins', 'cd-secs'].forEach(id => (document.getElementById(id).textContent = '00'));
+        renderStageFloat(nodes, now, nodes.length, true);
         return;
       }
 
@@ -1771,13 +1999,125 @@
 
       if (nextIdx === 0) {
         badgeText.textContent = '🎄 活動即將登場';
-        statusEl.textContent = `距離【${nodes[0].time} ${nodes[0].title}】還有`;
+        statusEl.textContent = `即將開始：【${nodes[0].time} ${nodes[0].title}】`;
       } else {
         badgeText.textContent = nodes[nextIdx - 1].activeBadge;
-        statusEl.textContent = `下一階段倒數：【${nodes[nextIdx].time} ${nodes[nextIdx].title}】`;
+        statusEl.textContent = `下一階段：【${nodes[nextIdx].time} ${nodes[nextIdx].title}】`;
+      }
+      renderStageFloat(nodes, now, nextIdx, false);
+      if (!isWelcomeMode() && !isReceiverMode()) checkStageReminders(nodes, now);
+    }
+
+    /* ---- 懸浮時程視窗 ---- */
+    const STAGE_FLOAT_OPEN_KEY = 'xmas2026_stage_float_open';
+    let stageFloatOpen = localStorage.getItem(STAGE_FLOAT_OPEN_KEY) === 'true';
+
+    function toggleStageFloat() {
+      stageFloatOpen = !stageFloatOpen;
+      localStorage.setItem(STAGE_FLOAT_OPEN_KEY, String(stageFloatOpen));
+      updateCountdownTick();
+    }
+
+    function renderStageFloat(nodes, now, nextIdx, done) {
+      const wrap = document.getElementById('stage-float');
+      if (!wrap) return;
+      const show = isStageInfoOpen && !isWelcomeMode() && !isReceiverMode();
+      wrap.classList.toggle('hidden', !show);
+      if (!show) return;
+
+      const nowEl = document.getElementById('stage-float-now');
+      const countEl = document.getElementById('stage-float-count');
+      if (done) {
+        nowEl.textContent = '活動圓滿結束';
+        countEl.textContent = '🎉';
+      } else {
+        const n = nodes[nextIdx];
+        nowEl.textContent = `${n.time} ${n.title}`;
+        countEl.textContent = fmtCountdown(n.ts - now);
       }
 
-      renderDigits(Math.max(0, nodes[nextIdx].ts - now));
+      const list = document.getElementById('stage-float-list');
+      document.getElementById('stage-float-arrow').textContent = stageFloatOpen ? '▼' : '▲';
+      list.classList.toggle('hidden', !stageFloatOpen);
+      if (!stageFloatOpen) return;
+      const currentIdx = done ? nodes.length - 1 : nextIdx - 1;
+      list.innerHTML = nodes
+        .map((n, i) => {
+          const past = done || i < currentIdx;
+          const cur = !done && i === currentIdx;
+          const cls = cur
+            ? 'bg-amber-100 ring-1 ring-amber-300 text-xmas-darkred'
+            : past
+            ? 'bg-gray-50 text-gray-400'
+            : 'bg-white text-gray-800 ring-1 ring-gray-100';
+          const mark = cur ? '▶' : past ? '✓' : '○';
+          return `<div class="flex items-start gap-2 rounded-lg px-2 py-1.5 text-xs ${cls}">
+            <span class="w-3 shrink-0 text-center font-black">${mark}</span>
+            <span class="w-11 shrink-0 font-mono font-black">${escapeHtml(n.time)}</span>
+            <span class="min-w-0 flex-1 font-bold leading-snug">${escapeHtml(n.title)}</span>
+          </div>`;
+        })
+        .join('');
+    }
+
+    /* ---- 時段提醒視窗：每個時段「開始前 10 分鐘」與「準時」各提醒一次 ---- */
+    const REMIND_KEY = 'xmas2026_stage_reminded';
+    let reminderTimer = null;
+
+    function getReminded() {
+      try {
+        const a = JSON.parse(localStorage.getItem(REMIND_KEY) || '[]');
+        return Array.isArray(a) ? a : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function checkStageReminders(nodes, now) {
+      const done = getReminded();
+      for (const n of nodes) {
+        const preKey = `${n.ts}:pre`;
+        const startKey = `${n.ts}:start`;
+        if (now >= n.ts && now < n.ts + 3 * 60000 && !done.includes(startKey)) {
+          done.push(startKey, preKey);
+          localStorage.setItem(REMIND_KEY, JSON.stringify(done.slice(-40)));
+          showStageReminder('start', n, 0);
+          return;
+        }
+        if (now >= n.ts - 10 * 60000 && now < n.ts && !done.includes(preKey)) {
+          done.push(preKey);
+          localStorage.setItem(REMIND_KEY, JSON.stringify(done.slice(-40)));
+          showStageReminder('pre', n, Math.ceil((n.ts - now) / 60000));
+          return;
+        }
+      }
+    }
+
+    function showStageReminder(kind, node, minsLeft) {
+      const box = document.getElementById('stage-reminder');
+      if (!box) return;
+      document.getElementById('stage-reminder-icon').textContent = kind === 'start' ? '🔔' : '⏰';
+      document.getElementById('stage-reminder-kicker').textContent =
+        kind === 'start' ? `${node.time} 時間到！` : `再 ${minsLeft} 分鐘（${node.time}）`;
+      document.getElementById('stage-reminder-title').textContent =
+        kind === 'start' ? `${node.title} 現在開始` : `${node.title} 即將開始`;
+      box.classList.remove('hidden');
+      try {
+        if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+      } catch (e) {}
+      clearTimeout(reminderTimer);
+      reminderTimer = setTimeout(hideStageReminder, 25000);
+    }
+
+    function hideStageReminder() {
+      clearTimeout(reminderTimer);
+      const box = document.getElementById('stage-reminder');
+      if (box) box.classList.add('hidden');
+    }
+
+    function testStageReminder() {
+      const n = stageSchedule[0] || { time: '09:00', title: '預覽用提醒' };
+      showStageReminder('pre', n, 10);
     }
 
     function renderDigits(diff) {
@@ -2013,16 +2353,100 @@
       resetStickyForm();
     }
 
-    // 會眾端：定時向後端取得最新常駐公告
-    async function fetchStickyFromServer() {
-      if (!API_URL || isAdminAuthorized) return;
-      const res = await apiGet({ action: 'stickyNotices' });
-      if (!res || !res.ok || !Array.isArray(res.notices)) return;
-      const ver = String(res.updatedAt || '');
+    /* ==================== 單一輪詢入口：即時公告＋常駐公告＋系統資訊開關 ==================== */
+    const LIVE_VER_KEY = 'xmas2026_latest_notice_ver';
+    let liveNoticeBusy = false;
+    let livePolling = false;
+
+    async function pollLiveState(opts) {
+      const initial = !!(opts && opts.initial);
+      if (!API_URL) {
+        updateWelcomeStatus('⚠️ 尚未設定 API_URL');
+        return;
+      }
+      if (livePolling) return;
+      livePolling = true;
+      try {
+        const res = await apiGet({ action: 'liveState' });
+        if (!res) {
+          updateWelcomeStatus('⚠️ 無法連線，稍後會自動重試');
+          return;
+        }
+        if (!res.ok || !res.live) {
+          updateWelcomeStatus(res.ok ? '⚠️ 後端為舊版，請重新部署新版 Apps Script' : '⚠️ 後端錯誤：' + (res.error || ''));
+          return;
+        }
+        const live = res.live;
+        applySystemInfoFromServer(live.systemInfo);
+        applyLiveNotices(live.notices, live.latestNoticeId, initial);
+        applyStickyFromServer(live.sticky);
+        updateWelcomeStatus(`已連線・${nowHMS()} 更新`);
+      } finally {
+        livePolling = false;
+      }
+    }
+
+    function startLiveStatePolling() {
+      if (!API_URL) return;
+      window.__liveInitial = pollLiveState({ initial: true });
+      setInterval(() => {
+        if (!document.hidden) pollLiveState();
+      }, 6000 + Math.floor(Math.random() * 1500));
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) pollLiveState();
+      });
+    }
+
+    function showLiveBanner(n) {
+      document.getElementById('live-banner-title').textContent = n.title;
+      document.getElementById('live-banner-body').textContent = n.body;
+      document.getElementById('live-notice-banner').classList.remove('hidden');
+    }
+
+    // 後端 → 本機：後端為準，所以別台刪除的公告也會同步消失
+    function applyLiveNotices(list, latestId, initial) {
+      if (liveNoticeBusy || !Array.isArray(list)) return;
+      const norm = list.map(n => ({
+        id: String(n.id),
+        tag: String(n.tag || '即時新布達'),
+        title: String(n.title || ''),
+        body: String(n.body || ''),
+        time: String(n.time || ''),
+        color: 'red',
+        expanded: true
+      }));
+      if (JSON.stringify(getLiveNotices()) !== JSON.stringify(norm)) {
+        localStorage.setItem(LIVE_NOTICES_KEY, JSON.stringify(norm));
+        renderNotices();
+        renderLiveAdminList();
+      }
+      if (latestId && latestId !== localStorage.getItem(LIVE_VER_KEY)) {
+        localStorage.setItem(LIVE_VER_KEY, latestId);
+        const latest = norm.find(n => n.id === latestId) || norm[0];
+        if (latest) {
+          syncModalWithLatestNotice(latest);
+          if (!initial && !isWelcomeMode() && !isReceiverMode()) showLiveBanner(latest);
+        }
+      }
+    }
+
+    function applyStickyFromServer(st) {
+      if (isAdminAuthorized) return;
+      if (!st || !Array.isArray(st.notices)) return;
+      const ver = String(st.updatedAt || '');
       if (ver && ver === localStorage.getItem(STICKY_VER_KEY)) return;
-      localStorage.setItem(STICKY_KEY, JSON.stringify(res.notices));
+      localStorage.setItem(STICKY_KEY, JSON.stringify(st.notices));
       localStorage.setItem(STICKY_VER_KEY, ver);
       renderNotices();
+    }
+
+    function getLiveNotices() {
+      try {
+        const a = JSON.parse(localStorage.getItem(LIVE_NOTICES_KEY) || '[]');
+        return Array.isArray(a) ? a : [];
+      } catch (e) {
+        return [];
+      }
     }
 
     function renderNotices() {
@@ -2033,6 +2457,8 @@
         container.innerHTML = '<div class="rounded-2xl border border-dashed border-gray-300 bg-white p-6 text-center text-sm text-gray-500 md:col-span-2">目前沒有公告</div>';
         return;
       }
+      const liveIds = new Set(getLiveNotices().map(n => n.id));
+      const canDelete = typeof isEditMode !== 'undefined' && isEditMode && isAdminAuthorized;
       container.innerHTML = list
         .map(
           item => `
@@ -2050,6 +2476,13 @@
             <div class="notice-detail ${item.expanded ? '' : 'hidden'} border-t border-gray-100 bg-amber-50/30 px-4 py-3 text-sm leading-relaxed text-gray-700">
               <p>${escapeHtml(item.body)}</p>
             </div>
+            ${
+              canDelete
+                ? `<div class="flex justify-end border-t border-gray-100 bg-gray-50 px-3 py-2">
+                    <button onclick="deleteNoticeById('${escapeAttr(item.id)}', '${liveIds.has(item.id) ? 'live' : 'sticky'}')" class="rounded-lg bg-red-100 px-3 py-1 text-xs font-black text-xmas-red hover:bg-red-200">🗑️ 刪除此公告</button>
+                  </div>`
+                : ''
+            }
           </article>
         `
         )
@@ -2064,7 +2497,7 @@
       arrow.textContent = isHidden ? '展開 ▼' : '收合 ▲';
     }
 
-    function publishLiveNotice() {
+    async function publishLiveNotice() {
       const tag = document.getElementById('admin-notice-tag').value.trim() || '即時新布達';
       const title = document.getElementById('admin-notice-title').value.trim();
       const body = document.getElementById('admin-notice-body').value.trim();
@@ -2075,30 +2508,138 @@
 
       const now = new Date();
       const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-      const newVersion = 'v' + Date.now();
       const newNotice = {
-        id: newVersion,
-        tag,
-        badgeColor: 'bg-xmas-red',
-        borderColor: 'border-red-300',
-        title,
-        body,
+        id: 'v' + Date.now(),
+        tag: tag.slice(0, 12),
+        color: 'red',
+        title: title.slice(0, 80),
+        body: body.slice(0, 500),
         time: timeStr,
         expanded: true
       };
 
-      const added = JSON.parse(localStorage.getItem(LIVE_NOTICES_KEY) || '[]');
-      added.unshift(newNotice);
+      // 先送到後端，成功才算發布：這樣手機一定拉得到，失敗也不會假裝成功
+      if (API_URL) {
+        const code = sessionStorage.getItem(ADMIN_CODE_SESSION_KEY);
+        if (!code) {
+          showToast('⚠️ 找不到管理員驗證資訊，請鎖定後重新登入');
+          return;
+        }
+        const btn = document.getElementById('publish-notice-btn');
+        liveNoticeBusy = true;
+        if (btn) {
+          btn.disabled = true;
+          btn.textContent = '⏳ 發布中…';
+        }
+        const res = await apiPost({ action: 'publishNotice', adminPasscode: code, id: newNotice.id, tag: newNotice.tag, title: newNotice.title, body: newNotice.body });
+        liveNoticeBusy = false;
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = '🚀 立即發布並同步推播至所有畫面';
+        }
+        if (!res || !res.ok) {
+          showToast('❌ 發布失敗：' + syncErrText(res), 4500);
+          return;
+        }
+        if (res.notice) {
+          newNotice.id = res.notice.id || newNotice.id;
+          newNotice.time = res.notice.time || newNotice.time;
+        }
+      }
+
+      const added = getLiveNotices();
+      if (!added.some(n => n.id === newNotice.id)) added.unshift(newNotice);
       localStorage.setItem(LIVE_NOTICES_KEY, JSON.stringify(added));
-      localStorage.setItem('xmas2026_latest_notice_ver', newVersion);
+      localStorage.setItem(LIVE_VER_KEY, newNotice.id);
 
       document.getElementById('admin-notice-title').value = '';
       document.getElementById('admin-notice-body').value = '';
 
       renderNotices();
+      renderLiveAdminList();
       syncModalWithLatestNotice(newNotice);
       broadcastSync('NEW_NOTICE', newNotice);
-      showToast('🚀 新重要布達已發布並同步推播至所有畫面！');
+      showToast(API_URL ? '🚀 已發布，所有手機約 6 秒內會收到推播' : '🚀 已發布（尚未設定 API_URL，只有本機看得到）');
+    }
+
+    function renderLiveAdminList() {
+      const box = document.getElementById('live-admin-list');
+      if (!box) return;
+      const list = getLiveNotices();
+      if (!list.length) {
+        box.innerHTML = '<div class="rounded-xl border border-dashed border-red-200 bg-white p-2.5 text-center text-xs text-gray-500">目前沒有即時公告</div>';
+        return;
+      }
+      box.innerHTML =
+        list
+          .map(
+            n => `
+          <div class="flex items-center justify-between gap-2 rounded-xl border border-red-200 bg-white p-2">
+            <div class="min-w-0 flex-1">
+              <span class="rounded bg-xmas-red px-1.5 py-0.5 text-[10px] font-black text-white">${escapeHtml(n.tag)}</span>
+              <span class="ml-1.5 text-xs font-black text-gray-900">${escapeHtml(n.title)}</span>
+              <span class="ml-1 text-[10px] font-bold text-gray-400">${escapeHtml(n.time || '')}</span>
+            </div>
+            <button onclick="deleteNoticeById('${escapeAttr(n.id)}', 'live')" class="shrink-0 rounded-lg bg-red-100 px-2.5 py-1 text-xs font-black text-xmas-red hover:bg-red-200">刪除</button>
+          </div>`
+          )
+          .join('') +
+        `<div class="flex justify-end pt-1"><button onclick="clearAllLiveNotices()" class="rounded-lg border border-gray-300 bg-white px-3 py-1 text-[11px] font-bold text-gray-600 hover:bg-gray-50">清除全部即時公告</button></div>`;
+    }
+
+    // 刪除任一公告（即時公告同步到後端；常駐公告走原本的儲存同步）
+    async function deleteNoticeById(id, kind) {
+      if (kind === 'sticky') {
+        const idx = getStickyNotices().findIndex(n => n.id === id);
+        if (idx >= 0) deleteSticky(idx);
+        return;
+      }
+      const n = getLiveNotices().find(x => x.id === id);
+      if (!n) return;
+      if (!confirm(`確定刪除公告「${n.title}」？手機端也會一起移除。`)) return;
+      if (API_URL) {
+        const code = sessionStorage.getItem(ADMIN_CODE_SESSION_KEY);
+        if (!code) {
+          showToast('⚠️ 找不到管理員驗證資訊，請鎖定後重新登入');
+          return;
+        }
+        liveNoticeBusy = true;
+        const res = await apiPost({ action: 'deleteNotice', adminPasscode: code, id });
+        liveNoticeBusy = false;
+        if (!res || !res.ok) {
+          showToast('❌ 刪除同步失敗：' + syncErrText(res), 4500);
+          return;
+        }
+      }
+      localStorage.setItem(LIVE_NOTICES_KEY, JSON.stringify(getLiveNotices().filter(x => x.id !== id)));
+      renderNotices();
+      renderLiveAdminList();
+      broadcastSync('STICKY_UPDATE', {});
+      showToast('已刪除公告');
+    }
+
+    async function clearAllLiveNotices() {
+      if (!getLiveNotices().length) return;
+      if (!confirm('確定清除全部即時公告？手機端也會一起移除。')) return;
+      if (API_URL) {
+        const code = sessionStorage.getItem(ADMIN_CODE_SESSION_KEY);
+        if (!code) {
+          showToast('⚠️ 找不到管理員驗證資訊，請鎖定後重新登入');
+          return;
+        }
+        liveNoticeBusy = true;
+        const res = await apiPost({ action: 'clearNotices', adminPasscode: code });
+        liveNoticeBusy = false;
+        if (!res || !res.ok) {
+          showToast('❌ 清除同步失敗：' + syncErrText(res), 4500);
+          return;
+        }
+      }
+      localStorage.setItem(LIVE_NOTICES_KEY, '[]');
+      renderNotices();
+      renderLiveAdminList();
+      broadcastSync('STICKY_UPDATE', {});
+      showToast('已清除全部即時公告');
     }
 
     function getCurrentNoticeVersion() {
@@ -3288,6 +3829,7 @@
         sessionStorage.setItem(ADMIN_AUTH_SESSION_KEY, 'true');
         closeAdminAuthModal();
         applyEditModeState(true);
+        applySystemInfoView();
         showToast('🔓 管理員權限驗證通過，已開啟禮物後台！');
       } else {
         err?.classList.remove('hidden');
@@ -3321,6 +3863,7 @@
       sessionStorage.removeItem(ADMIN_AUTH_SESSION_KEY);
       sessionStorage.removeItem(ADMIN_CODE_SESSION_KEY);
       applyEditModeState(false);
+      applySystemInfoView();
       showToast('🔒 已鎖定禮物後台並登出管理員權限');
     }
 
@@ -3342,6 +3885,9 @@
       if (labelSpan) {
         labelSpan.textContent = isEditMode ? '🎁 收合禮物後台' : '🎁 禮物後台';
       }
+      // 後台開啟時，每張公告卡片才會出現刪除鈕
+      renderNotices();
+      renderLiveAdminList();
     }
 
     function toggleEditMode() {
@@ -3428,8 +3974,8 @@
       updateSyncMasterUI();
       startRemoteSlidePolling();
       renderStickyAdmin();
-      fetchStickyFromServer();
-      if (API_URL) setInterval(fetchStickyFromServer, 15000);
+      renderLiveAdminList();
+      startLiveStatePolling();
 
       if (isProjectorReceiver || window.__FORCE_PROJECTOR_RECEIVER) {
         switchMainTab('ppt');
@@ -3444,7 +3990,10 @@
         return;
       }
 
-      checkMandatoryNotice();
+      // 等第一次同步（最多 2.5 秒）再決定要不要跳出重要布達；歡迎介面期間不跳，開放後才跳
+      Promise.race([window.__liveInitial || Promise.resolve(), new Promise(r => setTimeout(r, 2500))]).then(() => {
+        if (!isWelcomeMode()) checkMandatoryNotice();
+      });
     };
   </script>
 </body>
