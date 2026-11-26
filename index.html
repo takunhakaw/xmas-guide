@@ -1034,21 +1034,15 @@
         <div class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-300 bg-amber-50/70 px-4 py-3">
           <div class="text-xs">
             <span class="font-black text-amber-950">🔐 管理員權限狀態：已通過驗證</span>
-            <span class="ml-2 text-gray-600">（一般會眾無法未經密碼開啟此後台）</span>
+            <span class="ml-2 text-gray-600">（密碼由 Google Apps Script「指令碼屬性」ADMIN_PASSCODE 驗證）</span>
           </div>
           <div class="flex items-center gap-2">
-            <input
-              id="admin-new-passcode"
-              type="text"
-              maxlength="16"
-              placeholder="設定新通行碼..."
-              class="w-32 rounded-lg border border-amber-300 bg-white px-2.5 py-1 text-xs font-bold text-gray-800"
-            />
             <button
-              onclick="updateAdminPasscode()"
-              class="rounded-lg bg-amber-600 px-3 py-1 text-xs font-black text-white hover:bg-amber-700"
+              type="button"
+              onclick="syncFromCloud(true)"
+              class="rounded-lg bg-sky-600 px-3 py-1 text-xs font-black text-white hover:bg-sky-700"
             >
-              更新通行碼
+              ☁️ 立即雲端同步
             </button>
           </div>
         </div>
@@ -1279,6 +1273,108 @@
   </footer>
 
   <script>
+    /* ==================== Google Apps Script 雲端跨裝置同步設定 ==================== */
+    const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbzHnct_dWMyUjxAtu593g4mmtEgjkEmo4k1_zcJJoVxPNAV_boniM1sNx-SMHTxpqK8kg/exec';
+    const CLOUD_POLL_INTERVAL_MS = 10000;
+    let lastCloudStateSignature = '';
+
+    async function callGasGet(paramsObj = {}) {
+      if (!GAS_API_URL) throw new Error('尚未設定 GAS_API_URL');
+      const url = new URL(GAS_API_URL);
+      Object.entries(paramsObj).forEach(([k, v]) => {
+        if (v !== undefined && v !== null) url.searchParams.set(k, String(v));
+      });
+      const res = await fetch(url.toString(), { method: 'GET', cache: 'no-store' });
+      const json = await res.json();
+      if (!json.ok) {
+        throw new Error(json.error || '雲端讀取失敗');
+      }
+      return json;
+    }
+
+    async function callGasPost(payloadObj = {}) {
+      if (!GAS_API_URL) throw new Error('尚未設定 GAS_API_URL');
+      // 採用 text/plain 送出 JSON 字串，避免跨網域預檢 (CORS Preflight) 被 Apps Script 阻擋
+      const res = await fetch(GAS_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payloadObj)
+      });
+      const json = await res.json();
+      if (!json.ok) {
+        throw new Error(json.error || '雲端寫入失敗');
+      }
+      return json;
+    }
+
+    async function syncFromCloud(showFeedback = false) {
+      if (!GAS_API_URL) return;
+      try {
+        const res = await callGasGet({ action: 'sync' });
+        const cloud = res.data || {};
+        const signature = JSON.stringify({
+          notices: cloud.notices || [],
+          latestNoticeId: cloud.latestNoticeId || '',
+          gameQuotas: cloud.gameQuotas || [],
+          danmakuPending: cloud.danmakuPending || [],
+          danmakuApproved: cloud.danmakuApproved || []
+        });
+
+        if (signature === lastCloudStateSignature) {
+          if (showFeedback) showToast('☁️ 已與雲端同步（目前為最新資料）');
+          return;
+        }
+        lastCloudStateSignature = signature;
+
+        // 1. 同步即時新公告
+        if (Array.isArray(cloud.notices)) {
+          const prevAdded = JSON.parse(localStorage.getItem(LIVE_NOTICES_KEY) || '[]');
+          const prevTopId = prevAdded[0]?.id || '';
+          localStorage.setItem(LIVE_NOTICES_KEY, JSON.stringify(cloud.notices));
+          if (cloud.notices.length > 0) {
+            const topNotice = cloud.notices[0];
+            localStorage.setItem('xmas2026_latest_notice_ver', cloud.latestNoticeId || topNotice.id);
+            renderNotices();
+            syncModalWithLatestNotice(topNotice);
+            if (prevTopId && topNotice.id !== prevTopId && !isProjectorReceiver && !window.__FORCE_PROJECTOR_RECEIVER) {
+              document.getElementById('live-banner-title').textContent = topNotice.title;
+              document.getElementById('live-banner-body').textContent = topNotice.body;
+              document.getElementById('live-notice-banner').classList.remove('hidden');
+            }
+          }
+        }
+
+        // 2. 同步下午趣味競賽各場次出賽人數
+        if (Array.isArray(cloud.gameQuotas) && cloud.gameQuotas.length >= 3) {
+          gamesData = DEFAULT_GAMES_DATA.map((defGame, i) => ({
+            ...defGame,
+            ...(cloud.gameQuotas[i] || {})
+          }));
+          localStorage.setItem(GAME_QUOTA_KEY, JSON.stringify(gamesData));
+          loadGameQuotaForm();
+          renderCurrentGamePanel();
+        }
+
+        // 3. 同步祝福彈幕（待審與已核准）
+        if (Array.isArray(cloud.danmakuPending)) {
+          localStorage.setItem(PENDING_DANMAKU_KEY, JSON.stringify(cloud.danmakuPending));
+        }
+        if (Array.isArray(cloud.danmakuApproved)) {
+          localStorage.setItem(APPROVED_DANMAKU_KEY, JSON.stringify(cloud.danmakuApproved));
+        }
+        renderDanmakuWall();
+        renderPendingModeration();
+
+        if (showFeedback) {
+          showToast('☁️ 已完成雲端最新資料同步！');
+        }
+      } catch (err) {
+        if (showFeedback) {
+          showToast('⚠️ 雲端同步暫時無法連線，已使用本機資料');
+        }
+      }
+    }
+
     /* ==================== 跨分頁即時廣播通道 ==================== */
     const bc = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('xmas2026_live_channel') : null;
 
@@ -1716,6 +1812,21 @@
       syncModalWithLatestNotice(newNotice);
       broadcastSync('NEW_NOTICE', newNotice);
       showToast('🚀 新重要布達已發布並同步推播至所有畫面！');
+
+      callGasPost({
+        action: 'publishNotice',
+        adminPasscode: getAdminPasscode(),
+        tag,
+        title,
+        body
+      })
+        .then(() => {
+          lastCloudStateSignature = '';
+          syncFromCloud(false);
+        })
+        .catch(() => {
+          showToast('⚠️ 本機已推播，但雲端寫入未完成，請確認管理員密碼或網路');
+        });
     }
 
     function getCurrentNoticeVersion() {
@@ -2373,6 +2484,25 @@
       selectGame(idx);
       broadcastSync('GAME_QUOTA_UPDATE', { idx });
       showToast('已更新並即時同步該場次出賽人數公告！');
+
+      callGasPost({
+        action: 'saveGameQuota',
+        adminPasscode: getAdminPasscode(),
+        gameIndex: idx,
+        quota: {
+          total: gamesData[idx].total,
+          elder: gamesData[idx].elder,
+          youth: gamesData[idx].youth,
+          other: gamesData[idx].other,
+          note: gamesData[idx].note
+        }
+      })
+        .then(() => {
+          lastCloudStateSignature = '';
+        })
+        .catch(() => {
+          showToast('⚠️ 本機已更新，但雲端人數同步未完成');
+        });
     }
 
     const SCORE_KEY = 'xmas2026_team_scores';
@@ -2488,6 +2618,18 @@
       renderPendingModeration();
       broadcastSync('DANMAKU_UPDATE', {});
       showToast('📨 已送出！待大會管理者審核通過後即會登上祝福彈幕');
+
+      callGasPost({
+        action: 'submitDanmaku',
+        name,
+        text
+      })
+        .then(() => {
+          lastCloudStateSignature = '';
+        })
+        .catch(() => {
+          showToast('⚠️ 留言已暫存本機，雲端送出失敗請稍後再試');
+        });
     }
 
     function renderPendingModeration() {
@@ -2563,12 +2705,25 @@
 
     function removeApprovedDanmaku(index) {
       const approved = JSON.parse(localStorage.getItem(APPROVED_DANMAKU_KEY) || '[]');
-      approved.splice(index, 1);
+      const [removedItem] = approved.splice(index, 1);
       localStorage.setItem(APPROVED_DANMAKU_KEY, JSON.stringify(approved));
       renderDanmakuWall();
       renderPendingModeration();
       broadcastSync('DANMAKU_UPDATE', {});
       showToast('已從公開祝福彈幕牆下架該則留言');
+
+      if (removedItem && removedItem.id) {
+        callGasPost({
+          action: 'moderateDanmaku',
+          adminPasscode: getAdminPasscode(),
+          id: removedItem.id,
+          decision: 'remove'
+        })
+          .then(() => {
+            lastCloudStateSignature = '';
+          })
+          .catch(() => {});
+      }
     }
 
     function approveDanmaku(index) {
@@ -2585,32 +2740,40 @@
       renderPendingModeration();
       broadcastSync('DANMAKU_UPDATE', {});
       showToast('✨ 已核准並飛入公開祝福彈幕牆！');
+
+      if (item.id) {
+        callGasPost({
+          action: 'moderateDanmaku',
+          adminPasscode: getAdminPasscode(),
+          id: item.id,
+          decision: 'approve'
+        })
+          .then(() => {
+            lastCloudStateSignature = '';
+          })
+          .catch(() => {});
+      }
     }
 
     function rejectDanmaku(index) {
       const pending = JSON.parse(localStorage.getItem(PENDING_DANMAKU_KEY) || '[]');
-      pending.splice(index, 1);
+      const [removedItem] = pending.splice(index, 1);
       localStorage.setItem(PENDING_DANMAKU_KEY, JSON.stringify(pending));
       renderPendingModeration();
       broadcastSync('DANMAKU_UPDATE', {});
       showToast('已退回並刪除該則留言');
-    }
 
-    function copyDanmakuText(name, text) {
-      const shareStr = `🎄【2026 聖誕跨世代同樂日・祝福彈幕】\n💬「${text}」\n—— ${name}`;
-      try {
-        const tempTextarea = document.createElement('textarea');
-        tempTextarea.value = shareStr;
-        tempTextarea.setAttribute('readonly', '');
-        tempTextarea.style.position = 'fixed';
-        tempTextarea.style.opacity = '0';
-        document.body.appendChild(tempTextarea);
-        tempTextarea.select();
-        document.execCommand('copy');
-        document.body.removeChild(tempTextarea);
-        showToast('已複製祝福彈幕，可貼至 LINE 群組！');
-      } catch (err) {
-        showToast('複製完成');
+      if (removedItem && removedItem.id) {
+        callGasPost({
+          action: 'moderateDanmaku',
+          adminPasscode: getAdminPasscode(),
+          id: removedItem.id,
+          decision: 'reject'
+        })
+          .then(() => {
+            lastCloudStateSignature = '';
+          })
+          .catch(() => {});
       }
     }
 
@@ -2630,19 +2793,44 @@
     let isEditMode = false;
 
     function getAdminPasscode() {
-      return localStorage.getItem(ADMIN_PASSCODE_KEY) || '2026';
+      return localStorage.getItem(ADMIN_PASSCODE_KEY) || sessionStorage.getItem('xmas2026_verified_passcode') || '2026';
+    }
+    async function verifyAdminPasscode(e) {
+      e.preventDefault();
+      const inputVal = document.getElementById('admin-passcode-input')?.value.trim();
+      const err = document.getElementById('admin-auth-error');
+      if (!inputVal) return;
+
+      try {
+        const res = await callGasGet({ action: 'verifyAdmin', passcode: inputVal });
+        if (res.valid) {
+          localStorage.setItem(ADMIN_PASSCODE_KEY, inputVal);
+          sessionStorage.setItem('xmas2026_verified_passcode', inputVal);
+          isAdminAuthorized = true;
+          sessionStorage.setItem(ADMIN_AUTH_SESSION_KEY, 'true');
+          closeAdminAuthModal();
+          applyEditModeState(true);
+          showToast('🔓 雲端通行碼驗證通過，已開啟禮物後台！');
+          return;
+        }
+      } catch (cloudErr) {
+        // 若雲端驗證暫時無法連線，改以本機快取通行碼比對作為離線備援
+        if (inputVal === getAdminPasscode()) {
+          isAdminAuthorized = true;
+          sessionStorage.setItem(ADMIN_AUTH_SESSION_KEY, 'true');
+          closeAdminAuthModal();
+          applyEditModeState(true);
+          showToast('🔓 已使用本機快取通行碼開啟禮物後台');
+          return;
+        }
+      }
+
+      err?.classList.remove('hidden');
+      document.getElementById('admin-passcode-input')?.select();
     }
 
-    function openAdminAuthModal() {
-      const modal = document.getElementById('admin-auth-modal');
-      const input = document.getElementById('admin-passcode-input');
-      const err = document.getElementById('admin-auth-error');
-      if (!modal || !input) return;
-      input.value = '';
-      err?.classList.add('hidden');
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
-      setTimeout(() => input.focus(), 50);
+    function updateAdminPasscode() {
+      showToast('🔐 管理者密碼已改由 Google Apps Script「指令碼屬性 ADMIN_PASSCODE」統一管理，請至 Apps Script 專案設定修改');
     }
 
     function closeAdminAuthModal() {
@@ -2798,9 +2986,13 @@
           hintEl.classList.remove('hidden');
           hintEl.textContent = '🖥️ 獨立投影輸出視窗（與音控主控台及全場手機即時同步中・按 F11 可滿版全螢幕）';
         }
+        syncFromCloud(false);
+        setInterval(() => syncFromCloud(false), CLOUD_POLL_INTERVAL_MS);
         return;
       }
 
+      syncFromCloud(false);
+      setInterval(() => syncFromCloud(false), CLOUD_POLL_INTERVAL_MS);
       checkMandatoryNotice();
     };
   </script>
