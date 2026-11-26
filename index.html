@@ -997,32 +997,12 @@
         </div>
       </div>
 
-      <!-- 四大戰隊即時計分板 -->
+      <!-- 戰隊即時計分板（隊伍與分數由管理員在後台新增／調整，會同步到所有手機） -->
       <div class="rounded-2xl border border-amber-200 bg-white p-4 shadow-sm sm:p-5">
         <div class="flex items-center justify-between">
-          <h3 class="text-base font-black text-gray-900">📊 跨世代四大戰隊即時積分看板</h3>
+          <h3 class="text-base font-black text-gray-900">📊 跨世代戰隊即時積分看板</h3>
         </div>
-        <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <div class="rounded-2xl border-2 border-red-200 bg-red-50/50 p-3.5 text-center">
-            <div class="text-xs font-black text-xmas-red">🔴 伯利恆紅隊</div>
-            <div id="score-red" class="my-2 text-3xl font-black text-gray-900">0</div>
-          </div>
-
-          <div class="rounded-2xl border-2 border-emerald-200 bg-emerald-50/50 p-3.5 text-center">
-            <div class="text-xs font-black text-xmas-green">🟢 橄欖山綠隊</div>
-            <div id="score-green" class="my-2 text-3xl font-black text-gray-900">0</div>
-          </div>
-
-          <div class="rounded-2xl border-2 border-amber-200 bg-amber-50/50 p-3.5 text-center">
-            <div class="text-xs font-black text-amber-700">🟡 晨星燦金隊</div>
-            <div id="score-gold" class="my-2 text-3xl font-black text-gray-900">0</div>
-          </div>
-
-          <div class="rounded-2xl border-2 border-sky-200 bg-sky-50/50 p-3.5 text-center">
-            <div class="text-xs font-black text-sky-800">🔵 加利利藍隊</div>
-            <div id="score-blue" class="my-2 text-3xl font-black text-gray-900">0</div>
-          </div>
-        </div>
+        <div id="score-board-grid" class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4"></div>
       </div>
     </section>
 
@@ -1406,46 +1386,25 @@
           <p id="sync-status-text" class="mt-2 text-[11px] font-bold text-indigo-900">目前未廣播：全場手機維持各自翻閱</p>
         </div>
 
-        <!-- 區塊 H：四大戰隊積分控制（前台僅顯示分數） -->
+        <!-- 區塊 H：戰隊與積分控制（可自行新增隊伍、加減分；同步到所有手機） -->
         <div class="rounded-2xl border border-rose-200 bg-rose-50/40 p-4">
           <div class="flex flex-wrap items-center justify-between gap-2">
-            <h5 class="text-sm font-black text-rose-950">📊 跨世代四大戰隊積分控制（前台只顯示分數）</h5>
-            <button onclick="resetScores()" class="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-bold text-gray-600 hover:bg-gray-50">歸零重計</button>
+            <h5 class="text-sm font-black text-rose-950">📊 戰隊與積分控制（新增隊伍、加減分，手機即時同步）</h5>
+            <button onclick="resetScores()" class="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-bold text-gray-600 hover:bg-gray-50">全部歸零</button>
           </div>
-          <div class="mt-3 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-            <div class="rounded-xl border-2 border-red-200 bg-white p-3 text-center">
-              <div class="text-xs font-black text-xmas-red">🔴 伯利恆紅隊</div>
-              <div id="admin-score-red" class="my-1.5 text-2xl font-black text-gray-900">0</div>
-              <div class="flex justify-center gap-1.5">
-                <button onclick="updateScore('red', -10)" class="rounded-lg bg-white px-2.5 py-1 text-xs font-black text-gray-700 ring-1 ring-gray-200">-10</button>
-                <button onclick="updateScore('red', 10)" class="rounded-lg bg-xmas-red px-2.5 py-1 text-xs font-black text-white">+10</button>
-              </div>
+          <div class="mt-3 flex flex-wrap items-end gap-2 rounded-xl border border-rose-200 bg-white p-3">
+            <div class="min-w-[9rem] flex-1">
+              <label class="block text-[11px] font-black text-gray-700">新增隊伍名稱</label>
+              <input id="new-team-name" type="text" maxlength="12" placeholder="例如：以馬內利紫隊" class="mt-1 w-full rounded-lg border border-gray-300 px-2.5 py-2 text-sm font-bold focus:border-xmas-red focus:outline-none" />
             </div>
-            <div class="rounded-xl border-2 border-emerald-200 bg-white p-3 text-center">
-              <div class="text-xs font-black text-xmas-green">🟢 橄欖山綠隊</div>
-              <div id="admin-score-green" class="my-1.5 text-2xl font-black text-gray-900">0</div>
-              <div class="flex justify-center gap-1.5">
-                <button onclick="updateScore('green', -10)" class="rounded-lg bg-white px-2.5 py-1 text-xs font-black text-gray-700 ring-1 ring-gray-200">-10</button>
-                <button onclick="updateScore('green', 10)" class="rounded-lg bg-xmas-green px-2.5 py-1 text-xs font-black text-white">+10</button>
-              </div>
+            <div>
+              <label class="block text-[11px] font-black text-gray-700">顏色</label>
+              <select id="new-team-color" class="mt-1 rounded-lg border border-gray-300 px-2 py-2 text-sm font-bold"></select>
             </div>
-            <div class="rounded-xl border-2 border-amber-200 bg-white p-3 text-center">
-              <div class="text-xs font-black text-amber-700">🟡 晨星燦金隊</div>
-              <div id="admin-score-gold" class="my-1.5 text-2xl font-black text-gray-900">0</div>
-              <div class="flex justify-center gap-1.5">
-                <button onclick="updateScore('gold', -10)" class="rounded-lg bg-white px-2.5 py-1 text-xs font-black text-gray-700 ring-1 ring-gray-200">-10</button>
-                <button onclick="updateScore('gold', 10)" class="rounded-lg bg-amber-500 px-2.5 py-1 text-xs font-black text-white">+10</button>
-              </div>
-            </div>
-            <div class="rounded-xl border-2 border-sky-200 bg-white p-3 text-center">
-              <div class="text-xs font-black text-sky-800">🔵 加利利藍隊</div>
-              <div id="admin-score-blue" class="my-1.5 text-2xl font-black text-gray-900">0</div>
-              <div class="flex justify-center gap-1.5">
-                <button onclick="updateScore('blue', -10)" class="rounded-lg bg-white px-2.5 py-1 text-xs font-black text-gray-700 ring-1 ring-gray-200">-10</button>
-                <button onclick="updateScore('blue', 10)" class="rounded-lg bg-sky-600 px-2.5 py-1 text-xs font-black text-white">+10</button>
-              </div>
-            </div>
+            <button onclick="scoreAddTeam()" class="rounded-xl bg-xmas-red px-4 py-2 text-sm font-black text-white shadow hover:bg-xmas-darkred">＋ 新增隊伍</button>
           </div>
+          <div id="admin-score-list" class="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2"></div>
+          <p id="score-sync-status" class="mt-2 text-[11px] font-bold text-rose-950"></p>
         </div>
 
         <!-- 區塊 E：上午禮拜 PPT 投影片批量上傳（支援圖片集替換並同步大螢幕） -->
@@ -1591,7 +1550,7 @@
         renderNotices();
         renderStickyAdmin();
       } else if (type === 'SCORE_UPDATE') {
-        teamScores = JSON.parse(localStorage.getItem(SCORE_KEY) || '{"red":0,"green":0,"gold":0,"blue":0}');
+        loadScoreboard();
         renderScores();
       } else if (type === 'SNOW_UPDATE') {
         loadSnowSettingsFromStorage();
@@ -2491,6 +2450,7 @@
         if (live.serverNow) window.__srvOffset = Number(live.serverNow) - Date.now();
         applySystemInfoFromServer(live.systemInfo);
         applyLiveNotices(live.notices, live.latestNoticeId, initial);
+        applyScoreboardFromServer(live.scoreboard);
         applyStickyFromServer(live.sticky);
         updateWelcomeStatus(`已連線・${nowHMS()} 更新`);
       } finally {
@@ -3644,39 +3604,250 @@
       showToast('已更新並即時同步該場次出賽人數公告！');
     }
 
-    const SCORE_KEY = 'xmas2026_team_scores';
-    let teamScores = JSON.parse(localStorage.getItem(SCORE_KEY) || '{"red":0,"green":0,"gold":0,"blue":0}');
+    const SCORE_KEY = 'xmas2026_team_scores'; // 舊版固定四隊（僅用來搬移舊資料）
+    const SCOREBOARD_KEY = 'xmas2026_scoreboard';
+    const SCORE_PALETTE = {
+      red: { label: '紅', emoji: '🔴', text: '#B91C1C', border: '#FECACA', bg: '#FEF2F2' },
+      green: { label: '綠', emoji: '🟢', text: '#166534', border: '#A7F3D0', bg: '#ECFDF5' },
+      gold: { label: '金', emoji: '🟡', text: '#B45309', border: '#FDE68A', bg: '#FFFBEB' },
+      blue: { label: '藍', emoji: '🔵', text: '#075985', border: '#BAE6FD', bg: '#F0F9FF' },
+      purple: { label: '紫', emoji: '🟣', text: '#6B21A8', border: '#E9D5FF', bg: '#FAF5FF' },
+      pink: { label: '粉', emoji: '🌸', text: '#BE185D', border: '#FBCFE8', bg: '#FDF2F8' },
+      orange: { label: '橘', emoji: '🟠', text: '#C2410C', border: '#FED7AA', bg: '#FFF7ED' },
+      teal: { label: '青', emoji: '🔷', text: '#0F766E', border: '#99F6E4', bg: '#F0FDFA' },
+      gray: { label: '灰', emoji: '⚪', text: '#374151', border: '#D1D5DB', bg: '#F9FAFB' }
+    };
+    const MAX_TEAMS = 20;
 
-    function renderScores() {
-      ['red', 'green', 'gold', 'blue'].forEach(team => {
-        const el = document.getElementById('score-' + team);
-        if (el) el.textContent = teamScores[team] || 0;
-        const adminEl = document.getElementById('admin-score-' + team);
-        if (adminEl) adminEl.textContent = teamScores[team] || 0;
-      });
+    function defaultScoreboard() {
+      return {
+        teams: [
+          { id: 'red', name: '伯利恆紅隊', color: 'red', score: 0 },
+          { id: 'green', name: '橄欖山綠隊', color: 'green', score: 0 },
+          { id: 'gold', name: '晨星燦金隊', color: 'gold', score: 0 },
+          { id: 'blue', name: '加利利藍隊', color: 'blue', score: 0 }
+        ],
+        updatedAt: ''
+      };
     }
 
-    function updateScore(team, delta) {
-      if (!isAdminAuthorized) {
-        showToast('⚠️ 僅管理員可調整積分');
-        return;
+    function loadScoreboardFromStorage() {
+      try {
+        const sb = JSON.parse(localStorage.getItem(SCOREBOARD_KEY) || 'null');
+        if (sb && Array.isArray(sb.teams) && sb.teams.length) return sb;
+      } catch (e) {}
+      // 搬移舊版四隊分數
+      const base = defaultScoreboard();
+      try {
+        const old = JSON.parse(localStorage.getItem(SCORE_KEY) || 'null');
+        if (old) base.teams.forEach(t => (t.score = Number(old[t.id]) || 0));
+      } catch (e) {}
+      return base;
+    }
+
+    let scoreboard = loadScoreboardFromStorage();
+    let scoreDirty = false;
+    let scoreBusy = false;
+    let scorePushTimer = null;
+
+    function loadScoreboard() {
+      scoreboard = loadScoreboardFromStorage();
+    }
+
+    function scoreColor(key) {
+      return SCORE_PALETTE[key] || SCORE_PALETTE.gray;
+    }
+
+    function setScoreStatus(msg) {
+      const el = document.getElementById('score-sync-status');
+      if (el) el.textContent = msg;
+    }
+
+    function renderScores() {
+      // 前台看板：依分數由高到低排序，前三名且有分數者顯示名次
+      const grid = document.getElementById('score-board-grid');
+      if (grid) {
+        const teams = scoreboard.teams.map((t, i) => ({ ...t, i }));
+        const sorted = teams.slice().sort((a, b) => b.score - a.score || a.i - b.i);
+        grid.innerHTML = sorted
+          .map(t => {
+            const c = scoreColor(t.color);
+            const rank = 1 + teams.filter(x => x.score > t.score).length;
+            const medal = t.score > 0 && rank <= 3 ? ['🥇 第 1 名', '🥈 第 2 名', '🥉 第 3 名'][rank - 1] : '';
+            return `<div class="rounded-2xl border-2 p-3.5 text-center" style="border-color:${c.border};background:${c.bg}">
+              <div class="text-xs font-black" style="color:${c.text}">${c.emoji} ${escapeHtml(t.name)}</div>
+              <div class="my-2 text-3xl font-black text-gray-900">${t.score}</div>
+              <div class="h-4 text-[11px] font-black" style="color:${c.text}">${medal}</div>
+            </div>`;
+          })
+          .join('');
       }
-      teamScores[team] = Math.max(0, (teamScores[team] || 0) + delta);
-      localStorage.setItem(SCORE_KEY, JSON.stringify(teamScores));
+      renderScoreAdmin();
+    }
+
+    function renderScoreAdmin() {
+      const sel = document.getElementById('new-team-color');
+      if (sel && !sel.options.length) {
+        sel.innerHTML = Object.entries(SCORE_PALETTE).map(([k, c]) => `<option value="${k}">${c.emoji} ${c.label}</option>`).join('');
+      }
+      const box = document.getElementById('admin-score-list');
+      if (!box) return;
+      box.innerHTML = scoreboard.teams
+        .map(t => {
+          const c = scoreColor(t.color);
+          const id = escapeAttr(t.id);
+          return `<div class="rounded-xl border-2 bg-white p-3" style="border-color:${c.border}">
+            <div class="flex items-center justify-between gap-2">
+              <div class="min-w-0 truncate text-sm font-black" style="color:${c.text}">${c.emoji} ${escapeHtml(t.name)}</div>
+              <div class="flex shrink-0 gap-1">
+                <button onclick="scoreRename('${id}')" class="rounded-md bg-gray-100 px-2 py-0.5 text-[11px] font-bold text-gray-600 hover:bg-gray-200">改名</button>
+                <button onclick="scoreRemove('${id}')" class="rounded-md bg-red-50 px-2 py-0.5 text-[11px] font-bold text-xmas-red hover:bg-red-100">刪除</button>
+              </div>
+            </div>
+            <div class="my-1.5 text-center text-3xl font-black text-gray-900">${t.score}</div>
+            <div class="flex justify-center gap-1.5">
+              ${[-10, -5, 5, 10]
+                .map(d => `<button onclick="updateScore('${id}', ${d})" class="rounded-lg px-2.5 py-1 text-xs font-black ${d > 0 ? 'bg-xmas-red text-white' : 'bg-white text-gray-700 ring-1 ring-gray-200'}">${d > 0 ? '+' : ''}${d}</button>`)
+                .join('')}
+            </div>
+            <div class="mt-2 flex items-center gap-1.5">
+              <input id="score-custom-${id}" type="number" inputmode="numeric" min="1" placeholder="自訂分數" class="min-w-0 flex-1 rounded-lg border border-gray-300 px-2 py-1.5 text-sm font-bold focus:border-xmas-red focus:outline-none" />
+              <button onclick="scoreCustom('${id}', 1)" class="shrink-0 rounded-lg bg-xmas-green px-2.5 py-1.5 text-xs font-black text-white">加分</button>
+              <button onclick="scoreCustom('${id}', -1)" class="shrink-0 rounded-lg bg-gray-700 px-2.5 py-1.5 text-xs font-black text-white">扣分</button>
+            </div>
+          </div>`;
+        })
+        .join('');
+    }
+
+    function requireScoreAdmin() {
+      if (!isAdminAuthorized) {
+        showToast('⚠️ 僅管理員可調整隊伍與積分');
+        return false;
+      }
+      return true;
+    }
+
+    // 本機立即生效，稍後（0.4 秒內合併多次點擊）統一送到後端
+    function commitScoreboard() {
+      scoreboard.updatedAt = new Date().toISOString();
+      localStorage.setItem(SCOREBOARD_KEY, JSON.stringify(scoreboard));
       renderScores();
       broadcastSync('SCORE_UPDATE', {});
+      scoreDirty = true;
+      setScoreStatus(API_URL ? '⏳ 同步中…' : '⚠️ 尚未設定 API_URL：只有此瀏覽器看得到，手機收不到');
+      clearTimeout(scorePushTimer);
+      scorePushTimer = setTimeout(pushScoreboard, 400);
+    }
+
+    async function pushScoreboard() {
+      if (!API_URL) {
+        scoreDirty = false;
+        return;
+      }
+      if (scoreBusy) {
+        scorePushTimer = setTimeout(pushScoreboard, 300);
+        return;
+      }
+      const code = sessionStorage.getItem(ADMIN_CODE_SESSION_KEY);
+      if (!code) {
+        setScoreStatus('⚠️ 找不到管理員驗證資訊，請鎖定後重新登入');
+        return;
+      }
+      scoreBusy = true;
+      const snapshot = JSON.stringify(scoreboard.teams);
+      const res = await apiPost({ action: 'setScoreboard', adminPasscode: code, teams: scoreboard.teams });
+      scoreBusy = false;
+      if (res && res.ok) {
+        if (JSON.stringify(scoreboard.teams) === snapshot) scoreDirty = false;
+        setScoreStatus(`✅ 已同步到手機（${nowHMS()}）`);
+      } else {
+        setScoreStatus('❌ 同步失敗：' + syncErrText(res) + '（5 秒後自動重試）');
+        clearTimeout(scorePushTimer);
+        scorePushTimer = setTimeout(pushScoreboard, 5000);
+      }
+    }
+
+    // 後端 → 本機（管理員有尚未送出的修改時略過，避免被舊資料蓋回）
+    function applyScoreboardFromServer(sb) {
+      if (!sb || !Array.isArray(sb.teams) || !sb.teams.length || scoreBusy || scoreDirty) return;
+      if (JSON.stringify(sb.teams) === JSON.stringify(scoreboard.teams)) return;
+      scoreboard = { teams: sb.teams, updatedAt: String(sb.updatedAt || '') };
+      localStorage.setItem(SCOREBOARD_KEY, JSON.stringify(scoreboard));
+      renderScores();
+    }
+
+    function updateScore(id, delta) {
+      if (!requireScoreAdmin()) return;
+      const t = scoreboard.teams.find(x => x.id === id);
+      if (!t) return;
+      t.score = Math.min(99999, Math.max(0, (Number(t.score) || 0) + delta));
+      commitScoreboard();
+    }
+
+    function scoreCustom(id, sign) {
+      if (!requireScoreAdmin()) return;
+      const input = document.getElementById('score-custom-' + id);
+      const v = Math.floor(Math.abs(Number(input && input.value)));
+      if (!v) {
+        showToast('請先輸入要加／扣的分數');
+        return;
+      }
+      updateScore(id, sign * v);
+    }
+
+    function scoreAddTeam() {
+      if (!requireScoreAdmin()) return;
+      const nameEl = document.getElementById('new-team-name');
+      const name = nameEl.value.trim().slice(0, 12);
+      if (!name) {
+        showToast('請輸入隊伍名稱');
+        return;
+      }
+      if (scoreboard.teams.length >= MAX_TEAMS) {
+        showToast(`最多 ${MAX_TEAMS} 隊`);
+        return;
+      }
+      if (scoreboard.teams.some(t => t.name === name)) {
+        showToast('已有同名隊伍，請換一個名稱');
+        return;
+      }
+      const color = document.getElementById('new-team-color').value || 'gray';
+      scoreboard.teams.push({ id: 't' + Date.now().toString(36) + Math.floor(Math.random() * 100), name, color, score: 0 });
+      nameEl.value = '';
+      commitScoreboard();
+      showToast(`已新增「${name}」`);
+    }
+
+    function scoreRename(id) {
+      if (!requireScoreAdmin()) return;
+      const t = scoreboard.teams.find(x => x.id === id);
+      if (!t) return;
+      const name = (prompt('隊伍新名稱（最多 12 字）', t.name) || '').trim().slice(0, 12);
+      if (!name || name === t.name) return;
+      t.name = name;
+      commitScoreboard();
+    }
+
+    function scoreRemove(id) {
+      if (!requireScoreAdmin()) return;
+      const t = scoreboard.teams.find(x => x.id === id);
+      if (!t) return;
+      if (scoreboard.teams.length <= 1) {
+        showToast('至少要保留一支隊伍');
+        return;
+      }
+      if (!confirm(`確定刪除「${t.name}」？目前 ${t.score} 分也會一起移除。`)) return;
+      scoreboard.teams = scoreboard.teams.filter(x => x.id !== id);
+      commitScoreboard();
     }
 
     function resetScores() {
-      if (!isAdminAuthorized) {
-        showToast('⚠️ 僅管理員可歸零積分');
-        return;
-      }
-      teamScores = { red: 0, green: 0, gold: 0, blue: 0 };
-      localStorage.setItem(SCORE_KEY, JSON.stringify(teamScores));
-      renderScores();
-      broadcastSync('SCORE_UPDATE', {});
-      showToast('四隊積分已歸零');
+      if (!requireScoreAdmin()) return;
+      if (!confirm('確定把所有隊伍的分數歸零？（隊伍會保留）')) return;
+      scoreboard.teams.forEach(t => (t.score = 0));
+      commitScoreboard();
+      showToast('所有隊伍積分已歸零');
     }
 
     /* ==================== 9. 心得分享與感動（先審後上雙軌循環彈幕牆） ==================== */
@@ -4034,6 +4205,7 @@
         'xmas2026_latest_notice_ver',
         GAME_QUOTA_KEY,
         SCORE_KEY,
+        SCOREBOARD_KEY,
         PPT_CUSTOM_SLIDES_KEY,
         PPT_SYNC_SLIDE_KEY
       ].forEach(k => localStorage.removeItem(k));
@@ -4046,7 +4218,7 @@
       selectSlide(0, true);
       loadGameQuotasFromStorage();
       selectGame(0);
-      teamScores = { red: 0, green: 0, gold: 0, blue: 0 };
+      loadScoreboard();
       renderScores();
       broadcastSync('SNOW_UPDATE', {});
       broadcastSync('STAGE_UPDATE', {});
