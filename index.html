@@ -71,6 +71,14 @@
       display: none !important;
     }
 
+    /* 手機版：分頁列改為底部固定列（拇指好按），內容與浮動視窗讓出底部空間 */
+    :root { --nav-h: 0px; }
+    @media (max-width: 639px) {
+      html:not(.welcome-mode) { --nav-h: 62px; }
+      html:not(.welcome-mode) body { padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px)); }
+      #toast-msg { bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px) + 1rem) !important; }
+    }
+
     /* 主分頁隱藏捲軸 */
     .no-scrollbar::-webkit-scrollbar {
       display: none;
@@ -299,7 +307,7 @@
   </div>
 
   <!-- 懸浮時程視窗：系統資訊開啟後，各時段時間改以此視窗呈現 -->
-  <div id="stage-float" class="fixed right-3 z-40 hidden w-[min(19rem,calc(100vw-1.5rem))]" style="bottom: calc(env(safe-area-inset-bottom, 0px) + 0.75rem)">
+  <div id="stage-float" class="fixed right-3 z-40 hidden w-[min(19rem,calc(100vw-1.5rem))]" style="bottom: calc(env(safe-area-inset-bottom, 0px) + var(--nav-h) + 0.75rem)">
     <div class="overflow-hidden rounded-2xl border-2 border-amber-300 bg-white shadow-2xl">
       <button onclick="toggleStageFloat()" class="flex w-full items-center gap-2 bg-gradient-to-r from-xmas-darkred to-xmas-red px-3 py-2 text-left text-white">
         <span>⏱</span>
@@ -315,7 +323,7 @@
   </div>
 
   <!-- 時段提醒懸浮視窗（開始前 10 分鐘與準時各提醒一次） -->
-  <div id="stage-reminder" class="fixed left-1/2 z-50 hidden w-[94%] max-w-md -translate-x-1/2 rounded-2xl border-2 border-amber-300 bg-white p-3.5 shadow-2xl" style="bottom: calc(env(safe-area-inset-bottom, 0px) + 5rem)" role="alert">
+  <div id="stage-reminder" class="fixed left-1/2 z-50 hidden w-[94%] max-w-md -translate-x-1/2 rounded-2xl border-2 border-amber-300 bg-white p-3.5 shadow-2xl" style="bottom: calc(env(safe-area-inset-bottom, 0px) + var(--nav-h) + 4.5rem)" role="alert">
     <div class="flex items-start gap-3">
       <div id="stage-reminder-icon" class="text-2xl">⏰</div>
       <div class="min-w-0 flex-1">
@@ -438,7 +446,7 @@
 
   <!-- 頁首橫幅 Hero -->
   <header class="relative overflow-hidden bg-gradient-to-br from-xmas-darkred via-xmas-red to-xmas-green text-white shadow-lg">
-    <div class="mx-auto max-w-5xl px-4 pb-7 pt-6 sm:px-6">
+    <div class="mx-auto max-w-5xl px-4 pb-4 pt-4 sm:px-6 sm:pb-7 sm:pt-6">
       <div class="flex flex-wrap items-center justify-between gap-2">
         <span class="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-bold tracking-wide text-amber-200 backdrop-blur-sm">
           🎄 2026 跨世代聖誕同樂日｜年輕人專屬數位手冊
@@ -446,37 +454,37 @@
         <!-- 大會操作按鈕已移至禮物後台 -->
       </div>
 
-      <div class="mt-4 grid grid-cols-1 gap-5 md:grid-cols-12 md:items-center">
+      <div class="mt-3 grid grid-cols-1 gap-3 sm:mt-4 sm:gap-5 md:grid-cols-12 md:items-center">
         <div class="md:col-span-7">
           <h1 data-editable class="text-2xl font-black tracking-tight sm:text-3xl md:text-4xl">
             2026 聖誕跨世代同樂日
           </h1>
-          <p data-editable class="mt-2 text-sm text-red-100 sm:text-base">
+          <p data-editable class="mt-2 hidden text-sm text-red-100 sm:block sm:text-base">
             上午雙校敬拜恩典滿滿・下午運動場跨代同樂衝刺！長輩看紙本手冊，年輕人一機掌握全場資訊。
           </p>
 
           <!-- 三場地時間地點精簡卡 -->
-          <div class="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
-            <div class="rounded-xl bg-white/10 p-2.5 backdrop-blur-sm ring-1 ring-white/15">
-              <div class="text-[11px] font-bold text-amber-300">09:00 主日禮拜</div>
-              <div data-editable class="mt-0.5 text-sm font-black">📍 羅浮國小</div>
+          <div class="mt-2.5 grid grid-cols-3 gap-1.5 sm:mt-4 sm:gap-2">
+            <div class="rounded-xl bg-white/10 p-2 backdrop-blur-sm ring-1 ring-white/15 sm:p-2.5">
+              <div class="text-[10px] font-bold text-amber-300 sm:text-[11px]">09:00 主日禮拜</div>
+              <div data-editable class="mt-0.5 text-xs font-black sm:text-sm">📍 羅浮國小</div>
             </div>
-            <div class="rounded-xl bg-white/10 p-2.5 backdrop-blur-sm ring-1 ring-white/15">
-              <div class="text-[11px] font-bold text-amber-300">09:00 兒童主日學</div>
-              <div data-editable class="mt-0.5 text-sm font-black">📍 羅浮高中</div>
+            <div class="rounded-xl bg-white/10 p-2 backdrop-blur-sm ring-1 ring-white/15 sm:p-2.5">
+              <div class="text-[10px] font-bold text-amber-300 sm:text-[11px]">09:00 兒童主日學</div>
+              <div data-editable class="mt-0.5 text-xs font-black sm:text-sm">📍 羅浮高中</div>
             </div>
-            <div class="rounded-xl bg-white/10 p-2.5 backdrop-blur-sm ring-1 ring-white/15">
-              <div class="text-[11px] font-bold text-amber-300">13:00 下午趣味競賽</div>
-              <div data-editable class="mt-0.5 text-sm font-black">📍 羅浮高中運動場</div>
+            <div class="rounded-xl bg-white/10 p-2 backdrop-blur-sm ring-1 ring-white/15 sm:p-2.5">
+              <div class="text-[10px] font-bold text-amber-300 sm:text-[11px]">13:00 下午競賽</div>
+              <div data-editable class="mt-0.5 text-xs font-black sm:text-sm">📍 運動場</div>
             </div>
           </div>
         </div>
 
         <!-- 全天智能分段倒數計時器（預設僅顯示倒數時間，操作者開放後才顯示現場階段資訊） -->
         <div class="md:col-span-5">
-          <div class="relative overflow-hidden rounded-2xl border border-amber-300/40 bg-black/30 p-4 text-center shadow-inner backdrop-blur-md">
+          <div class="relative overflow-hidden rounded-2xl border border-amber-300/40 bg-black/30 p-3 text-center shadow-inner backdrop-blur-md sm:p-4">
             <!-- 左下角精緻聖誕樹與禮物盒裝飾 SVG -->
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" class="pointer-events-none absolute -bottom-2 -left-2 h-24 w-24 opacity-90 sm:h-28 sm:w-28" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" class="pointer-events-none absolute -bottom-2 -left-2 hidden h-24 w-24 opacity-90 sm:block sm:h-28 sm:w-28" aria-hidden="true">
               <!-- 樹幹 -->
               <rect x="48" y="92" width="14" height="18" rx="2" fill="#78350F" />
               <!-- 聖誕樹三層樹冠 -->
@@ -503,7 +511,7 @@
             </svg>
 
             <!-- 右下角雙層聖誕禮物盒與雪花點綴 SVG -->
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" class="pointer-events-none absolute -bottom-1 -right-1 h-20 w-20 opacity-90 sm:h-24 sm:w-24" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" class="pointer-events-none absolute -bottom-1 -right-1 hidden h-20 w-20 opacity-90 sm:block sm:h-24 sm:w-24" aria-hidden="true">
               <!-- 後方金色禮物盒 -->
               <rect x="44" y="46" width="34" height="34" rx="4" fill="#D97706" />
               <rect x="59" y="46" width="5" height="34" fill="#FEF08A" />
@@ -601,55 +609,39 @@
   </section>
 
   <!-- 黏性主分頁導覽列 (重要布達公告置頂第一個) -->
-  <nav id="main-nav" class="sticky top-0 z-30 border-b border-amber-200/80 bg-xmas-cream/95 shadow-sm backdrop-blur-md">
-    <div class="mx-auto max-w-5xl px-2 sm:px-6">
-      <div id="main-tabs" class="no-scrollbar flex items-center gap-1.5 overflow-x-auto py-2.5">
-        <button
-          data-tab="notices"
-          onclick="switchMainTab('notices')"
-          class="main-tab-btn flex shrink-0 items-center gap-1.5 rounded-xl bg-xmas-red px-3.5 py-2 text-xs font-black text-white shadow-sm transition sm:text-sm"
-        >
-          <span>📢 重要布達公告</span>
-          <span id="notice-badge" class="rounded-full bg-amber-300 px-1.5 py-0.5 text-[10px] font-black text-xmas-darkred">NEW</span>
+  <nav id="main-nav" class="fixed inset-x-0 bottom-0 z-30 border-t border-amber-200 bg-xmas-cream/95 shadow-[0_-4px_14px_rgba(0,0,0,0.08)] backdrop-blur-md sm:sticky sm:inset-x-auto sm:bottom-auto sm:top-0 sm:border-b sm:border-t-0 sm:shadow-sm" style="padding-bottom: env(safe-area-inset-bottom, 0px)">
+    <div class="mx-auto max-w-5xl px-1.5 sm:px-6">
+      <div id="main-tabs" class="no-scrollbar flex items-stretch gap-1 py-1.5 sm:items-center sm:gap-1.5 sm:overflow-x-auto sm:py-2.5">
+        <button data-tab="notices" onclick="switchMainTab('notices')" class="main-tab-btn relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl bg-xmas-red px-1 py-1.5 font-black text-white shadow-sm transition sm:flex-none sm:flex-row sm:gap-1.5 sm:px-3.5 sm:py-2">
+          <span class="relative text-xl leading-none sm:text-sm">📢</span>
+          <span class="text-[11px] leading-tight sm:text-sm"><span class="sm:hidden">布達</span><span class="hidden sm:inline">重要布達公告</span><span id="notice-badge" class="absolute right-1 top-0.5 whitespace-nowrap rounded-full bg-amber-300 px-1 text-[9px] font-black leading-4 text-xmas-darkred sm:static sm:ml-1.5 sm:px-1.5 sm:py-0.5 sm:text-[10px] sm:leading-normal">NEW</span></span>
         </button>
-        <button
-          data-tab="timeline"
-          onclick="switchMainTab('timeline')"
-          class="main-tab-btn flex shrink-0 items-center gap-1.5 rounded-xl bg-white px-3.5 py-2 text-xs font-bold text-gray-700 ring-1 ring-gray-200 transition hover:bg-amber-50 sm:text-sm"
-        >
-          <span>📅 活動流程時間軸</span>
+        <button data-tab="timeline" onclick="switchMainTab('timeline')" class="main-tab-btn relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl bg-white px-1 py-1.5 font-bold text-gray-700 ring-1 ring-gray-200 transition hover:bg-amber-50 sm:flex-none sm:flex-row sm:gap-1.5 sm:px-3.5 sm:py-2">
+          <span class="relative text-xl leading-none sm:text-sm">📅</span>
+          <span class="text-[11px] leading-tight sm:text-sm"><span class="sm:hidden">流程</span><span class="hidden sm:inline">活動流程時間軸</span></span>
         </button>
-        <button
-          data-tab="ppt"
-          onclick="switchMainTab('ppt')"
-          class="main-tab-btn flex shrink-0 items-center gap-1.5 rounded-xl bg-white px-3.5 py-2 text-xs font-bold text-gray-700 ring-1 ring-gray-200 transition hover:bg-amber-50 sm:text-sm"
-        >
-          <span>📖 上午禮拜 PPT 資料</span>
+        <button data-tab="ppt" onclick="switchMainTab('ppt')" class="main-tab-btn relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl bg-white px-1 py-1.5 font-bold text-gray-700 ring-1 ring-gray-200 transition hover:bg-amber-50 sm:flex-none sm:flex-row sm:gap-1.5 sm:px-3.5 sm:py-2">
+          <span class="relative text-xl leading-none sm:text-sm">📖</span>
+          <span class="text-[11px] leading-tight sm:text-sm"><span class="sm:hidden">禮拜</span><span class="hidden sm:inline">上午禮拜 PPT 資料</span></span>
         </button>
-        <button
-          data-tab="games"
-          onclick="switchMainTab('games')"
-          class="main-tab-btn flex shrink-0 items-center gap-1.5 rounded-xl bg-white px-3.5 py-2 text-xs font-bold text-gray-700 ring-1 ring-gray-200 transition hover:bg-amber-50 sm:text-sm"
-        >
-          <span>🏆 下午趣味競賽</span>
+        <button data-tab="games" onclick="switchMainTab('games')" class="main-tab-btn relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl bg-white px-1 py-1.5 font-bold text-gray-700 ring-1 ring-gray-200 transition hover:bg-amber-50 sm:flex-none sm:flex-row sm:gap-1.5 sm:px-3.5 sm:py-2">
+          <span class="relative text-xl leading-none sm:text-sm">🏆</span>
+          <span class="text-[11px] leading-tight sm:text-sm"><span class="sm:hidden">競賽</span><span class="hidden sm:inline">下午趣味競賽</span></span>
         </button>
-        <button
-          data-tab="reflection"
-          onclick="switchMainTab('reflection')"
-          class="main-tab-btn flex shrink-0 items-center gap-1.5 rounded-xl bg-white px-3.5 py-2 text-xs font-bold text-gray-700 ring-1 ring-gray-200 transition hover:bg-amber-50 sm:text-sm"
-        >
-          <span>✍️ 心得分享與感動</span>
+        <button data-tab="reflection" onclick="switchMainTab('reflection')" class="main-tab-btn relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl bg-white px-1 py-1.5 font-bold text-gray-700 ring-1 ring-gray-200 transition hover:bg-amber-50 sm:flex-none sm:flex-row sm:gap-1.5 sm:px-3.5 sm:py-2">
+          <span class="relative text-xl leading-none sm:text-sm">✍️</span>
+          <span class="text-[11px] leading-tight sm:text-sm"><span class="sm:hidden">心得</span><span class="hidden sm:inline">心得分享與感動</span></span>
         </button>
       </div>
     </div>
   </nav>
 
   <!-- 大會官方快拍自動橫移展示牆 -->
-  <section id="official-marquee-section" aria-label="大會官方快拍橫移展示" class="border-b border-amber-200/70 bg-gradient-to-r from-amber-50/90 via-white to-red-50/80 py-3">
+  <section id="official-marquee-section" aria-label="大會官方快拍橫移展示" class="border-b border-amber-200/70 bg-gradient-to-r from-amber-50/90 via-white to-red-50/80 py-2 sm:py-3">
     <div class="mx-auto mb-2 flex max-w-5xl items-center justify-between px-4 sm:px-6">
       <div class="flex items-center gap-2">
         <span class="inline-flex h-2 w-2 animate-ping rounded-full bg-xmas-red"></span>
-        <span class="text-xs font-black text-xmas-darkred sm:text-sm">📸 大會官方現場快拍（自動橫移・點擊看大圖）</span>
+        <span class="text-[11px] font-black text-xmas-darkred sm:text-sm">📸 大會官方現場快拍（點擊看大圖）</span>
       </div>
     </div>
 
@@ -661,12 +653,12 @@
   </section>
 
   <!-- 主內容區 -->
-  <main class="mx-auto max-w-5xl px-4 py-6 sm:px-6">
+  <main class="mx-auto max-w-5xl px-3 py-4 sm:px-6 sm:py-6">
     <!-- ==================== 分頁 1：重要布達公告（極簡兩欄位 + 即時跨分頁推播） ==================== -->
     <section id="panel-notices" class="tab-panel space-y-5">
       <div class="rounded-2xl border border-amber-200 bg-white p-4 shadow-sm">
         <h2 class="text-lg font-black text-gray-900 sm:text-xl">📢 大會重要布達公告欄</h2>
-        <p class="mt-0.5 text-xs text-gray-500">
+        <p class="mt-0.5 hidden text-xs text-gray-500 sm:block">
           操作者新增公告時，所有使用中裝置將即時同步推播並跳出提醒；點擊任一公告卡片可展開詳細內容。
         </p>
       </div>
@@ -2721,18 +2713,24 @@
     });
 
     /* ==================== 4. 主分頁切換 ==================== */
+    const TAB_ON = 'main-tab-btn relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl bg-xmas-red px-1 py-1.5 font-black text-white shadow-sm transition sm:flex-none sm:flex-row sm:gap-1.5 sm:px-3.5 sm:py-2';
+    const TAB_OFF = 'main-tab-btn relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl bg-white px-1 py-1.5 font-bold text-gray-700 ring-1 ring-gray-200 transition hover:bg-amber-50 sm:flex-none sm:flex-row sm:gap-1.5 sm:px-3.5 sm:py-2';
     function switchMainTab(tabName) {
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
       const activePanel = document.getElementById('panel-' + tabName);
       if (activePanel) activePanel.classList.remove('hidden');
 
       document.querySelectorAll('.main-tab-btn').forEach(btn => {
-        if (btn.dataset.tab === tabName) {
-          btn.className = 'main-tab-btn flex shrink-0 items-center gap-1.5 rounded-xl bg-xmas-red px-3.5 py-2 text-xs font-black text-white shadow-sm transition sm:text-sm';
-        } else {
-          btn.className = 'main-tab-btn flex shrink-0 items-center gap-1.5 rounded-xl bg-white px-3.5 py-2 text-xs font-bold text-gray-700 ring-1 ring-gray-200 transition hover:bg-amber-50 sm:text-sm';
-        }
+        btn.className = btn.dataset.tab === tabName ? TAB_ON : TAB_OFF;
       });
+
+      // 手機：切換分頁後直接把內容頂端帶到螢幕上緣，不必再滑過標題區與照片橫幅
+      if (window.matchMedia('(max-width: 639px)').matches && !document.body.classList.contains('ppt-phone-full')) {
+        const m = document.querySelector('main');
+        if (m && m.offsetParent !== null) {
+          window.scrollTo({ top: Math.max(0, m.getBoundingClientRect().top + window.scrollY - 8), behavior: 'smooth' });
+        }
+      }
     }
 
     /* ==================== 5. 大會官方快拍橫移展示牆 ==================== */
@@ -2781,7 +2779,7 @@
           (item, idx) => `
           <div
             onclick="openLightbox(${idx % officialPhotos.length})"
-            class="group relative h-32 w-56 shrink-0 cursor-pointer overflow-hidden rounded-2xl border border-amber-200/80 bg-white shadow-sm transition hover:scale-[1.02] hover:shadow-md sm:h-36 sm:w-64"
+            class="group relative h-24 w-40 shrink-0 cursor-pointer overflow-hidden rounded-2xl border border-amber-200/80 bg-white shadow-sm transition hover:scale-[1.02] hover:shadow-md sm:h-36 sm:w-64"
           >
             <img src="${item.src}" alt="${item.caption}" class="h-full w-full object-cover" />
             <div class="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/80 via-black/20 to-transparent p-2.5">
