@@ -68,6 +68,11 @@
       display: none !important;
     }
 
+    /* 即時布達全螢幕遮罩：蓋過一切（含 PPT 全螢幕、投影模式、鎖定畫面） */
+    @keyframes urgentPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
+    .urgent-pulse { animation: urgentPulse 1.1s ease-in-out infinite; }
+    html.urgent-open, html.urgent-open body { overflow: hidden !important; }
+
     /* 鎖定畫面：紅色區塊滿版（整個螢幕高度），內容垂直置中 */
     html.welcome-mode header {
       min-height: 100vh;
@@ -297,6 +302,23 @@
   <canvas id="snow-canvas"></canvas>
 
   <!-- 即時新公告頂部緊急推播橫幅 -->
+  <!-- 即時布達全螢幕遮罩：不論目前在哪個畫面（含 PPT 全螢幕）都會蓋過一切，需按「我知道了」才關閉 -->
+  <div id="urgent-overlay" class="fixed inset-0 hidden flex-col bg-gradient-to-b from-red-800 via-xmas-red to-xmas-darkred text-white" style="z-index: 2147483000" role="alertdialog" aria-modal="true" aria-labelledby="urgent-kicker">
+    <div class="urgent-pulse pointer-events-none absolute inset-0 border-8 border-amber-300"></div>
+    <div class="relative flex-1 overflow-y-auto px-5" style="padding-top: max(1.25rem, env(safe-area-inset-top, 0px))">
+      <div class="mx-auto flex min-h-full max-w-3xl flex-col justify-center py-4">
+        <div class="text-center">
+          <span id="urgent-kicker" class="inline-block rounded-full bg-amber-300 px-4 py-1.5 text-base font-black text-xmas-darkred">🚨 大會即時布達</span>
+          <div id="urgent-meta" class="mt-2 text-sm font-bold text-amber-200"></div>
+        </div>
+        <div id="urgent-list" class="mt-5 space-y-5"></div>
+      </div>
+    </div>
+    <div class="relative px-5 pt-2" style="padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px))">
+      <button id="urgent-ack-btn" onclick="dismissUrgent()" class="mx-auto block w-full max-w-3xl rounded-2xl bg-amber-300 px-6 py-4 text-xl font-black text-xmas-darkred shadow-xl transition active:scale-[0.98]" style="min-height: 56px">我知道了</button>
+    </div>
+  </div>
+
   <div id="live-notice-banner" class="fixed left-1/2 top-3 z-50 hidden w-[94%] max-w-xl -translate-x-1/2 rounded-2xl border-2 border-amber-300 bg-gradient-to-r from-xmas-darkred to-xmas-red p-3.5 text-white shadow-2xl">
     <div class="flex items-start justify-between gap-3">
       <div>
@@ -1222,6 +1244,11 @@
               🚀 立即發布並同步推播至所有畫面
             </button>
           </div>
+          <div class="mt-2">
+            <button onclick="previewUrgent()" class="w-full rounded-xl border border-red-300 bg-white px-3 py-2 text-xs font-black text-xmas-darkred hover:bg-red-50">
+              👁 預覽全螢幕遮罩（只在你自己的螢幕顯示，不會推播）
+            </button>
+          </div>
           <div class="mt-3 border-t border-red-200/70 pt-3">
             <div class="text-xs font-black text-xmas-darkred">🗑️ 已發布的即時公告（可個別刪除，手機約 6 秒內同步移除）</div>
             <div id="live-admin-list" class="mt-2 space-y-1.5"></div>
@@ -1548,10 +1575,8 @@
         renderNotices();
         const latest = getAllNotices()[0];
         if (latest) {
-          document.getElementById('live-banner-title').textContent = latest.title;
-          document.getElementById('live-banner-body').textContent = latest.body;
-          document.getElementById('live-notice-banner').classList.remove('hidden');
           syncModalWithLatestNotice(latest);
+          showUrgentIfNeeded();
         }
       } else if (type === 'DANMAKU_UPDATE') {
         renderDanmakuWall();
@@ -2308,6 +2333,137 @@
       resetStickyForm();
     }
 
+    /* ==================== 即時布達：全螢幕遮罩 ==================== */
+    const URGENT_ACK_KEY = 'xmas2026_urgent_ack_at';
+    const URGENT_FRESH_MS = 30 * 60 * 1000;
+    let urgentShown = [];
+    let urgentPreview = false;
+    let urgentAutoTimer = null;
+    window.__srvOffset = 0; // 後端時間 − 本機時間：用後端時間算公告新舊，手機時鐘不準也不受影響
+
+    function idTs(id) {
+      const n = Number(String(id || '').replace(/^\D+/, ''));
+      return Number.isFinite(n) ? n : 0;
+    }
+    function noticeAt(n) {
+      return Number(n && n.at) || idTs(n && n.id);
+    }
+    function isUrgentVisible() {
+      const el = document.getElementById('urgent-overlay');
+      return !!el && !el.classList.contains('hidden');
+    }
+
+    // 尚未按過「我知道了」、且在 30 分鐘內發布的即時公告（新到的在最前）
+    function getUrgentFreshList() {
+      const ack = Number(localStorage.getItem(URGENT_ACK_KEY) || 0);
+      const now = Date.now() + (window.__srvOffset || 0);
+      return getLiveNotices()
+        .filter(n => {
+          const at = noticeAt(n);
+          return at > ack && now - at < URGENT_FRESH_MS;
+        })
+        .sort((a, b) => noticeAt(b) - noticeAt(a));
+    }
+
+    function showUrgentIfNeeded(extra) {
+      if (urgentPreview) return;
+      const existing = new Set(getLiveNotices().map(n => n.id));
+      const fresh = getUrgentFreshList();
+      if (isUrgentVisible()) {
+        // 已在顯示：合併新到的；若顯示中的公告全被管理員刪除，就自動收起
+        const keep = urgentShown.filter(n => existing.has(n.id));
+        const map = new Map();
+        [...fresh, ...keep].forEach(n => map.set(n.id, n));
+        const merged = [...map.values()].sort((a, b) => noticeAt(b) - noticeAt(a));
+        if (!merged.length) return hideUrgent();
+        if (merged.map(n => n.id).join() !== urgentShown.map(n => n.id).join()) renderUrgent(merged, false);
+        return;
+      }
+      const list = extra && extra.length ? extra : fresh;
+      if (list.length) renderUrgent(list, false);
+    }
+
+    function renderUrgent(list, preview) {
+      urgentShown = list.slice();
+      urgentPreview = !!preview;
+      const receiver = isReceiverMode();
+      const box = document.getElementById('urgent-list');
+      const titleSize = receiver ? 'clamp(3rem, 6vw, 8rem)' : 'clamp(2.1rem, 10vw, 4.5rem)';
+      const bodySize = receiver ? 'clamp(1.8rem, 3.4vw, 4.5rem)' : 'clamp(1.35rem, 6vw, 2.4rem)';
+      box.innerHTML = list
+        .map((n, i) =>
+          i === 0
+            ? `<div class="text-center">
+                <span class="inline-block rounded-md bg-white/20 px-3 py-1 text-sm font-black text-amber-200">${escapeHtml(n.tag || '即時新布達')}${n.time ? '・' + escapeHtml(n.time) : ''}</span>
+                <h2 class="mt-3 font-black" style="font-size:${titleSize};line-height:1.15">${escapeHtml(n.title)}</h2>
+                <p class="mt-4 whitespace-pre-wrap font-bold text-red-50" style="font-size:${bodySize};line-height:1.5">${escapeHtml(n.body)}</p>
+              </div>`
+            : `<div class="rounded-2xl bg-black/25 p-4">
+                <span class="text-xs font-black text-amber-200">${escapeHtml(n.tag || '即時新布達')}${n.time ? '・' + escapeHtml(n.time) : ''}</span>
+                <h3 class="mt-1 text-xl font-black">${escapeHtml(n.title)}</h3>
+                <p class="mt-1 whitespace-pre-wrap text-base font-bold text-red-100">${escapeHtml(n.body)}</p>
+              </div>`
+        )
+        .join('');
+      const meta = document.getElementById('urgent-meta');
+      meta.textContent = preview
+        ? '（預覽：只有你看得到，不會推播給任何人）'
+        : receiver
+        ? '（投影畫面：45 秒後自動關閉）'
+        : list.length > 1
+        ? `共 ${list.length} 則最新布達，請往下看完`
+        : '';
+      document.getElementById('urgent-ack-btn').textContent = preview ? '關閉預覽' : '我知道了';
+      const el = document.getElementById('urgent-overlay');
+      el.classList.remove('hidden');
+      el.classList.add('flex');
+      document.documentElement.classList.add('urgent-open');
+      el.scrollTop = 0;
+      try {
+        if (navigator.vibrate) navigator.vibrate([300, 150, 300, 150, 600]);
+      } catch (e) {}
+      clearTimeout(urgentAutoTimer);
+      if (receiver && !preview) urgentAutoTimer = setTimeout(dismissUrgent, 45000);
+    }
+
+    function hideUrgent() {
+      clearTimeout(urgentAutoTimer);
+      const el = document.getElementById('urgent-overlay');
+      if (el) {
+        el.classList.add('hidden');
+        el.classList.remove('flex');
+      }
+      document.documentElement.classList.remove('urgent-open');
+      urgentShown = [];
+      urgentPreview = false;
+    }
+
+    function dismissUrgent() {
+      if (!urgentPreview && urgentShown.length) {
+        const maxAt = Math.max(...urgentShown.map(noticeAt));
+        const prev = Number(localStorage.getItem(URGENT_ACK_KEY) || 0);
+        localStorage.setItem(URGENT_ACK_KEY, String(Math.max(prev, maxAt)));
+        // 已在遮罩看過，就視同已讀：不再重複跳出「重要布達」確認視窗
+        localStorage.setItem(NOTICE_STORAGE_KEY, getCurrentNoticeVersion());
+        const modal = document.getElementById('mandatory-notice-modal');
+        if (modal) {
+          modal.classList.add('hidden');
+          modal.classList.remove('flex');
+        }
+        const badge = document.getElementById('notice-badge');
+        if (badge) badge.textContent = '已讀';
+        dismissLiveBanner();
+      }
+      hideUrgent();
+    }
+
+    function previewUrgent() {
+      const title = document.getElementById('admin-notice-title').value.trim() || '下午競賽提前 10 分鐘集合';
+      const body = document.getElementById('admin-notice-body').value.trim() || '請各隊於 12:50 前到羅浮高中運動場集合，謝謝大家配合！';
+      const tag = document.getElementById('admin-notice-tag').value.trim() || '即時新布達';
+      renderUrgent([{ id: 'preview', tag, title, body, time: '預覽' }], true);
+    }
+
     /* ==================== 單一輪詢入口：即時公告＋常駐公告＋系統資訊開關 ==================== */
     const LIVE_VER_KEY = 'xmas2026_latest_notice_ver';
     let liveNoticeBusy = false;
@@ -2332,6 +2488,7 @@
           return;
         }
         const live = res.live;
+        if (live.serverNow) window.__srvOffset = Number(live.serverNow) - Date.now();
         applySystemInfoFromServer(live.systemInfo);
         applyLiveNotices(live.notices, live.latestNoticeId, initial);
         applyStickyFromServer(live.sticky);
@@ -2367,6 +2524,7 @@
         title: String(n.title || ''),
         body: String(n.body || ''),
         time: String(n.time || ''),
+        at: Number(n.at) || 0,
         color: 'red',
         expanded: true
       }));
@@ -2378,11 +2536,10 @@
       if (latestId && latestId !== localStorage.getItem(LIVE_VER_KEY)) {
         localStorage.setItem(LIVE_VER_KEY, latestId);
         const latest = norm.find(n => n.id === latestId) || norm[0];
-        if (latest) {
-          syncModalWithLatestNotice(latest);
-          if (!initial && !isWelcomeMode() && !isReceiverMode()) showLiveBanner(latest);
-        }
+        if (latest) syncModalWithLatestNotice(latest);
       }
+      // 不論目前在哪個畫面（含鎖定畫面、PPT 全螢幕、投影）都跳出全螢幕遮罩
+      showUrgentIfNeeded();
     }
 
     function applyStickyFromServer(st) {
@@ -2499,6 +2656,7 @@
         if (res.notice) {
           newNotice.id = res.notice.id || newNotice.id;
           newNotice.time = res.notice.time || newNotice.time;
+          newNotice.at = Number(res.notice.at) || 0;
         }
       }
 
@@ -2514,6 +2672,9 @@
       renderLiveAdminList();
       syncModalWithLatestNotice(newNotice);
       broadcastSync('NEW_NOTICE', newNotice);
+      // 管理員自己的畫面也跳出同樣的全螢幕遮罩，確認會眾看到的就是這個
+      urgentPreview = false;
+      showUrgentIfNeeded([newNotice]);
       showToast(API_URL ? '🚀 已發布，所有手機約 6 秒內會收到推播' : '🚀 已發布（尚未設定 API_URL，只有本機看得到）');
     }
 
@@ -2620,6 +2781,7 @@
     }
 
     function checkMandatoryNotice() {
+      if (isUrgentVisible()) return;
       const readVer = localStorage.getItem(NOTICE_STORAGE_KEY);
       const currentVer = getCurrentNoticeVersion();
       if (readVer !== currentVer) {
