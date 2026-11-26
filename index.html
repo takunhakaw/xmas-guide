@@ -67,8 +67,17 @@
     html.welcome-mode main {
       display: none !important;
     }
-    html:not(.welcome-mode) #welcome-panel {
-      display: none !important;
+
+    /* 鎖定畫面：紅色區塊滿版（整個螢幕高度），內容垂直置中 */
+    html.welcome-mode header {
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    html.welcome-mode header > div {
+      width: 100%;
     }
 
     /* 手機版：分頁列改為底部固定列（拇指好按），內容與浮動視窗讓出底部空間 */
@@ -413,7 +422,7 @@
           </span>
           <button onclick="closeAdminAuthModal()" class="text-sm font-bold text-white/80 hover:text-white">✕</button>
         </div>
-        <h3 class="mt-1.5 text-lg font-black">開啟 🎁 聖誕禮物後台</h3>
+        <h3 class="mt-1.5 text-lg font-black">開啟 🎅 聖誕老人的工作室</h3>
         <p class="mt-0.5 text-xs text-red-100">僅限大會籌備同工、音控與活動管理者操作</p>
       </div>
       <form onsubmit="verifyAdminPasscode(event)" class="space-y-4 p-5">
@@ -446,10 +455,22 @@
 
   <!-- 頁首橫幅 Hero -->
   <header class="relative overflow-hidden bg-gradient-to-br from-xmas-darkred via-xmas-red to-xmas-green text-white shadow-lg">
+    <!-- 聖誕老人的工作室（管理後台入口）：縮小並固定在版面右上角 -->
+    <button
+      id="toggle-edit-btn"
+      onclick="toggleEditMode()"
+      aria-label="開啟聖誕老人的工作室（管理後台）"
+      title="聖誕老人的工作室"
+      class="absolute right-3 top-3 z-20 inline-flex items-center gap-1 rounded-full border border-amber-300/60 bg-black/25 px-2.5 py-1 text-[11px] font-black text-amber-200 shadow backdrop-blur-sm transition hover:bg-black/40 sm:right-5 sm:top-4 sm:text-xs"
+    >
+      <span id="pending-count-pill" class="hidden absolute -right-1.5 -top-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-amber-400 px-1 text-[10px] font-black text-xmas-darkred ring-2 ring-white">0</span>
+      <span>🎅 聖誕老人的工作室</span>
+    </button>
     <div class="mx-auto max-w-5xl px-4 pb-4 pt-4 sm:px-6 sm:pb-7 sm:pt-6">
       <div class="flex flex-wrap items-center justify-between gap-2">
         <span class="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-bold tracking-wide text-amber-200 backdrop-blur-sm">
-          🎄 2026 跨世代聖誕同樂日｜年輕人專屬數位手冊
+          <span class="hidden sm:inline">🎄 2026 跨世代聖誕同樂日｜年輕人專屬數位手冊</span>
+          <span class="sm:hidden">🎄 年輕人專屬數位手冊</span>
         </span>
         <!-- 大會操作按鈕已移至禮物後台 -->
       </div>
@@ -569,44 +590,6 @@
       </div>
     </div>
   </header>
-
-  <!-- 歡迎介面：系統資訊關閉時顯示（只有倒數與地點）；開啟後自動隱藏 -->
-  <section id="welcome-panel" class="mx-auto max-w-5xl px-4 py-6 sm:px-6" aria-label="歡迎">
-    <div class="rounded-3xl border-2 border-amber-300 bg-white p-5 shadow-md sm:p-7">
-      <div class="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-3 py-1 text-xs font-black text-xmas-red">🎄 歡迎光臨</div>
-      <h2 class="mt-3 text-xl font-black text-gray-900 sm:text-2xl">2026 聖誕跨世代同樂日</h2>
-      <p class="mt-1 text-sm font-bold text-gray-600">2026 年 12 月 6 日（星期日）09:00 開始</p>
-      <p class="mt-3 rounded-xl bg-amber-50 px-3.5 py-2.5 text-xs font-bold leading-relaxed text-amber-950 ring-1 ring-amber-200">
-        完整活動手冊（重要布達、流程、上午禮拜 PPT、競賽、心得）將於活動當天由大會開放，開放後本頁會自動切換，不需要重新整理。
-      </p>
-      <h3 class="mt-5 text-sm font-black text-gray-900">📍 集合與活動地點</h3>
-      <div class="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <div class="rounded-2xl border border-amber-200 bg-amber-50/50 p-3.5">
-          <div class="text-[11px] font-black text-xmas-red">09:00 上午禮拜</div>
-          <div class="mt-0.5 text-base font-black text-gray-900">羅浮國小</div>
-          <p class="mt-1 text-xs leading-relaxed text-gray-600">成人、青年與長輩：主日禮拜</p>
-          <a href="https://www.google.com/maps/search/?api=1&query=復興區羅浮國小" target="_blank" rel="noopener" class="mt-2.5 inline-flex items-center gap-1 rounded-lg bg-white px-2.5 py-1.5 text-xs font-black text-xmas-darkred ring-1 ring-amber-300 hover:bg-amber-100">📍 在地圖開啟</a>
-        </div>
-        <div class="rounded-2xl border border-amber-200 bg-amber-50/50 p-3.5">
-          <div class="text-[11px] font-black text-xmas-red">09:00 兒童主日學</div>
-          <div class="mt-0.5 text-base font-black text-gray-900">羅浮高中</div>
-          <p class="mt-1 text-xs leading-relaxed text-gray-600">國小以下兒童與兒主同工：直接前往羅浮高中教室報到</p>
-          <a href="https://www.google.com/maps/search/?api=1&query=復興區羅浮高中" target="_blank" rel="noopener" class="mt-2.5 inline-flex items-center gap-1 rounded-lg bg-white px-2.5 py-1.5 text-xs font-black text-xmas-darkred ring-1 ring-amber-300 hover:bg-amber-100">📍 在地圖開啟</a>
-        </div>
-        <div class="rounded-2xl border border-amber-200 bg-amber-50/50 p-3.5">
-          <div class="text-[11px] font-black text-xmas-red">13:00 下午競賽</div>
-          <div class="mt-0.5 text-base font-black text-gray-900">羅浮高中運動場</div>
-          <p class="mt-1 text-xs leading-relaxed text-gray-600">跨世代趣味競賽，請著運動鞋與保暖層次穿搭</p>
-          <a href="https://www.google.com/maps/search/?api=1&query=復興區羅浮高中運動場" target="_blank" rel="noopener" class="mt-2.5 inline-flex items-center gap-1 rounded-lg bg-white px-2.5 py-1.5 text-xs font-black text-xmas-darkred ring-1 ring-amber-300 hover:bg-amber-100">📍 在地圖開啟</a>
-        </div>
-      </div>
-      <p class="mt-3 text-xs font-bold text-xmas-darkred">⚠️ 09:00 兩校同步開始，請勿走錯校門。</p>
-      <div class="mt-4 flex flex-wrap items-center gap-2 border-t border-gray-100 pt-3">
-        <button onclick="pollLiveState()" class="rounded-lg bg-gray-100 px-3 py-1.5 text-xs font-black text-gray-700 hover:bg-gray-200">🔄 立即檢查是否已開放</button>
-        <span id="welcome-sync-status" class="text-[11px] font-bold text-gray-500"></span>
-      </div>
-    </div>
-  </section>
 
   <!-- 黏性主分頁導覽列 (重要布達公告置頂第一個) -->
   <nav id="main-nav" class="fixed inset-x-0 bottom-0 z-30 border-t border-amber-200 bg-xmas-cream/95 shadow-[0_-4px_14px_rgba(0,0,0,0.08)] backdrop-blur-md sm:sticky sm:inset-x-auto sm:bottom-auto sm:top-0 sm:border-b sm:border-t-0 sm:shadow-sm" style="padding-bottom: env(safe-area-inset-bottom, 0px)">
@@ -1102,26 +1085,6 @@
   <footer class="mt-10 border-t border-amber-200/80 bg-xmas-warm/60 py-8">
     <div class="mx-auto max-w-5xl px-4 text-center sm:px-6">
       <p class="text-xs font-bold text-gray-600">2026 聖誕跨世代同樂日籌備團隊｜願平安與喜樂常與你同在</p>
-
-      <!-- 🎁 聖誕禮物盒包裝後台開關 -->
-      <div class="mt-4 flex justify-center">
-        <button
-          id="toggle-edit-btn"
-          onclick="toggleEditMode()"
-          aria-label="開啟聖誕禮物後台設定"
-          title="開啟大會禮物盒參數後台"
-          class="group relative inline-flex items-center gap-2 rounded-2xl border-2 border-amber-400 bg-gradient-to-b from-white to-amber-50 px-4 py-2.5 shadow-md transition hover:-translate-y-0.5 hover:shadow-lg"
-        >
-          <!-- 精緻聖誕禮物盒 SVG 圖示 -->
-          <span class="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-xmas-red to-xmas-darkred text-white shadow-inner">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5 text-amber-300 transition-transform group-hover:rotate-12">
-              <path d="M9.375 3a1.875 1.875 0 0 0 0 3.75h1.875v4.5H3.375A1.875 1.875 0 0 1 1.5 9.375v-.75c0-1.036.84-1.875 1.875-1.875h3.193A3.375 3.375 0 0 1 12 2.753a3.375 3.375 0 0 1 5.432 3.997h3.943c1.035 0 1.875.84 1.875 1.875v.75c0 1.036-.84 1.875-1.875 1.875H12.75v-4.5h1.875a1.875 1.875 0 1 0-1.875-1.875V6.75h-1.5V4.875C11.25 3.839 10.41 3 9.375 3ZM11.25 12.75H3v6.75a2.25 2.25 0 0 0 2.25 2.25h6v-9ZM12.75 12.75v9h6.75a2.25 2.25 0 0 0 2.25-2.25v-6.75h-9Z" />
-            </svg>
-            <span id="pending-count-pill" class="hidden absolute -right-2 -top-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-amber-400 px-1 text-[10px] font-black text-xmas-darkred ring-2 ring-white">0</span>
-          </span>
-          <span class="text-xs font-black text-amber-950">🎁 禮物後台</span>
-        </button>
-      </div>
 
       <!-- 🎁 聖誕禮物盒專屬全參數後台（開啟後顯示所有可調整參數） -->
       <div id="organizer-panel" class="mt-5 hidden space-y-6 rounded-3xl border-2 border-amber-400 bg-white p-5 text-left shadow-xl">
@@ -3828,7 +3791,7 @@
         closeAdminAuthModal();
         applyEditModeState(true);
         applySystemInfoView();
-        showToast('🔓 管理員權限驗證通過，已開啟禮物後台！');
+        showToast('🔓 管理員權限驗證通過，已開啟聖誕老人的工作室！');
       } else {
         err?.classList.remove('hidden');
         document.getElementById('admin-passcode-input')?.select();
@@ -3862,7 +3825,7 @@
       sessionStorage.removeItem(ADMIN_CODE_SESSION_KEY);
       applyEditModeState(false);
       applySystemInfoView();
-      showToast('🔒 已鎖定禮物後台並登出管理員權限');
+      showToast('🔒 已鎖定聖誕老人的工作室並登出管理員權限');
     }
 
     function applyEditModeState(enable) {
@@ -3881,11 +3844,13 @@
       });
 
       if (labelSpan) {
-        labelSpan.textContent = isEditMode ? '🎁 收合禮物後台' : '🎁 禮物後台';
+        labelSpan.textContent = isEditMode ? '🎅 收合工作室' : '🎅 聖誕老人的工作室';
       }
       // 後台開啟時，每張公告卡片才會出現刪除鈕
       renderNotices();
       renderLiveAdminList();
+      // 入口在頁首右上角、面板在頁尾：開啟後自動帶到面板，不必自己往下找
+      if (isEditMode) setTimeout(() => panel.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
     }
 
     function toggleEditMode() {
@@ -3894,7 +3859,7 @@
         return;
       }
       applyEditModeState(!isEditMode);
-      showToast(isEditMode ? '🎁 已開啟聖誕禮物盒全參數後台' : '已收合禮物盒後台');
+      showToast(isEditMode ? '🎅 已開啟聖誕老人的工作室' : '已收合聖誕老人的工作室');
     }
 
     function resetAllSystemParams() {
@@ -3935,7 +3900,7 @@
       const orgPanel = clone.querySelector('#organizer-panel');
       if (orgPanel) orgPanel.classList.add('hidden');
       const labelSpan = clone.querySelector('#toggle-edit-btn > span:last-child');
-      if (labelSpan) labelSpan.textContent = '🎁 禮物後台';
+      if (labelSpan) labelSpan.textContent = '🎅 聖誕老人的工作室';
 
       const htmlContent = '<!DOCTYPE html>\n' + clone.outerHTML;
       const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
