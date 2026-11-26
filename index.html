@@ -37,6 +37,7 @@
       overflow-x: hidden;
     }
 
+    /* 飄雪畫布 */
     #snow-canvas {
       position: fixed;
       inset: 0;
@@ -46,6 +47,7 @@
       z-index: 40;
     }
 
+    /* 主分頁隱藏捲軸 */
     .no-scrollbar::-webkit-scrollbar {
       display: none;
     }
@@ -54,13 +56,22 @@
       scrollbar-width: none;
     }
 
+    /* 大會官方快拍與雙軌祝福彈幕橫移 Marquee */
     @keyframes marqueeScroll {
-      0% { transform: translateX(0); }
-      100% { transform: translateX(-50%); }
+      0% {
+        transform: translateX(0);
+      }
+      100% {
+        transform: translateX(-50%);
+      }
     }
     @keyframes marqueeScrollReverse {
-      0% { transform: translateX(-50%); }
-      100% { transform: translateX(0); }
+      0% {
+        transform: translateX(-50%);
+      }
+      100% {
+        transform: translateX(0);
+      }
     }
     .marquee-track {
       display: flex;
@@ -86,6 +97,7 @@
       animation-play-state: paused;
     }
 
+    /* 主辦人編輯模式外框提示 */
     body.edit-mode [data-editable] {
       outline: 2px dashed #D97706;
       outline-offset: 2px;
@@ -94,6 +106,7 @@
       cursor: text;
     }
 
+    /* 上午禮拜大螢幕投影模式 (音控台專屬滿版) */
     body.ppt-projector-mode {
       background-color: #111827;
       overflow: hidden;
@@ -152,6 +165,7 @@
   </style>
 </head>
 <body class="font-sans antialiased selection:bg-xmas-red selection:text-white">
+  <!-- 輕量飄雪畫布 -->
   <canvas id="snow-canvas"></canvas>
 
   <!-- 即時新公告頂部緊急推播橫幅 -->
@@ -173,7 +187,7 @@
     </div>
   </div>
 
-  <!-- 強制已讀新重要布達公告視窗 -->
+  <!-- 強制已讀新重要布達公告視窗 (Modal) -->
   <div id="mandatory-notice-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
     <div class="relative w-full max-w-lg overflow-hidden rounded-3xl border-2 border-amber-400 bg-white shadow-2xl">
       <div class="bg-gradient-to-r from-xmas-darkred via-xmas-red to-xmas-pine px-6 py-4 text-white">
@@ -225,7 +239,7 @@
     </div>
   </div>
 
-  <!-- 照片燈箱檢視器 -->
+  <!-- 照片燈箱檢視器 (Lightbox) -->
   <div id="photo-lightbox" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/85 p-4 backdrop-blur-sm" onclick="closeLightbox()">
     <div class="relative max-h-[90vh] max-w-3xl overflow-hidden rounded-2xl bg-white shadow-2xl" onclick="event.stopPropagation()">
       <button onclick="closeLightbox()" class="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black">
@@ -242,7 +256,7 @@
     </div>
   </div>
 
-  <!-- 🎁 禮物後台管理員權限驗證視窗 -->
+  <!-- 🎁 禮物後台管理員權限驗證視窗 (Modal) -->
   <div id="admin-auth-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/75 p-4 backdrop-blur-sm" onclick="closeAdminAuthModal()">
     <div class="relative w-full max-w-sm overflow-hidden rounded-3xl border-2 border-amber-400 bg-white shadow-2xl" onclick="event.stopPropagation()">
       <div class="bg-gradient-to-r from-xmas-darkred to-xmas-red px-5 py-4 text-white">
@@ -272,7 +286,7 @@
           <button type="button" onclick="closeAdminAuthModal()" class="w-1/3 rounded-xl bg-gray-100 py-2.5 text-xs font-bold text-gray-600 hover:bg-gray-200">
             取消
           </button>
-          <button type="submit" class="w-2/3 rounded-xl bg-xmas-red py-2.5 text-xs font-black text-white shadow hover:bg-xmas-darkred">
+          <button id="admin-auth-submit-btn" type="submit" class="w-2/3 rounded-xl bg-xmas-red py-2.5 text-xs font-black text-white shadow hover:bg-xmas-darkred">
             🔓 驗證並進入後台
           </button>
         </div>
@@ -293,7 +307,7 @@
         <div class="flex items-center gap-2">
           <button
             onclick="triggerNewNoticeDemo()"
-            class="rounded-full bg-amber-400/20 px-3 py-1 text-xs font-bold text-amber-200 ring-1 ring-amber-300/40 transition hover:bg-amber-400/30"
+            class="admin-panel-only-ctrl hidden rounded-full bg-amber-400/20 px-3 py-1 text-xs font-bold text-amber-200 ring-1 ring-amber-300/40 transition hover:bg-amber-400/30"
           >
             🔔 重看強制公告
           </button>
@@ -309,6 +323,7 @@
             上午雙校敬拜恩典滿滿・下午運動場跨代同樂衝刺！長輩看紙本手冊，年輕人一機掌握全場資訊。
           </p>
 
+          <!-- 三場地時間地點精簡卡 -->
           <div class="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
             <div class="rounded-xl bg-white/10 p-2.5 backdrop-blur-sm ring-1 ring-white/15">
               <div class="text-[11px] font-bold text-amber-300">09:00 主日禮拜</div>
@@ -462,18 +477,18 @@
 
   <!-- 主內容區 -->
   <main class="mx-auto max-w-5xl px-4 py-6 sm:px-6">
-    <!-- 分頁 1：重要布達公告 -->
+    <!-- ==================== 分頁 1：重要布達公告 ==================== -->
     <section id="panel-notices" class="tab-panel space-y-5">
       <div class="rounded-2xl border border-amber-200 bg-white p-4 shadow-sm">
         <h2 class="text-lg font-black text-gray-900 sm:text-xl">📢 大會重要布達公告欄</h2>
         <p class="mt-0.5 text-xs text-gray-500">
-          操作者新增公告時，所有使用中裝置將即時同步推播並跳出提醒；點擊任一公告卡片可展開詳細內容。
+          操作者新增公告時，所有使用中裝置將同步推播並跳出提醒；點擊任一公告卡片可展開詳細內容。
         </p>
       </div>
       <div id="announcement-list" class="grid grid-cols-1 items-start gap-4 md:grid-cols-2"></div>
     </section>
 
-    <!-- 分頁 2：活動流程時間軸 -->
+    <!-- ==================== 分頁 2：活動流程時間軸 ==================== -->
     <section id="panel-timeline" class="tab-panel hidden space-y-5">
       <div class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-white p-4 shadow-sm">
         <div>
@@ -575,4 +590,2356 @@
               <span class="note-chevron">▼</span>
             </button>
             <div class="note-content mt-2 hidden rounded-xl border border-amber-200 bg-amber-50/50 p-3 text-xs leading-relaxed text-gray-700">
-              <ul data-editable
+              <ul data-editable class="list-disc space-y-1 pl-4">
+                <li>1,000 人同時用餐動線較長，請年輕人先協助同桌 70 歲以上長輩取餐與倒熱茶。</li>
+                <li>12:40 廣播集結時，請各隊隊長清點隊員人數並帶往羅浮高中運動場。</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div data-period="afternoon" class="tl-item rounded-2xl border border-emerald-200 bg-white p-4 shadow-sm sm:p-5">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="rounded-full bg-xmas-green px-3 py-1 text-xs font-black text-white">13:00 - 15:30</span>
+            <span class="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-bold text-xmas-green">🏆 羅浮高中運動場</span>
+          </div>
+          <h3 data-editable class="mt-2.5 text-base font-black text-gray-900 sm:text-lg">跨世代聖誕趣味競賽（三大場次）</h3>
+          <p data-editable class="mt-1 text-sm leading-relaxed text-gray-600">
+            四色戰隊依序進行《跨時代金曲猜猜看》、《聖誕好禮接力傳》與《默契比手畫腳大挑戰》，老少合作爭取最高榮譽。
+          </p>
+          <div class="mt-3 border-t border-dashed border-gray-200 pt-2.5">
+            <button onclick="toggleNoteBox(this)" class="flex w-full items-center justify-between rounded-xl bg-emerald-50 px-3 py-2 text-left text-xs font-black text-xmas-green transition hover:bg-emerald-100">
+              <span>⚠️ 注意事項（點擊展開）</span>
+              <span class="note-chevron">▼</span>
+            </button>
+            <div class="note-content mt-2 hidden rounded-xl border border-emerald-200 bg-emerald-50/50 p-3 text-xs leading-relaxed text-gray-700">
+              <ul data-editable class="list-disc space-y-1 pl-4">
+                <li>賽前務必參與 10 分鐘暖身操，避免山區氣溫低造成抽筋。</li>
+                <li>詳細場次出賽人數公告、規則與即時戰隊積分，可切換至頂部「🏆 下午趣味競賽」頁籤查看。</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div data-period="afternoon" class="tl-item rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="rounded-full bg-gray-800 px-3 py-1 text-xs font-black text-white">15:30 - 16:10</span>
+            <span class="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-bold text-amber-900">📸 羅浮高中運動場主舞台</span>
+          </div>
+          <h3 data-editable class="mt-2.5 text-base font-black text-gray-900 sm:text-lg">頒獎典禮、千人大合照與平安賦歸</h3>
+          <p data-editable class="mt-1 text-sm leading-relaxed text-gray-600">
+            頒發跨代同心獎與精神總錦標，拍攝全體聖誕大合照後祝福禱告賦歸。
+          </p>
+          <div class="mt-3 border-t border-dashed border-gray-200 pt-2.5">
+            <button onclick="toggleNoteBox(this)" class="flex w-full items-center justify-between rounded-xl bg-amber-50 px-3 py-2 text-left text-xs font-black text-amber-900 transition hover:bg-amber-100">
+              <span>⚠️ 注意事項（點擊展開）</span>
+              <span class="note-chevron">▼</span>
+            </button>
+            <div class="note-content mt-2 hidden rounded-xl border border-amber-200 bg-amber-50/50 p-3 text-xs leading-relaxed text-gray-700">
+              <p data-editable>大合照由大會官方攝影組統一拍攝後上傳至頂部橫移展示牆，散場時請協助確認長輩隨身物品與接駁車班次。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 分頁 3：上午禮拜 PPT 資料 ==================== -->
+    <section id="panel-ppt" class="tab-panel hidden space-y-5">
+      <div id="ppt-control-header" class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-white p-4 shadow-sm">
+        <div>
+          <h2 class="text-lg font-black text-gray-900 sm:text-xl">📖 上午禮拜 PPT 資料同步看</h2>
+          <p class="mt-0.5 text-xs text-gray-500">音控台開啟大螢幕投影切換投影片時，台下手機畫面將自動同步翻頁。</p>
+        </div>
+        <div id="ppt-control-header-actions" class="flex flex-wrap items-center gap-2">
+          <button
+            id="ppt-sync-follow-btn"
+            onclick="togglePptFollowSync()"
+            class="rounded-xl bg-emerald-100 px-3 py-2 text-xs font-black text-xmas-green transition hover:bg-emerald-200"
+          >
+            🔄 跟隨現場投影同步：開
+          </button>
+          <button
+            id="ppt-large-text-btn"
+            onclick="togglePptLargeText()"
+            class="rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-black text-amber-950 transition hover:bg-amber-100"
+          >
+            🔍 長輩共讀大字模式：關
+          </button>
+          <button
+            id="ppt-snow-toggle-btn"
+            onclick="toggleSnowEffect()"
+            class="admin-session-ppt-ctrl hidden rounded-xl border border-sky-300 bg-sky-50 px-3 py-2 text-xs font-black text-sky-900 transition hover:bg-sky-100"
+          >
+            ❄️ 投影雪花特效：開
+          </button>
+          <button
+            id="ppt-fullscreen-btn"
+            onclick="triggerAdminProjector('self')"
+            class="admin-session-ppt-ctrl hidden rounded-xl bg-gray-900 px-3.5 py-2 text-xs font-black text-amber-300 shadow transition hover:bg-black"
+          >
+            🖥️ 本視窗滿版投影
+          </button>
+          <button
+            id="ppt-popup-btn"
+            onclick="triggerAdminProjector('popup')"
+            class="admin-session-ppt-ctrl hidden rounded-xl bg-xmas-darkred px-3.5 py-2 text-xs font-black text-white shadow transition hover:bg-red-900"
+          >
+            🪟 彈出獨立大螢幕投影視窗
+          </button>
+        </div>
+      </div>
+
+      <div id="ppt-card-wrapper" class="overflow-hidden rounded-3xl border-2 border-xmas-darkred/20 bg-white shadow-md">
+        <div class="flex flex-wrap items-center justify-between gap-2 bg-xmas-darkred px-4 py-3 text-white">
+          <div id="ppt-slide-tabs" class="flex flex-wrap gap-1.5">
+            <button onclick="selectSlide(0, true)" data-slide-btn="0" class="ppt-tab-btn rounded-lg bg-amber-400 px-3 py-1 text-xs font-black text-xmas-darkred">
+              1. 禮拜程序單
+            </button>
+            <button onclick="selectSlide(1, true)" data-slide-btn="1" class="ppt-tab-btn rounded-lg bg-white/15 px-3 py-1 text-xs font-bold text-white hover:bg-white/25">
+              2. 敬拜詩歌歌詞
+            </button>
+            <button onclick="selectSlide(2, true)" data-slide-btn="2" class="ppt-tab-btn rounded-lg bg-white/15 px-3 py-1 text-xs font-bold text-white hover:bg-white/25">
+              3. 聖誕信息經文與大綱
+            </button>
+            <button onclick="selectSlide(3, true)" data-slide-btn="3" class="ppt-tab-btn rounded-lg bg-white/15 px-3 py-1 text-xs font-bold text-white hover:bg-white/25">
+              4. 兒主場次簡報摘要
+            </button>
+          </div>
+          <div class="flex items-center gap-3">
+            <span id="slide-counter" class="text-xs font-bold text-amber-200">第 1 / 4 頁</span>
+            <button
+              id="exit-projector-btn"
+              onclick="toggleProjectorMode(false)"
+              class="hidden rounded-lg bg-amber-400 px-3 py-1 text-xs font-black text-xmas-darkred shadow hover:bg-amber-300"
+            >
+              ✕ 結束大螢幕投影 (ESC)
+            </button>
+          </div>
+        </div>
+
+        <div id="ppt-stage" class="min-h-[320px] bg-gradient-to-b from-amber-50/40 to-white p-6 transition-all sm:p-8">
+          <div id="custom-ppt-slides-container" class="hidden"></div>
+
+          <div id="default-ppt-slides-container">
+            <div class="ppt-slide space-y-4">
+              <div class="inline-block rounded-full bg-xmas-red/10 px-3 py-1 text-xs font-black text-xmas-red">羅浮國小主日禮拜｜09:00 - 10:50</div>
+              <h3 data-editable class="text-2xl font-black text-gray-900">2026 聖誕感恩主日程序表</h3>
+              <ol data-editable class="space-y-2.5 text-base font-medium text-gray-800">
+                <li class="flex justify-between border-b border-gray-100 pb-1.5"><span>1. 序樂與宣召（詩篇 98:4-6）</span><span class="font-bold text-xmas-red">主禮人</span></li>
+                <li class="flex justify-between border-b border-gray-100 pb-1.5"><span>2. 跨世代詩歌敬拜《普世歡騰》《平安夜》</span><span class="font-bold text-xmas-red">青年敬拜團</span></li>
+                <li class="flex justify-between border-b border-gray-100 pb-1.5"><span>3. 聯合詩班聖誕獻詩《榮耀歸於至高真神》</span><span class="font-bold text-xmas-red">松年＋青年詩班</span></li>
+                <li class="flex justify-between border-b border-gray-100 pb-1.5"><span>4. 聖誕信息證道：《跨越世代的愛與盼望》</span><span class="font-bold text-xmas-red">證道牧師</span></li>
+                <li class="flex justify-between"><span>5. 回應詩歌、奉獻與祝禱</span><span class="font-bold text-xmas-red">全體會眾</span></li>
+              </ol>
+            </div>
+
+            <div class="ppt-slide hidden space-y-5">
+              <div class="inline-block rounded-full bg-xmas-green/10 px-3 py-1 text-xs font-black text-xmas-green">敬拜詩歌歌詞同步</div>
+              <h3 data-editable class="text-2xl font-black text-gray-900">《普世歡騰 Joy to the World》</h3>
+              <div data-editable class="space-y-3 rounded-2xl bg-amber-50/70 p-4 text-base font-bold leading-loose text-gray-800">
+                <p>普世歡騰！救主下降，大地接她君王；<br />惟願眾心預備地方，諸天萬物歌唱，諸天萬物歌唱，諸天，諸天萬物歌唱。</p>
+                <p>普世歡騰！主治萬方，民眾首當歌唱；<br />沃野、洪濤、山石、平原，響應歌聲嘹亮，響應歌聲嘹亮，響應，響應歌聲嘹亮。</p>
+              </div>
+            </div>
+
+            <div class="ppt-slide hidden space-y-4">
+              <div class="inline-block rounded-full bg-amber-100 px-3 py-1 text-xs font-black text-amber-900">信息主題經文｜路加福音 2:10-14</div>
+              <h3 data-editable class="text-2xl font-black text-gray-900">《跨越世代的愛與盼望》</h3>
+              <blockquote data-editable class="rounded-2xl border-l-4 border-xmas-red bg-red-50/60 p-4 text-base font-bold leading-relaxed text-gray-800">
+                「那天使對他們說：『不要懼怕！我報給你們大喜的信息，是關乎萬民的；因今天在大衛的城裡，為你們生了救主，就是主基督。』」
+              </blockquote>
+              <ul data-editable class="list-disc space-y-1.5 pl-5 text-base text-gray-700">
+                <li><strong>一、大喜的信息是關乎萬民的</strong>：不分長幼世代，同在主愛裡成為一家人。</li>
+                <li><strong>二、在馬槽裡看見謙卑與接納</strong>：年輕人尊重長輩智慧，長輩祝福青年奔跑。</li>
+                <li><strong>三、將平安帶進家庭與部落</strong>：成為彼此生命中的聖誕禮物。</li>
+              </ul>
+            </div>
+
+            <div class="ppt-slide hidden space-y-4">
+              <div class="inline-block rounded-full bg-emerald-100 px-3 py-1 text-xs font-black text-xmas-green">羅浮高中場｜09:00 兒童主日學簡報</div>
+              <h3 data-editable class="text-2xl font-black text-gray-900">《星星指引的奇妙夜晚》兒主課程重點</h3>
+              <div data-editable class="space-y-2.5 text-base leading-relaxed text-gray-700">
+                <p>1. <strong>破冰律動</strong>：《聖誕鈴聲響叮噹》全場帶動跳。</p>
+                <p>2. <strong>聖經故事劇場</strong>：博士追隨伯利恆之星，獻上黃金、乳香、沒藥。</p>
+                <p>3. <strong>金句背誦</strong>：「在至高之處榮耀歸與神！在地上平安歸與他所喜悅的人！」（路加福音 2:14）</p>
+                <p>4. <strong>手作任務</strong>：製作「送給阿公阿嬤的聖誕祝福卡」，中午愛宴時親手送出！</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between border-t border-gray-100 bg-gray-50 px-5 py-3">
+          <button onclick="prevSlide()" class="rounded-xl bg-white px-4 py-2 text-xs font-black text-gray-700 ring-1 ring-gray-200 hover:bg-gray-100">
+            ← 上一頁
+          </button>
+          <div class="flex items-center gap-3">
+            <button
+              id="projector-bar-snow-btn"
+              onclick="toggleSnowEffect()"
+              class="admin-session-ppt-ctrl hidden rounded-lg border border-sky-300 bg-sky-50 px-2.5 py-1 text-xs font-black text-sky-900 hover:bg-sky-100"
+            >
+              ❄️ 投影雪花特效：開
+            </button>
+            <span id="projector-hint" class="hidden text-xs font-bold text-gray-500 sm:inline">音控提示：可使用鍵盤左右方向鍵 (← / →) 切換投影片，並自動同步至全場手機</span>
+          </div>
+          <button onclick="nextSlide()" class="rounded-xl bg-xmas-red px-4 py-2 text-xs font-black text-white shadow-sm hover:bg-xmas-darkred">
+            下一頁 →
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 分頁 4：下午趣味競賽 ==================== -->
+    <section id="panel-games" class="tab-panel hidden space-y-5">
+      <div class="rounded-2xl border border-emerald-200 bg-white p-4 shadow-sm">
+        <h2 class="text-lg font-black text-gray-900 sm:text-xl">🏆 下午趣味競賽場次與即時積分板</h2>
+        <p class="mt-0.5 text-xs text-gray-500">地點：羅浮高中運動場（13:00 - 15:30）｜切換場次查看大版面出賽人數公告、規則與神隊友攻略。</p>
+      </div>
+
+      <div class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
+        <div class="flex flex-wrap gap-2">
+          <button onclick="selectGame(0)" data-game-btn="0" class="game-tab-btn rounded-xl bg-xmas-green px-3.5 py-2 text-xs font-black text-white">
+            第一場：跨時代金曲猜猜看
+          </button>
+          <button onclick="selectGame(1)" data-game-btn="1" class="game-tab-btn rounded-xl bg-gray-100 px-3.5 py-2 text-xs font-bold text-gray-700 hover:bg-gray-200">
+            第二場：聖誕好禮接力傳
+          </button>
+          <button onclick="selectGame(2)" data-game-btn="2" class="game-tab-btn rounded-xl bg-gray-100 px-3.5 py-2 text-xs font-bold text-gray-700 hover:bg-gray-200">
+            第三場：默契比手畫腳大挑戰
+          </button>
+        </div>
+
+        <div id="game-detail-box" class="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50/40 p-4 sm:p-5"></div>
+      </div>
+
+      <div class="rounded-2xl border border-amber-200 bg-white p-4 shadow-sm sm:p-5">
+        <div class="flex items-center justify-between">
+          <h3 class="text-base font-black text-gray-900">📊 跨世代四大戰隊即時積分看板</h3>
+          <button onclick="resetScores()" class="admin-panel-only-ctrl hidden rounded-lg bg-gray-100 px-2.5 py-1 text-xs font-bold text-gray-600 hover:bg-gray-200">
+            歸零重計
+          </button>
+        </div>
+        <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div class="rounded-2xl border-2 border-red-200 bg-red-50/50 p-3.5 text-center">
+            <div class="text-xs font-black text-xmas-red">🔴 伯利恆紅隊</div>
+            <div id="score-red" class="my-2 text-3xl font-black text-gray-900">0</div>
+            <div class="admin-panel-only-ctrl hidden flex justify-center gap-1.5">
+              <button onclick="updateScore('red', -10)" class="rounded-lg bg-white px-2.5 py-1 text-xs font-black text-gray-700 ring-1 ring-gray-200">-10</button>
+              <button onclick="updateScore('red', 10)" class="rounded-lg bg-xmas-red px-2.5 py-1 text-xs font-black text-white">+10</button>
+            </div>
+          </div>
+
+          <div class="rounded-2xl border-2 border-emerald-200 bg-emerald-50/50 p-3.5 text-center">
+            <div class="text-xs font-black text-xmas-green">🟢 橄欖山綠隊</div>
+            <div id="score-green" class="my-2 text-3xl font-black text-gray-900">0</div>
+            <div class="admin-panel-only-ctrl hidden flex justify-center gap-1.5">
+              <button onclick="updateScore('green', -10)" class="rounded-lg bg-white px-2.5 py-1 text-xs font-black text-gray-700 ring-1 ring-gray-200">-10</button>
+              <button onclick="updateScore('green', 10)" class="rounded-lg bg-xmas-green px-2.5 py-1 text-xs font-black text-white">+10</button>
+            </div>
+          </div>
+
+          <div class="rounded-2xl border-2 border-amber-200 bg-amber-50/50 p-3.5 text-center">
+            <div class="text-xs font-black text-amber-700">🟡 晨星燦金隊</div>
+            <div id="score-gold" class="my-2 text-3xl font-black text-gray-900">0</div>
+            <div class="admin-panel-only-ctrl hidden flex justify-center gap-1.5">
+              <button onclick="updateScore('gold', -10)" class="rounded-lg bg-white px-2.5 py-1 text-xs font-black text-gray-700 ring-1 ring-gray-200">-10</button>
+              <button onclick="updateScore('gold', 10)" class="rounded-lg bg-amber-500 px-2.5 py-1 text-xs font-black text-white">+10</button>
+            </div>
+          </div>
+
+          <div class="rounded-2xl border-2 border-sky-200 bg-sky-50/50 p-3.5 text-center">
+            <div class="text-xs font-black text-sky-800">🔵 加利利藍隊</div>
+            <div id="score-blue" class="my-2 text-3xl font-black text-gray-900">0</div>
+            <div class="admin-panel-only-ctrl hidden flex justify-center gap-1.5">
+              <button onclick="updateScore('blue', -10)" class="rounded-lg bg-white px-2.5 py-1 text-xs font-black text-gray-700 ring-1 ring-gray-200">-10</button>
+              <button onclick="updateScore('blue', 10)" class="rounded-lg bg-sky-600 px-2.5 py-1 text-xs font-black text-white">+10</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 分頁 5：活動心得分享與感動 ==================== -->
+    <section id="panel-reflection" class="tab-panel hidden space-y-5">
+      <div class="overflow-hidden rounded-3xl border-2 border-amber-300/80 bg-gradient-to-br from-xmas-darkred via-red-900 to-xmas-green py-4 text-white shadow-md">
+        <div class="mb-3 flex flex-wrap items-center justify-between gap-2 px-4 sm:px-6">
+          <div class="flex items-center gap-2">
+            <span class="inline-flex h-2.5 w-2.5 animate-ping rounded-full bg-amber-300"></span>
+            <h3 class="text-sm font-black tracking-wide text-amber-200 sm:text-base">✨ 聖誕跨世代祝福彈幕牆（管理者審核放行・懸停可暫停閱讀）</h3>
+          </div>
+          <span class="text-[11px] font-bold text-amber-100/80">點擊任一彈幕卡片可一鍵複製分享</span>
+        </div>
+
+        <div class="marquee-wrapper space-y-3 overflow-hidden">
+          <div id="danmaku-track-1" class="marquee-track-slow gap-3 px-3"></div>
+          <div id="danmaku-track-2" class="marquee-track-reverse gap-3 px-3"></div>
+        </div>
+      </div>
+
+      <div class="rounded-2xl border border-red-200 bg-white p-5 shadow-sm">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 class="text-lg font-black text-gray-900 sm:text-xl">✍️ 寫下今天的聖誕感動與感謝</h2>
+            <p class="mt-0.5 text-xs text-gray-500">
+              留言送出後將由大會管理者審核放行，通過後即會躍上上方「聖誕祝福彈幕牆」（限 150 字內）。
+            </p>
+          </div>
+          <span id="my-pending-badge" class="hidden rounded-full bg-amber-100 px-3 py-1 text-xs font-black text-amber-900">
+            ⏳ 目前有留言審核中
+          </span>
+        </div>
+
+        <form id="reflection-form" onsubmit="submitReflection(event)" class="mt-4 space-y-3">
+          <div>
+            <label class="block text-xs font-bold text-gray-700">你的名字 / 暱稱</label>
+            <input
+              id="ref-name"
+              type="text"
+              required
+              maxlength="20"
+              placeholder="例如：大溪青年 小宇"
+              class="mt-1 w-full rounded-xl border border-gray-300 px-3.5 py-2 text-sm focus:border-xmas-red focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <div class="flex items-center justify-between">
+              <label class="block text-xs font-bold text-gray-700">感動與感謝的話（限 150 字）</label>
+              <span id="ref-char-count" class="text-xs font-black text-xmas-green">0 / 150 字</span>
+            </div>
+            <textarea
+              id="ref-text"
+              rows="3"
+              required
+              maxlength="150"
+              oninput="updateCharCount()"
+              placeholder="寫下今天最讓你感動或想感謝的一句話..."
+              class="mt-1 w-full rounded-xl border border-gray-300 p-3.5 text-sm leading-relaxed focus:border-xmas-red focus:outline-none"
+            ></textarea>
+            <div class="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
+              <div id="ref-char-bar" class="h-full w-0 bg-xmas-green transition-all"></div>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center justify-end gap-2">
+            <button
+              type="submit"
+              class="rounded-xl bg-xmas-red px-5 py-2.5 text-xs font-black text-white shadow transition hover:bg-xmas-darkred sm:text-sm"
+            >
+              📨 送出感謝留言（待審核上彈幕）
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <!-- 頁尾與聖誕禮物盒後台 -->
+  <footer class="mt-10 border-t border-amber-200/80 bg-xmas-warm/60 py-8">
+    <div class="mx-auto max-w-5xl px-4 text-center sm:px-6">
+      <p class="text-xs font-bold text-gray-600">2026 聖誕跨世代同樂日籌備團隊｜願平安與喜樂常與你同在</p>
+
+      <div class="mt-4 flex justify-center">
+        <button
+          id="toggle-edit-btn"
+          onclick="toggleEditMode()"
+          aria-label="開啟聖誕禮物後台設定"
+          title="開啟大會禮物盒參數後台"
+          class="group relative inline-flex items-center gap-2 rounded-2xl border-2 border-amber-400 bg-gradient-to-b from-white to-amber-50 px-4 py-2.5 shadow-md transition hover:-translate-y-0.5 hover:shadow-lg"
+        >
+          <span class="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-xmas-red to-xmas-darkred text-white shadow-inner">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5 text-amber-300 transition-transform group-hover:rotate-12">
+              <path d="M9.375 3a1.875 1.875 0 0 0 0 3.75h1.875v4.5H3.375A1.875 1.875 0 0 1 1.5 9.375v-.75c0-1.036.84-1.875 1.875-1.875h3.193A3.375 3.375 0 0 1 12 2.753a3.375 3.375 0 0 1 5.432 3.997h3.943c1.035 0 1.875.84 1.875 1.875v.75c0 1.036-.84 1.875-1.875 1.875H12.75v-4.5h1.875a1.875 1.875 0 1 0-1.875-1.875V6.75h-1.5V4.875C11.25 3.839 10.41 3 9.375 3ZM11.25 12.75H3v6.75a2.25 2.25 0 0 0 2.25 2.25h6v-9ZM12.75 12.75v9h6.75a2.25 2.25 0 0 0 2.25-2.25v-6.75h-9Z" />
+            </svg>
+            <span id="pending-count-pill" class="hidden absolute -right-2 -top-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-amber-400 px-1 text-[10px] font-black text-xmas-darkred ring-2 ring-white">0</span>
+          </span>
+          <span class="text-xs font-black text-amber-950">🎁 禮物後台</span>
+        </button>
+      </div>
+
+      <!-- 🎁 聖誕禮物盒專屬全參數後台 -->
+      <div id="organizer-panel" class="mt-5 hidden space-y-6 rounded-3xl border-2 border-amber-400 bg-white p-5 text-left shadow-xl">
+        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-amber-100 pb-3">
+          <div class="flex items-center gap-2.5">
+            <span class="flex h-10 w-10 items-center justify-center rounded-2xl bg-red-50 text-xl">🎁</span>
+            <div>
+              <h4 class="text-base font-black text-amber-950">聖誕禮物盒｜全站參數與現場中控後台</h4>
+              <p class="text-xs text-gray-600">直接點擊頁面文字可編輯，下方可控制雪花特效、公告、倒數、競賽人數、PPT、彈幕審核與照片。</p>
+            </div>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button
+              onclick="syncFromCloudNow(true)"
+              class="rounded-xl border border-sky-300 bg-sky-50 px-3 py-2 text-xs font-black text-sky-900 hover:bg-sky-100"
+            >
+              ☁️ 立即雲端同步
+            </button>
+            <button
+              onclick="lockAdminSession()"
+              class="rounded-xl border border-gray-300 bg-gray-100 px-3 py-2 text-xs font-black text-gray-700 hover:bg-gray-200"
+            >
+              🔒 鎖定並登出權限
+            </button>
+            <button
+              onclick="resetAllSystemParams()"
+              class="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-black text-xmas-red hover:bg-red-100"
+            >
+              ↺ 重置所有後台參數
+            </button>
+            <button
+              onclick="exportCleanHtml()"
+              class="rounded-xl bg-xmas-green px-4 py-2 text-xs font-black text-white shadow hover:bg-green-900"
+            >
+              💾 匯出最新網頁 HTML 檔
+            </button>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-300 bg-amber-50/70 px-4 py-3">
+          <div class="text-xs">
+            <span class="font-black text-amber-950">🔐 管理員權限狀態：已通過驗證（連線 Apps Script 雲端後台）</span>
+            <span class="ml-2 text-gray-600">（管理員密碼於 Apps Script「指令碼屬性」`ADMIN_PASSCODE` 管理）</span>
+          </div>
+        </div>
+
+        <!-- 區塊 0：全站視覺與投影雪花特效參數 -->
+        <div class="rounded-2xl border border-sky-200 bg-sky-50/50 p-4">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h5 class="text-sm font-black text-sky-950">❄️ 視覺與投影雪花特效參數（同步套用至大螢幕與全場手機）</h5>
+              <p class="text-[11px] text-gray-600">立體冰藍光暈雪花可清晰飄過深色或淺色 PPT 投影片上方；亦可調整飄雪密度或隨時開關。</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <button
+                id="admin-snow-toggle-btn"
+                onclick="toggleSnowEffect()"
+                class="admin-panel-only-ctrl hidden rounded-xl bg-sky-600 px-3.5 py-2 text-xs font-black text-white shadow transition hover:bg-sky-700"
+              >
+                ❄️ 投影雪花特效：開
+              </button>
+            </div>
+          </div>
+          <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div class="rounded-xl border border-sky-200 bg-white p-3">
+              <div class="flex items-center justify-between text-xs font-bold text-gray-700">
+                <span>飄雪雪花數量（密度）</span>
+                <span id="snow-count-label" class="font-black text-sky-700">40 片</span>
+              </div>
+              <input
+                id="admin-snow-count"
+                type="range"
+                min="10"
+                max="100"
+                step="5"
+                value="40"
+                oninput="updateSnowParams()"
+                class="mt-2 w-full accent-sky-600"
+              />
+            </div>
+            <div class="rounded-xl border border-sky-200 bg-white p-3">
+              <div class="flex items-center justify-between text-xs font-bold text-gray-700">
+                <span>強制已讀公告彈窗控制</span>
+                <span class="text-[11px] text-gray-400">全場重讀測試</span>
+              </div>
+              <button
+                onclick="triggerNewNoticeDemo()"
+                class="mt-1.5 w-full rounded-lg bg-amber-100 px-3 py-1.5 text-xs font-black text-amber-950 hover:bg-amber-200"
+              >
+                🔔 立即觸發強制已讀公告彈窗
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 區塊 A：即時發布新重要布達 -->
+        <div class="rounded-2xl border border-red-200 bg-red-50/40 p-4">
+          <h5 class="text-sm font-black text-xmas-darkred">📢 即時發布新重要布達（同步寫入雲端並推播至所有裝置）</h5>
+          <div class="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-12">
+            <input
+              id="admin-notice-tag"
+              type="text"
+              placeholder="標籤（如：緊急通知）"
+              value="即時新布達"
+              class="rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs sm:col-span-3"
+            />
+            <input
+              id="admin-notice-title"
+              type="text"
+              placeholder="輸入新公告標題（例如：下午趣味競賽提前 10 分鐘集合！）"
+              class="rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs sm:col-span-9"
+            />
+            <textarea
+              id="admin-notice-body"
+              rows="2"
+              placeholder="輸入詳細布達內容..."
+              class="rounded-xl border border-gray-300 bg-white p-3 text-xs sm:col-span-12"
+            ></textarea>
+          </div>
+          <div class="mt-2.5 flex justify-end">
+            <button
+              onclick="publishLiveNotice()"
+              class="rounded-xl bg-xmas-red px-4 py-2 text-xs font-black text-white shadow hover:bg-xmas-darkred"
+            >
+              🚀 立即發布並同步推播至所有畫面
+            </button>
+          </div>
+        </div>
+
+        <!-- 區塊 B：下午趣味競賽各場次出賽人數即時設定 -->
+        <div class="rounded-2xl border border-emerald-200 bg-emerald-50/40 p-4">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <h5 class="text-sm font-black text-xmas-green">🏆 下午趣味競賽：各場次出賽人數即時設定（雲端與大看板同步更新）</h5>
+            <select id="admin-game-select" onchange="loadGameQuotaForm()" class="rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-xs font-bold">
+              <option value="0">第一場：跨時代金曲猜猜看</option>
+              <option value="1">第二場：聖誕好禮接力傳</option>
+              <option value="2">第三場：默契比手畫腳大挑戰</option>
+            </select>
+          </div>
+          <div class="mt-3 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+            <div>
+              <label class="block text-[11px] font-bold text-gray-700">每隊總出賽人數</label>
+              <input id="gq-total" type="text" placeholder="如：6 人" class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-xs font-black" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-gray-700">長輩名額</label>
+              <input id="gq-elder" type="text" placeholder="如：3 位長輩" class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-xs font-black" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-gray-700">青年名額</label>
+              <input id="gq-youth" type="text" placeholder="如：3 位青年" class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-xs font-black" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-gray-700">孩童 / 其他名額</label>
+              <input id="gq-other" type="text" placeholder="如：自由加油團" class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-xs font-black" />
+            </div>
+            <div class="col-span-2 sm:col-span-4">
+              <label class="block text-[11px] font-bold text-gray-700">大看板即時召集令 / 補充公告</label>
+              <input id="gq-note" type="text" placeholder="輸入大看板醒目召集提示..." class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-xs" />
+            </div>
+          </div>
+          <div class="mt-2.5 flex justify-end">
+            <button onclick="saveGameQuota()" class="rounded-xl bg-xmas-green px-4 py-2 text-xs font-black text-white shadow hover:bg-green-900">
+              ✓ 套用並即時同步人數公告
+            </button>
+          </div>
+        </div>
+
+        <!-- 區塊 C：分段倒數開放控制與時程設定 -->
+        <div class="rounded-2xl border border-amber-200 bg-amber-50/40 p-4">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h5 class="text-sm font-black text-amber-950">⏱️ 全天分段倒數開放控制與時程設定</h5>
+              <p class="text-[11px] text-gray-600">未開放前僅顯示純倒數數字；按下開放後，使用者畫面才會顯示現場進行中場次與階段倒數。</p>
+            </div>
+            <button
+              id="toggle-stage-open-btn"
+              onclick="toggleStageInfoOpen()"
+              class="rounded-xl bg-gray-800 px-3.5 py-2 text-xs font-black text-white shadow transition"
+            >
+              🔒 目前未開放（點擊立即開放現場資訊）
+            </button>
+          </div>
+          <div id="stage-schedule-inputs" class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2"></div>
+          <div class="mt-2.5 flex flex-wrap justify-end gap-2">
+            <button onclick="resetStageSchedule()" class="rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-xs font-bold text-gray-600 hover:bg-gray-50">
+              恢復預設時程
+            </button>
+            <button onclick="saveStageSchedule()" class="rounded-xl bg-amber-600 px-4 py-1.5 text-xs font-black text-white shadow hover:bg-amber-700">
+              ✓ 套用並即時同步時程
+            </button>
+          </div>
+        </div>
+
+        <!-- 區塊 D：祝福彈幕留言審核佇列 -->
+        <div class="rounded-2xl border border-sky-200 bg-sky-50/40 p-4">
+          <div class="flex items-center justify-between">
+            <h5 class="text-sm font-black text-sky-950">🛡️ 心得與感謝彈幕審核佇列（核准後才跳上公開彈幕）</h5>
+            <span id="admin-pending-summary" class="text-xs font-bold text-sky-800">待審核：0 則</span>
+          </div>
+          <div id="admin-pending-list" class="mt-3 space-y-2"></div>
+
+          <div class="mt-4 border-t border-sky-200/70 pt-3">
+            <div class="text-xs font-black text-sky-950">📋 已公開上牆祝福彈幕管理（可下架不當留言）</div>
+            <div id="admin-approved-list" class="mt-2 max-h-40 space-y-1.5 overflow-y-auto"></div>
+          </div>
+        </div>
+
+        <!-- 區塊 E：上午禮拜 PPT 投影片批量上傳 -->
+        <div class="rounded-2xl border border-purple-200 bg-purple-50/40 p-4">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h5 class="text-sm font-black text-purple-950">📖 上午禮拜 PPT 投影片批量上傳（JPG / PNG 圖片集）</h5>
+              <p class="text-[11px] text-gray-600">
+                在 PowerPoint 點選「另存新檔 → JPEG / PNG（匯出全部投影片）」後一次全選上傳，系統將自動依頁碼排序並同步至獨立大螢幕與全場手機。
+              </p>
+            </div>
+            <button
+              onclick="resetCustomPptSlides()"
+              class="rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 hover:bg-gray-100"
+            >
+              ↺ 恢復內建預設簡報
+            </button>
+          </div>
+          <div class="mt-3 grid grid-cols-1 gap-3 md:grid-cols-12">
+            <div class="md:col-span-5">
+              <label class="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-purple-400 bg-white px-4 py-4 text-center transition hover:bg-purple-50">
+                <span class="text-xs font-black text-purple-900">📤 點擊一次全選上傳 PPT 投影片圖片</span>
+                <span class="mt-1 text-[11px] text-gray-500">自動依檔名頁碼排序・自動高畫質輕量壓縮</span>
+                <input id="admin-ppt-upload-input" type="file" accept="image/*" multiple class="hidden" onchange="handleCustomPptUpload(event)" />
+              </label>
+            </div>
+            <div class="md:col-span-7">
+              <div id="admin-ppt-status" class="text-xs font-bold text-purple-900">目前使用：內建預設 4 頁禮拜簡報</div>
+              <div id="admin-ppt-preview-list" class="mt-2 flex flex-wrap gap-2"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 區塊 F：大會官方照片上傳管理 -->
+        <div class="grid grid-cols-1 gap-4 border-t border-amber-100 pt-4 md:grid-cols-12">
+          <div class="space-y-2.5 md:col-span-5">
+            <label class="block text-xs font-black text-gray-800">📸 大會攝影組：新增橫移展示照片</label>
+            <input
+              id="official-photo-tag"
+              type="text"
+              placeholder="輸入場次標籤（如：羅浮高中運動場）"
+              value="羅浮高中運動場"
+              class="w-full rounded-xl border border-gray-300 px-3 py-2 text-xs"
+            />
+            <input
+              id="official-photo-caption"
+              type="text"
+              placeholder="輸入簡短圖說（如：長輩與青年同心傳接！）"
+              class="w-full rounded-xl border border-gray-300 px-3 py-2 text-xs"
+            />
+            <label class="flex cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-xmas-red/40 bg-red-50/40 px-4 py-3 text-xs font-black text-xmas-red transition hover:bg-red-50">
+              <span>＋ 選取照片（自動輕量化壓縮並加入橫移）</span>
+              <input id="official-photo-input" type="file" accept="image/*" multiple class="hidden" onchange="handleOfficialPhotoUpload(event)" />
+            </label>
+          </div>
+
+          <div class="md:col-span-7">
+            <div class="text-xs font-black text-gray-800">目前橫移展示列照片管理（點擊 × 可移除）：</div>
+            <div id="organizer-photo-list" class="mt-2 flex flex-wrap gap-2"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    /* ==================== 雲端後台設定 (Google Apps Script Web App) ==================== */
+    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzHnct_dWMyUjxAtu593g4mmtEgjkEmo4k1_zcJJoVxPNAV_boniM1sNx-SMHTxpqK8kg/exec';
+    const ACTIVE_TAB_SYNC_KEY = 'xmas2026_active_tab_sync';
+    const PROJECTOR_LIVE_KEY = 'xmas2026_projector_live';
+
+    async function callGasGet(action) {
+      if (!GAS_WEB_APP_URL) return null;
+      const url = `${GAS_WEB_APP_URL}?action=${encodeURIComponent(action)}&_t=${Date.now()}`;
+      const res = await fetch(url, { method: 'GET' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    }
+
+    async function callGasPost(payload) {
+      if (!GAS_WEB_APP_URL) return null;
+      const res = await fetch(GAS_WEB_APP_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    }
+
+    /* ==================== 跨分頁即時廣播通道 ==================== */
+    const bc = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('xmas2026_live_channel') : null;
+
+    function broadcastSync(type, payload) {
+      if (bc) {
+        bc.postMessage({ type, payload, ts: Date.now() });
+      }
+      localStorage.setItem('xmas2026_last_sync', JSON.stringify({ type, ts: Date.now() }));
+    }
+
+    if (bc) {
+      bc.onmessage = event => {
+        handleIncomingSync(event.data?.type, event.data?.payload);
+      };
+    }
+
+    window.addEventListener('storage', e => {
+      if (e.key === 'xmas2026_last_sync' && e.newValue) {
+        try {
+          const data = JSON.parse(e.newValue);
+          handleIncomingSync(data.type, data.payload);
+        } catch (err) {}
+      }
+    });
+
+    function handleIncomingSync(type, payload) {
+      if (type === 'NEW_NOTICE') {
+        renderNotices();
+        const latest = getAllNotices()[0];
+        if (latest) {
+          document.getElementById('live-banner-title').textContent = latest.title;
+          document.getElementById('live-banner-body').textContent = latest.body;
+          document.getElementById('live-notice-banner').classList.remove('hidden');
+          syncModalWithLatestNotice(latest);
+        }
+      } else if (type === 'DANMAKU_UPDATE') {
+        renderDanmakuWall();
+        renderPendingModeration();
+      } else if (type === 'STAGE_UPDATE') {
+        loadStageSettingsFromStorage();
+        updateCountdownTick();
+      } else if (type === 'GAME_QUOTA_UPDATE') {
+        loadGameQuotasFromStorage();
+        renderCurrentGamePanel();
+      } else if (type === 'SNOW_UPDATE') {
+        loadSnowSettingsFromStorage();
+      } else if (type === 'PPT_CUSTOM_UPDATE') {
+        loadCustomPptSlides();
+        const syncedSlide = Number(localStorage.getItem(PPT_SYNC_SLIDE_KEY) || 0);
+        selectSlide(syncedSlide, false);
+        showToast('📖 主辦人已更新上午禮拜 PPT 簡報內容！');
+      } else if (type === 'ADMIN_PROJECTOR_SYNC') {
+        const syncedSlide = Number(payload?.slide ?? localStorage.getItem(PPT_SYNC_SLIDE_KEY) ?? 0);
+        if (isProjectorReceiver || window.__FORCE_PROJECTOR_RECEIVER) {
+          switchMainTab('ppt');
+          selectSlide(syncedSlide, false);
+        } else if (isPptFollowSync && !isProjectorMode) {
+          switchMainTab('ppt');
+          selectSlide(syncedSlide, false);
+          showToast(`🖥️ 音控已啟動大螢幕，手機已同步至禮拜簡報第 ${syncedSlide + 1} 頁`);
+        }
+      } else if (type === 'PPT_SLIDE_SYNC') {
+        const syncedSlide = Number(localStorage.getItem(PPT_SYNC_SLIDE_KEY) || 0);
+        if (isProjectorReceiver || window.__FORCE_PROJECTOR_RECEIVER) {
+          selectSlide(syncedSlide, false);
+        } else if (isPptFollowSync && !isProjectorMode) {
+          selectSlide(syncedSlide, false);
+          showToast(`📖 已同步現場禮拜投影片（第 ${syncedSlide + 1} 頁）`);
+        }
+      }
+    }
+
+    /* ==================== 1. 立體冰藍光暈飄雪動畫 ==================== */
+    const SNOW_ENABLED_KEY = 'xmas2026_snow_enabled';
+    const SNOW_COUNT_KEY = 'xmas2026_snow_count';
+    let isSnowEnabled = localStorage.getItem(SNOW_ENABLED_KEY) !== 'false';
+    let snowFlakeCount = Number(localStorage.getItem(SNOW_COUNT_KEY) || 40);
+    let snowFlakes = [];
+
+    function rebuildSnowFlakes(width, height) {
+      snowFlakes = Array.from({ length: snowFlakeCount }, () => ({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        r: Math.random() * 2.8 + 1.4,
+        d: Math.random() * 0.65 + 0.35,
+        phase: Math.random() * Math.PI * 2
+      }));
+    }
+
+    function updateSnowButtonsUI() {
+      const canvas = document.getElementById('snow-canvas');
+      if (canvas) canvas.classList.toggle('hidden', !isSnowEnabled);
+
+      const labelText = isSnowEnabled ? '❄️ 投影雪花特效：開' : '❄️ 投影雪花特效：關';
+      ['ppt-snow-toggle-btn', 'projector-bar-snow-btn', 'admin-snow-toggle-btn'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+        btn.textContent = labelText;
+        if (id === 'admin-snow-toggle-btn') {
+          btn.className = isSnowEnabled
+            ? 'admin-panel-only-ctrl hidden rounded-xl bg-sky-600 px-3.5 py-2 text-xs font-black text-white shadow transition hover:bg-sky-700'
+            : 'admin-panel-only-ctrl hidden rounded-xl bg-gray-600 px-3.5 py-2 text-xs font-black text-white shadow transition hover:bg-gray-700';
+        } else {
+          btn.className = isSnowEnabled
+            ? 'admin-session-ppt-ctrl hidden rounded-xl border border-sky-300 bg-sky-50 px-3 py-1.5 text-xs font-black text-sky-900 transition hover:bg-sky-100'
+            : 'admin-session-ppt-ctrl hidden rounded-xl border border-gray-300 bg-gray-100 px-3 py-1.5 text-xs font-bold text-gray-600 transition hover:bg-gray-200';
+        }
+      });
+
+      updateAdminOnlyVisibility();
+
+      const slider = document.getElementById('admin-snow-count');
+      const countLabel = document.getElementById('snow-count-label');
+      if (slider) slider.value = snowFlakeCount;
+      if (countLabel) countLabel.textContent = `${snowFlakeCount} 片`;
+    }
+
+    function loadSnowSettingsFromStorage() {
+      isSnowEnabled = localStorage.getItem(SNOW_ENABLED_KEY) !== 'false';
+      snowFlakeCount = Number(localStorage.getItem(SNOW_COUNT_KEY) || 40);
+      rebuildSnowFlakes(window.innerWidth, window.innerHeight);
+      updateSnowButtonsUI();
+    }
+
+    function toggleSnowEffect() {
+      isSnowEnabled = !isSnowEnabled;
+      localStorage.setItem(SNOW_ENABLED_KEY, String(isSnowEnabled));
+      updateSnowButtonsUI();
+      broadcastSync('SNOW_UPDATE', { isSnowEnabled, snowFlakeCount });
+      showToast(isSnowEnabled ? '❄️ 已開啟投影雪花特效' : '已關閉投影雪花特效');
+    }
+
+    function updateSnowParams() {
+      const slider = document.getElementById('admin-snow-count');
+      if (!slider) return;
+      snowFlakeCount = Number(slider.value || 40);
+      localStorage.setItem(SNOW_COUNT_KEY, String(snowFlakeCount));
+      rebuildSnowFlakes(window.innerWidth, window.innerHeight);
+      updateSnowButtonsUI();
+      broadcastSync('SNOW_UPDATE', { isSnowEnabled, snowFlakeCount });
+    }
+
+    (function initSnow() {
+      const canvas = document.getElementById('snow-canvas');
+      const ctx = canvas.getContext('2d');
+      let width = (canvas.width = window.innerWidth);
+      let height = (canvas.height = window.innerHeight);
+
+      window.addEventListener('resize', () => {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+      });
+
+      rebuildSnowFlakes(width, height);
+      updateSnowButtonsUI();
+
+      function draw() {
+        ctx.clearRect(0, 0, width, height);
+        if (isSnowEnabled) {
+          ctx.save();
+          ctx.shadowColor = 'rgba(14, 116, 144, 0.45)';
+          ctx.shadowBlur = 4;
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+          ctx.strokeStyle = 'rgba(186, 230, 253, 0.75)';
+          ctx.lineWidth = 0.8;
+          ctx.beginPath();
+          for (const f of snowFlakes) {
+            ctx.moveTo(f.x + f.r, f.y);
+            ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+          }
+          ctx.fill();
+          ctx.stroke();
+          ctx.restore();
+
+          for (const f of snowFlakes) {
+            f.y += f.d;
+            f.x += Math.sin(f.y * 0.012 + f.phase) * 0.45;
+            if (f.y > height + 6) {
+              f.y = -6;
+              f.x = Math.random() * width;
+            }
+          }
+        }
+        requestAnimationFrame(draw);
+      }
+      draw();
+    })();
+
+    /* ==================== 2. 全天智能分段倒數 ==================== */
+    const STAGE_OPEN_KEY = 'xmas2026_stage_info_open';
+    const STAGE_SCHEDULE_KEY = 'xmas2026_stage_schedule';
+    const DEFAULT_SCHEDULE = [
+      { time: '09:00', title: '雙校同步聖誕禮拜（羅浮國小／羅浮高中）', activeBadge: '⛪ 上午雙校同步禮拜進行中' },
+      { time: '11:00', title: '全體匯合・千人聖誕愛宴午餐', activeBadge: '🍱 千人聖誕愛宴團契進行中' },
+      { time: '13:00', title: '羅浮高中運動場・跨世代趣味競賽', activeBadge: '🏆 羅浮高中運動場競賽進行中' },
+      { time: '15:30', title: '頒獎典禮與千人大合照', activeBadge: '📸 頒獎與千人大合照進行中' },
+      { time: '16:30', title: '祝福禱告與平安賦歸', activeBadge: '🎉 2026 聖誕跨世代同樂日圓滿落幕！' }
+    ];
+
+    let isStageInfoOpen = localStorage.getItem(STAGE_OPEN_KEY) === 'true';
+    let stageSchedule = JSON.parse(localStorage.getItem(STAGE_SCHEDULE_KEY) || 'null') || JSON.parse(JSON.stringify(DEFAULT_SCHEDULE));
+
+    function loadStageSettingsFromStorage() {
+      isStageInfoOpen = localStorage.getItem(STAGE_OPEN_KEY) === 'true';
+      stageSchedule = JSON.parse(localStorage.getItem(STAGE_SCHEDULE_KEY) || 'null') || JSON.parse(JSON.stringify(DEFAULT_SCHEDULE));
+      updateStageOpenButtonUI();
+      renderStageScheduleInputs();
+    }
+
+    function toggleStageInfoOpen() {
+      isStageInfoOpen = !isStageInfoOpen;
+      localStorage.setItem(STAGE_OPEN_KEY, String(isStageInfoOpen));
+      updateStageOpenButtonUI();
+      updateCountdownTick();
+      broadcastSync('STAGE_UPDATE', { isStageInfoOpen });
+      showToast(isStageInfoOpen ? '📡 已開放現場分段倒數資訊！' : '🔒 已關閉現場資訊，僅顯示純倒數時間');
+    }
+
+    function updateStageOpenButtonUI() {
+      const btn = document.getElementById('toggle-stage-open-btn');
+      if (!btn) return;
+      if (isStageInfoOpen) {
+        btn.className = 'rounded-xl bg-xmas-green px-3.5 py-2 text-xs font-black text-white shadow transition';
+        btn.textContent = '📡 已開放現場進度資訊（點擊收回）';
+      } else {
+        btn.className = 'rounded-xl bg-gray-800 px-3.5 py-2 text-xs font-black text-white shadow transition';
+        btn.textContent = '🔒 目前未開放（點擊立即開放現場資訊）';
+      }
+    }
+
+    function renderStageScheduleInputs() {
+      const container = document.getElementById('stage-schedule-inputs');
+      if (!container) return;
+      container.innerHTML = stageSchedule
+        .map(
+          (st, i) => `
+          <div class="flex items-center gap-2 rounded-xl border border-amber-200 bg-white p-2">
+            <input type="time" id="st-time-${i}" value="${st.time}" class="rounded-lg border border-gray-300 px-2 py-1 text-xs font-black text-xmas-darkred" />
+            <input type="text" id="st-title-${i}" value="${escapeHtml(st.title)}" class="w-full rounded-lg border border-gray-300 px-2.5 py-1 text-xs font-bold text-gray-800" />
+          </div>
+        `
+        )
+        .join('');
+    }
+
+    function saveStageSchedule() {
+      stageSchedule = stageSchedule.map((st, i) => ({
+        ...st,
+        time: document.getElementById(`st-time-${i}`)?.value || st.time,
+        title: document.getElementById(`st-title-${i}`)?.value.trim() || st.title
+      }));
+      localStorage.setItem(STAGE_SCHEDULE_KEY, JSON.stringify(stageSchedule));
+      updateCountdownTick();
+      broadcastSync('STAGE_UPDATE', { stageSchedule });
+      showToast('已套用並即時同步最新倒數時程！');
+    }
+
+    function resetStageSchedule() {
+      stageSchedule = JSON.parse(JSON.stringify(DEFAULT_SCHEDULE));
+      localStorage.setItem(STAGE_SCHEDULE_KEY, JSON.stringify(stageSchedule));
+      renderStageScheduleInputs();
+      updateCountdownTick();
+      broadcastSync('STAGE_UPDATE', { stageSchedule });
+      showToast('已恢復預設活動時程');
+    }
+
+    function updateCountdownTick() {
+      const now = Date.now();
+      const baseDate = '2026-12-06';
+      const nodes = stageSchedule.map(st => ({
+        ...st,
+        ts: new Date(`${baseDate}T${st.time}:00+08:00`).getTime()
+      }));
+
+      const badgeWrap = document.getElementById('live-stage-badge');
+      const badgeText = document.getElementById('live-stage-badge-text');
+      const statusEl = document.getElementById('countdown-status');
+      const defaultLabel = document.getElementById('countdown-default-label');
+
+      if (!isStageInfoOpen) {
+        badgeWrap.classList.add('hidden');
+        statusEl.classList.add('hidden');
+        defaultLabel.classList.remove('hidden');
+        const firstTarget = nodes[0]?.ts || new Date('2026-12-06T09:00:00+08:00').getTime();
+        const diff = Math.max(0, firstTarget - now);
+        renderDigits(diff);
+        return;
+      }
+
+      defaultLabel.classList.add('hidden');
+      badgeWrap.classList.remove('hidden');
+      statusEl.classList.remove('hidden');
+
+      const lastNode = nodes[nodes.length - 1];
+      if (now >= lastNode.ts) {
+        badgeText.textContent = lastNode.activeBadge;
+        statusEl.textContent = '感謝所有青年同工、長輩與孩童的熱情參與！';
+        ['cd-days', 'cd-hours', 'cd-mins', 'cd-secs'].forEach(id => (document.getElementById(id).textContent = '00'));
+        return;
+      }
+
+      let nextIdx = nodes.findIndex(n => now < n.ts);
+      if (nextIdx === -1) nextIdx = 0;
+
+      if (nextIdx === 0) {
+        badgeText.textContent = '🎄 活動即將登場';
+        statusEl.textContent = `距離【${nodes[0].time} ${nodes[0].title}】還有`;
+      } else {
+        badgeText.textContent = nodes[nextIdx - 1].activeBadge;
+        statusEl.textContent = `下一階段倒數：【${nodes[nextIdx].time} ${nodes[nextIdx].title}】`;
+      }
+
+      renderDigits(Math.max(0, nodes[nextIdx].ts - now));
+    }
+
+    function renderDigits(diff) {
+      const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const m = Math.floor((diff / (1000 * 60)) % 60);
+      const s = Math.floor((diff / 1000) % 60);
+      document.getElementById('cd-days').textContent = String(d).padStart(2, '0');
+      document.getElementById('cd-hours').textContent = String(h).padStart(2, '0');
+      document.getElementById('cd-mins').textContent = String(m).padStart(2, '0');
+      document.getElementById('cd-secs').textContent = String(s).padStart(2, '0');
+    }
+
+    setInterval(updateCountdownTick, 1000);
+
+    /* ==================== 3. 重要布達公告 ==================== */
+    const NOTICE_STORAGE_KEY = 'xmas2026_read_notice_version';
+    const LIVE_NOTICES_KEY = 'xmas2026_live_notices';
+
+    const defaultNotices = [
+      {
+        id: 'n1',
+        tag: '置頂必讀',
+        badgeColor: 'bg-xmas-red',
+        borderColor: 'border-red-200',
+        title: '09:00 羅浮國小（主日）與羅浮高中（兒主）同步開始',
+        body: '請青年夥伴 08:40 前抵達指定校區協助引導：成人、青年與長輩於「羅浮國小」參加主日禮拜；國小以下兒童與兒主同工直接前往「羅浮高中」教室報到，切勿走錯校門。',
+        expanded: true
+      },
+      {
+        id: 'n2',
+        tag: '長輩守護',
+        badgeColor: 'bg-amber-500',
+        borderColor: 'border-amber-200',
+        title: '長輩手持紙本手冊，青年請主動協助對照時段與座位',
+        body: '現場 1,000 人規模較大，長輩手上的紙本手冊印有大字體程序單與隊別貼紙。若長輩忘記眼鏡或看不清字體，請青年同工直接打開本網頁「上午禮拜 PPT 資料」切換大字體模式共讀。',
+        expanded: false
+      },
+      {
+        id: 'n3',
+        tag: '下午競賽',
+        badgeColor: 'bg-xmas-green',
+        borderColor: 'border-emerald-200',
+        title: '13:00 羅浮高中運動場趣味競賽｜請著運動鞋與保暖層次穿搭',
+        body: '復興區羅浮 12 月初山區早晚溫差大，建議採「洋蔥式穿法」。下午趣味競賽為跨世代合作項目，嚴禁衝撞推擠，長輩參與傳接項目時請由青年同工在旁護持。',
+        expanded: false
+      },
+      {
+        id: 'n4',
+        tag: '環保與秩序',
+        badgeColor: 'bg-gray-700',
+        borderColor: 'border-gray-200',
+        title: '自備環保杯具與餐具，愛宴優先禮讓長輩與幼童取餐',
+        body: '11:10 愛宴午餐時間，請各小組青年代表先協助同桌長輩盛裝熱湯與餐點，並於餐後配合分類回收，維持校園整潔。',
+        expanded: false
+      }
+    ];
+
+    function getAllNotices() {
+      const added = JSON.parse(localStorage.getItem(LIVE_NOTICES_KEY) || '[]');
+      return [...added, ...defaultNotices];
+    }
+
+    function renderNotices() {
+      const list = getAllNotices();
+      const container = document.getElementById('announcement-list');
+      if (!container) return;
+      container.innerHTML = list
+        .map(
+          item => `
+          <article class="notice-card overflow-hidden rounded-2xl border-2 ${item.borderColor || 'border-red-200'} bg-white shadow-sm transition hover:shadow-md">
+            <button onclick="toggleNoticeDetail(this)" class="flex w-full items-start justify-between gap-3 p-4 text-left">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="rounded-md ${item.badgeColor || 'bg-xmas-red'} px-2 py-0.5 text-[11px] font-black text-white">${escapeHtml(item.tag)}</span>
+                  ${item.time ? `<span class="text-[11px] font-bold text-gray-400">${item.time} 發布</span>` : ''}
+                </div>
+                <h3 data-editable class="mt-1.5 text-base font-black text-gray-900">${escapeHtml(item.title)}</h3>
+              </div>
+              <span class="notice-arrow mt-1 shrink-0 rounded-full bg-red-50 px-2 py-1 text-xs font-bold text-xmas-red">${item.expanded ? '收合 ▲' : '展開 ▼'}</span>
+            </button>
+            <div class="notice-detail ${item.expanded ? '' : 'hidden'} border-t border-gray-100 bg-amber-50/30 px-4 py-3 text-sm leading-relaxed text-gray-700">
+              <p data-editable>${escapeHtml(item.body)}</p>
+            </div>
+          </article>
+        `
+        )
+        .join('');
+    }
+
+    function toggleNoticeDetail(btn) {
+      const card = btn.closest('.notice-card');
+      const detail = card.querySelector('.notice-detail');
+      const arrow = btn.querySelector('.notice-arrow');
+      const isHidden = detail.classList.toggle('hidden');
+      arrow.textContent = isHidden ? '展開 ▼' : '收合 ▲';
+    }
+
+    async function publishLiveNotice() {
+      const tag = document.getElementById('admin-notice-tag').value.trim() || '即時新布達';
+      const title = document.getElementById('admin-notice-title').value.trim();
+      const body = document.getElementById('admin-notice-body').value.trim();
+      if (!title || !body) {
+        showToast('請輸入新公告標題與內容');
+        return;
+      }
+
+      const now = new Date();
+      const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      const newVersion = 'v' + Date.now();
+      const newNotice = {
+        id: newVersion,
+        tag,
+        badgeColor: 'bg-xmas-red',
+        borderColor: 'border-red-300',
+        title,
+        body,
+        time: timeStr,
+        expanded: true
+      };
+
+      const added = JSON.parse(localStorage.getItem(LIVE_NOTICES_KEY) || '[]');
+      added.unshift(newNotice);
+      localStorage.setItem(LIVE_NOTICES_KEY, JSON.stringify(added));
+      localStorage.setItem('xmas2026_latest_notice_ver', newVersion);
+
+      document.getElementById('admin-notice-title').value = '';
+      document.getElementById('admin-notice-body').value = '';
+
+      renderNotices();
+      syncModalWithLatestNotice(newNotice);
+      broadcastSync('NEW_NOTICE', newNotice);
+
+      try {
+        await callGasPost({
+          action: 'addNotice',
+          passcode: getAdminPasscode(),
+          notice: newNotice
+        });
+        showToast('🚀 新重要布達已同步至雲端與所有裝置！');
+      } catch (err) {
+        showToast('🚀 本機已推播新公告（雲端連線稍後重試）');
+      }
+    }
+
+    function getCurrentNoticeVersion() {
+      return localStorage.getItem('xmas2026_latest_notice_ver') || 'v2026.12.06-A';
+    }
+
+    function syncModalWithLatestNotice(notice) {
+      if (!notice) return;
+      document.getElementById('modal-notice-version').textContent = notice.id || getCurrentNoticeVersion();
+      document.getElementById('modal-notice-title').textContent = notice.title;
+      document.getElementById('modal-notice-body').innerHTML = `
+        <div class="rounded-2xl border border-red-200 bg-red-50/70 p-4">
+          <span class="inline-block rounded bg-xmas-red px-2 py-0.5 text-[11px] font-black text-white">${escapeHtml(notice.tag)}</span>
+          <p class="mt-2 text-sm leading-relaxed text-gray-800">${escapeHtml(notice.body)}</p>
+        </div>
+      `;
+      const badge = document.getElementById('notice-badge');
+      if (badge) badge.textContent = 'NEW';
+    }
+
+    function dismissLiveBanner() {
+      document.getElementById('live-notice-banner').classList.add('hidden');
+    }
+
+    function checkMandatoryNotice() {
+      const readVer = localStorage.getItem(NOTICE_STORAGE_KEY);
+      const currentVer = getCurrentNoticeVersion();
+      if (readVer !== currentVer) {
+        const added = JSON.parse(localStorage.getItem(LIVE_NOTICES_KEY) || '[]');
+        if (added.length > 0) {
+          syncModalWithLatestNotice(added[0]);
+        }
+        openMandatoryModal();
+      } else {
+        const badge = document.getElementById('notice-badge');
+        if (badge) badge.textContent = '已讀';
+      }
+    }
+
+    function openMandatoryModal() {
+      dismissLiveBanner();
+      const modal = document.getElementById('mandatory-notice-modal');
+      const checkbox = document.getElementById('mandatory-read-checkbox');
+      const btn = document.getElementById('confirm-mandatory-btn');
+      checkbox.checked = false;
+      btn.disabled = true;
+      btn.className = 'w-full rounded-xl bg-gray-300 px-4 py-3 text-sm font-black text-gray-500 shadow transition disabled:cursor-not-allowed';
+      btn.textContent = '請先勾選上方確認框以進入手冊';
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function triggerNewNoticeDemo() {
+      localStorage.removeItem(NOTICE_STORAGE_KEY);
+      openMandatoryModal();
+    }
+
+    document.getElementById('mandatory-read-checkbox').addEventListener('change', function () {
+      const btn = document.getElementById('confirm-mandatory-btn');
+      if (this.checked) {
+        btn.disabled = false;
+        btn.className = 'w-full cursor-pointer rounded-xl bg-xmas-red px-4 py-3 text-sm font-black text-white shadow-lg transition hover:bg-xmas-darkred';
+        btn.textContent = '✓ 我已確認重要布達，開始瀏覽手冊';
+      } else {
+        btn.disabled = true;
+        btn.className = 'w-full rounded-xl bg-gray-300 px-4 py-3 text-sm font-black text-gray-500 shadow transition disabled:cursor-not-allowed';
+        btn.textContent = '請先勾選上方確認框以進入手冊';
+      }
+    });
+
+    document.getElementById('confirm-mandatory-btn').addEventListener('click', function () {
+      localStorage.setItem(NOTICE_STORAGE_KEY, getCurrentNoticeVersion());
+      const modal = document.getElementById('mandatory-notice-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      const badge = document.getElementById('notice-badge');
+      if (badge) badge.textContent = '已讀';
+      showToast('已確認最新重要布達公告！');
+    });
+
+    /* ==================== 4. 主分頁切換 ==================== */
+    function switchMainTab(tabName) {
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+      const activePanel = document.getElementById('panel-' + tabName);
+      if (activePanel) activePanel.classList.remove('hidden');
+
+      document.querySelectorAll('.main-tab-btn').forEach(btn => {
+        if (btn.dataset.tab === tabName) {
+          btn.className = 'main-tab-btn flex shrink-0 items-center gap-1.5 rounded-xl bg-xmas-red px-3.5 py-2 text-xs font-black text-white shadow-sm transition sm:text-sm';
+        } else {
+          btn.className = 'main-tab-btn flex shrink-0 items-center gap-1.5 rounded-xl bg-white px-3.5 py-2 text-xs font-bold text-gray-700 ring-1 ring-gray-200 transition hover:bg-amber-50 sm:text-sm';
+        }
+      });
+    }
+
+    /* ==================== 5. 大會官方快拍橫移展示牆 ==================== */
+    function createSvgPlaceholder(bg1, bg2, emoji, title) {
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="480" height="300" viewBox="0 0 480 300">
+        <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${bg1}"/><stop offset="100%" stop-color="${bg2}"/></linearGradient></defs>
+        <rect width="480" height="300" fill="url(#g)"/>
+        <text x="240" y="135" font-size="64" text-anchor="middle">${emoji}</text>
+        <text x="240" y="195" font-family="sans-serif" font-size="22" font-weight="bold" fill="#ffffff" text-anchor="middle">${title}</text>
+        <text x="240" y="228" font-family="sans-serif" font-size="14" fill="#fde68a" text-anchor="middle">2026 聖誕跨世代同樂日・大會官方攝影組</text>
+      </svg>`;
+      return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
+    }
+
+    let officialPhotos = [
+      {
+        src: createSvgPlaceholder('#991B1B', '#14532D', '⛪', '羅浮國小・主日敬拜恩典時刻'),
+        tag: '羅浮國小主日場',
+        caption: '跨世代詩歌敬拜，長輩與青年同聲頌讚！'
+      },
+      {
+        src: createSvgPlaceholder('#166534', '#D97706', '🧒', '羅浮高中・兒童主日學歡慶'),
+        tag: '羅浮高中兒主場',
+        caption: '小朋友專注聆聽伯利恆之星聖誕故事劇'
+      },
+      {
+        src: createSvgPlaceholder('#B91C1C', '#D97706', '🍱', '千人聖誕愛宴・跨代團契'),
+        tag: '愛宴午餐時間',
+        caption: '青年同工貼心為同桌長輩送上熱騰騰佳餚'
+      },
+      {
+        src: createSvgPlaceholder('#14532D', '#0369A1', '🏆', '羅浮高中運動場・趣味競賽'),
+        tag: '下午運動場競賽',
+        caption: '老少聯隊齊心協力完成聖誕好禮接力傳！'
+      }
+    ];
+
+    function renderMarqueePhotos() {
+      const track = document.getElementById('official-marquee-track');
+      const adminList = document.getElementById('organizer-photo-list');
+      if (!track) return;
+
+      const doubled = [...officialPhotos, ...officialPhotos];
+      track.innerHTML = doubled
+        .map(
+          (item, idx) => `
+          <div
+            onclick="openLightbox(${idx % officialPhotos.length})"
+            class="group relative h-32 w-56 shrink-0 cursor-pointer overflow-hidden rounded-2xl border border-amber-200/80 bg-white shadow-sm transition hover:scale-[1.02] hover:shadow-md sm:h-36 sm:w-64"
+          >
+            <img src="${item.src}" alt="${item.caption}" class="h-full w-full object-cover" />
+            <div class="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/80 via-black/20 to-transparent p-2.5">
+              <span class="w-fit rounded bg-xmas-red/90 px-1.5 py-0.5 text-[10px] font-bold text-white">${item.tag}</span>
+              <p class="mt-0.5 truncate text-xs font-bold text-white">${item.caption}</p>
+            </div>
+          </div>
+        `
+        )
+        .join('');
+
+      if (adminList) {
+        adminList.innerHTML = officialPhotos
+          .map(
+            (item, i) => `
+            <div class="relative h-14 w-20 overflow-hidden rounded-lg border border-gray-300">
+              <img src="${item.src}" class="h-full w-full object-cover" />
+              <button onclick="removeOfficialPhoto(${i})" class="absolute right-0.5 top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white">×</button>
+            </div>
+          `
+          )
+          .join('');
+      }
+    }
+
+    function openLightbox(index) {
+      const item = officialPhotos[index];
+      if (!item) return;
+      document.getElementById('lightbox-img').src = item.src;
+      document.getElementById('lightbox-tag').textContent = item.tag;
+      document.getElementById('lightbox-caption').textContent = item.caption;
+      const lb = document.getElementById('photo-lightbox');
+      lb.classList.remove('hidden');
+      lb.classList.add('flex');
+    }
+
+    function closeLightbox() {
+      const lb = document.getElementById('photo-lightbox');
+      lb.classList.add('hidden');
+      lb.classList.remove('flex');
+    }
+
+    function handleOfficialPhotoUpload(event) {
+      const files = Array.from(event.target.files || []);
+      if (!files.length) return;
+      const tag = document.getElementById('official-photo-tag').value.trim() || '大會官方快拍';
+      const customCaption = document.getElementById('official-photo-caption').value.trim();
+
+      files.forEach((file, idx) => {
+        const reader = new FileReader();
+        reader.onload = e => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const maxW = 720;
+            const scale = Math.min(1, maxW / img.width);
+            canvas.width = img.width * scale;
+            canvas.height = img.height * scale;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.78);
+            officialPhotos.unshift({
+              src: compressedDataUrl,
+              tag: tag,
+              caption: customCaption || `${tag} 現場精選畫面 #${idx + 1}`
+            });
+            renderMarqueePhotos();
+            showToast('已新增照片至大會橫移展示牆！');
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+      event.target.value = '';
+    }
+
+    function removeOfficialPhoto(index) {
+      if (officialPhotos.length <= 1) {
+        showToast('橫移展示列至少需保留 1 張照片');
+        return;
+      }
+      officialPhotos.splice(index, 1);
+      renderMarqueePhotos();
+    }
+
+    /* ==================== 6. 時間軸篩選與注意事項收合 ==================== */
+    function toggleNoteBox(btn) {
+      const content = btn.nextElementSibling;
+      const chevron = btn.querySelector('.note-chevron');
+      const isHidden = content.classList.toggle('hidden');
+      if (chevron) chevron.textContent = isHidden ? '▼' : '▲';
+    }
+
+    function toggleAllTimelineNotes(expand) {
+      document.querySelectorAll('#timeline-container .note-content').forEach(box => {
+        box.classList.toggle('hidden', !expand);
+      });
+      document.querySelectorAll('#timeline-container .note-chevron').forEach(ch => {
+        ch.textContent = expand ? '▲' : '▼';
+      });
+    }
+
+    function filterTimeline(period) {
+      document.querySelectorAll('.tl-filter-btn').forEach(b => {
+        b.className =
+          b.dataset.tfilter === period
+            ? 'tl-filter-btn rounded-lg bg-xmas-red px-2.5 py-1 text-white'
+            : 'tl-filter-btn rounded-lg px-2.5 py-1 text-gray-600';
+      });
+      document.querySelectorAll('.tl-item').forEach(item => {
+        item.classList.toggle('hidden', period !== 'all' && item.dataset.period !== period);
+      });
+    }
+
+    /* ==================== 7. 上午禮拜 PPT 投影片、批量上傳、大螢幕投影與手機同步 ==================== */
+    const PPT_SYNC_SLIDE_KEY = 'xmas2026_ppt_current_slide';
+    const PPT_CUSTOM_SLIDES_KEY = 'xmas2026_ppt_custom_slides';
+    let customPptSlides = JSON.parse(localStorage.getItem(PPT_CUSTOM_SLIDES_KEY) || '[]');
+    let currentSlide = Number(localStorage.getItem(PPT_SYNC_SLIDE_KEY) || 0);
+    let isPptLarge = false;
+    let isPptFollowSync = true;
+    let isProjectorMode = false;
+    const isProjectorReceiver = new URLSearchParams(window.location.search).get('projector') === '1';
+    let independentProjectorWin = null;
+
+    function loadCustomPptSlides() {
+      customPptSlides = JSON.parse(localStorage.getItem(PPT_CUSTOM_SLIDES_KEY) || '[]');
+      renderPptSlidesStructure();
+    }
+
+    function renderPptSlidesStructure() {
+      const stage = document.getElementById('ppt-stage');
+      const customBox = document.getElementById('custom-ppt-slides-container');
+      const defaultBox = document.getElementById('default-ppt-slides-container');
+      const tabsBox = document.getElementById('ppt-slide-tabs');
+      const adminStatus = document.getElementById('admin-ppt-status');
+      const adminPreview = document.getElementById('admin-ppt-preview-list');
+
+      if (customPptSlides.length > 0) {
+        stage?.classList.add('has-custom-slides');
+        defaultBox?.classList.add('hidden');
+        customBox?.classList.remove('hidden');
+
+        if (customBox) {
+          customBox.innerHTML = customPptSlides
+            .map(
+              (item, idx) => `
+              <div class="ppt-slide ${idx === 0 ? '' : 'hidden'} flex flex-col items-center justify-center">
+                <img src="${item.src}" alt="${escapeHtml(item.title)}" class="max-h-[65vh] w-full rounded-2xl object-contain shadow-sm" />
+              </div>
+            `
+            )
+            .join('');
+        }
+
+        if (tabsBox) {
+          tabsBox.innerHTML = customPptSlides
+            .map(
+              (item, idx) => `
+              <button onclick="selectSlide(${idx}, true)" data-slide-btn="${idx}" class="ppt-tab-btn rounded-lg ${idx === 0 ? 'bg-amber-400 font-black text-xmas-darkred' : 'bg-white/15 font-bold text-white hover:bg-white/25'} px-2.5 py-1 text-xs">
+                P.${idx + 1}
+              </button>
+            `
+            )
+            .join('');
+        }
+
+        if (adminStatus) adminStatus.textContent = `目前使用：自訂上傳 PPT 簡報（共 ${customPptSlides.length} 頁）`;
+        if (adminPreview) {
+          adminPreview.innerHTML = customPptSlides
+            .map(
+              (item, idx) => `
+              <div class="relative h-14 w-24 overflow-hidden rounded-lg border border-purple-300 bg-black">
+                <img src="${item.src}" class="h-full w-full object-contain" />
+                <span class="absolute bottom-0.5 left-0.5 rounded bg-black/75 px-1 text-[10px] font-bold text-white">P.${idx + 1}</span>
+              </div>
+            `
+            )
+            .join('');
+        }
+      } else {
+        stage?.classList.remove('has-custom-slides');
+        customBox?.classList.add('hidden');
+        defaultBox?.classList.remove('hidden');
+
+        if (tabsBox) {
+          const defaultTitles = ['1. 禮拜程序單', '2. 敬拜詩歌歌詞', '3. 聖誕信息經文與大綱', '4. 兒主場次簡報摘要'];
+          tabsBox.innerHTML = defaultTitles
+            .map(
+              (t, idx) => `
+              <button onclick="selectSlide(${idx}, true)" data-slide-btn="${idx}" class="ppt-tab-btn rounded-lg ${idx === 0 ? 'bg-amber-400 font-black text-xmas-darkred' : 'bg-white/15 font-bold text-white hover:bg-white/25'} px-3 py-1 text-xs">
+                ${t}
+              </button>
+            `
+            )
+            .join('');
+        }
+
+        if (adminStatus) adminStatus.textContent = '目前使用：內建預設 4 頁禮拜簡報';
+        if (adminPreview) adminPreview.innerHTML = '';
+      }
+    }
+
+    function handleCustomPptUpload(event) {
+      const files = Array.from(event.target.files || []);
+      if (!files.length) return;
+
+      files.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
+
+      const loadedResults = new Array(files.length);
+      let completed = 0;
+
+      files.forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onload = e => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const maxW = 1280;
+            const scale = Math.min(1, maxW / img.width);
+            canvas.width = img.width * scale;
+            canvas.height = img.height * scale;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            loadedResults[index] = {
+              src: canvas.toDataURL('image/jpeg', 0.82),
+              title: file.name.replace(/\.[^/.]+$/, '')
+            };
+            completed++;
+            if (completed === files.length) {
+              customPptSlides = loadedResults;
+              try {
+                localStorage.setItem(PPT_CUSTOM_SLIDES_KEY, JSON.stringify(customPptSlides));
+                localStorage.setItem(PPT_SYNC_SLIDE_KEY, '0');
+                renderPptSlidesStructure();
+                selectSlide(0, true);
+                broadcastSync('PPT_CUSTOM_UPDATE', { count: customPptSlides.length });
+                showToast(`🎉 已成功匯入 ${customPptSlides.length} 頁 PPT 投影片並同步至全場！`);
+              } catch (storageErr) {
+                showToast('⚠️ 投影片總檔案過大超過瀏覽器儲存上限，請減少頁數或降低圖片解析度後再試');
+              }
+            }
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+      event.target.value = '';
+    }
+
+    function resetCustomPptSlides() {
+      customPptSlides = [];
+      localStorage.removeItem(PPT_CUSTOM_SLIDES_KEY);
+      localStorage.setItem(PPT_SYNC_SLIDE_KEY, '0');
+      renderPptSlidesStructure();
+      selectSlide(0, true);
+      broadcastSync('PPT_CUSTOM_UPDATE', { count: 0 });
+      showToast('已恢復內建預設禮拜簡報');
+    }
+
+    function selectSlide(idx, shouldBroadcast = false) {
+      const containerSelector = customPptSlides.length > 0 ? '#custom-ppt-slides-container .ppt-slide' : '#default-ppt-slides-container .ppt-slide';
+      const slides = document.querySelectorAll(containerSelector);
+      const btns = document.querySelectorAll('.ppt-tab-btn');
+      if (!slides.length) return;
+      currentSlide = (idx + slides.length) % slides.length;
+      slides.forEach((s, i) => s.classList.toggle('hidden', i !== currentSlide));
+      btns.forEach((b, i) => {
+        b.className =
+          i === currentSlide
+            ? 'ppt-tab-btn rounded-lg bg-amber-400 px-3 py-1 text-xs font-black text-xmas-darkred'
+            : 'ppt-tab-btn rounded-lg bg-white/15 px-3 py-1 text-xs font-bold text-white hover:bg-white/25';
+      });
+      document.getElementById('slide-counter').textContent = `第 ${currentSlide + 1} / ${slides.length} 頁`;
+
+      if (shouldBroadcast) {
+        localStorage.setItem(PPT_SYNC_SLIDE_KEY, String(currentSlide));
+        broadcastSync('PPT_SLIDE_SYNC', { slide: currentSlide });
+      }
+    }
+
+    function nextSlide() {
+      selectSlide(currentSlide + 1, true);
+    }
+
+    function prevSlide() {
+      selectSlide(currentSlide - 1, true);
+    }
+
+    function togglePptLargeText() {
+      isPptLarge = !isPptLarge;
+      const stage = document.getElementById('ppt-stage');
+      const btn = document.getElementById('ppt-large-text-btn');
+      stage.classList.toggle('text-xl', isPptLarge);
+      stage.classList.toggle('leading-loose', isPptLarge);
+      btn.textContent = isPptLarge ? '🔍 長輩共讀大字模式：開' : '🔍 長輩共讀大字模式：關';
+      btn.classList.toggle('bg-amber-300', isPptLarge);
+    }
+
+    function togglePptFollowSync() {
+      isPptFollowSync = !isPptFollowSync;
+      const btn = document.getElementById('ppt-sync-follow-btn');
+      if (isPptFollowSync) {
+        btn.className = 'rounded-xl bg-emerald-100 px-3 py-2 text-xs font-black text-xmas-green transition hover:bg-emerald-200';
+        btn.textContent = '🔄 跟隨現場投影同步：開';
+        const latestSlide = Number(localStorage.getItem(PPT_SYNC_SLIDE_KEY) || 0);
+        selectSlide(latestSlide, false);
+        showToast('已開啟跟隨現場投影片同步');
+      } else {
+        btn.className = 'rounded-xl bg-gray-100 px-3 py-2 text-xs font-bold text-gray-600 transition hover:bg-gray-200';
+        btn.textContent = '🔄 跟隨現場投影同步：關（自行翻閱）';
+        showToast('已切換為自行翻閱模式');
+      }
+    }
+
+    function broadcastStageControlToPhones(modeType = 'live') {
+      localStorage.setItem(ACTIVE_TAB_SYNC_KEY, 'ppt');
+      localStorage.setItem(PROJECTOR_LIVE_KEY, JSON.stringify({ active: true, mode: modeType, slide: currentSlide, ts: Date.now() }));
+      localStorage.setItem(PPT_SYNC_SLIDE_KEY, String(currentSlide));
+      broadcastSync('ADMIN_PROJECTOR_SYNC', {
+        tab: 'ppt',
+        slide: currentSlide,
+        mode: modeType
+      });
+    }
+
+    function triggerAdminProjector(target) {
+      if (!isAdminAuthorized) {
+        openAdminAuthModal();
+        return;
+      }
+      switchMainTab('ppt');
+      broadcastStageControlToPhones(target);
+      if (target === 'popup') {
+        openIndependentProjectorWindow();
+      } else {
+        toggleProjectorMode(true);
+      }
+    }
+
+    function toggleProjectorMode(enable) {
+      isProjectorMode = enable;
+      document.body.classList.toggle('ppt-projector-mode', enable);
+      document.getElementById('exit-projector-btn').classList.toggle('hidden', !enable);
+      document.getElementById('projector-hint').classList.toggle('hidden', !enable);
+
+      if (enable) {
+        switchMainTab('ppt');
+        selectSlide(currentSlide, true);
+        if (document.documentElement.requestFullscreen) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        }
+        showToast('🖥️ 已進入音控台大螢幕投影模式（按 ESC 可退出）');
+      } else {
+        if (document.fullscreenElement && document.exitFullscreen) {
+          document.exitFullscreen().catch(() => {});
+        }
+        showToast('已結束大螢幕投影模式');
+      }
+    }
+
+    function openIndependentProjectorWindow() {
+      const targetUrl = new URL(window.location.href);
+      targetUrl.searchParams.set('projector', '1');
+      const winFeatures = 'width=1280,height=720,menubar=no,toolbar=no,location=no,status=no';
+
+      if (window.location.protocol.startsWith('http')) {
+        independentProjectorWin = window.open(targetUrl.toString(), 'Xmas2026ProjectorWindow', winFeatures);
+      } else {
+        independentProjectorWin = window.open('', 'Xmas2026ProjectorWindow', winFeatures);
+        if (independentProjectorWin) {
+          const clone = document.documentElement.cloneNode(true);
+          clone.querySelector('body').classList.add('ppt-projector-mode');
+          const scriptInject = clone.ownerDocument.createElement('script');
+          scriptInject.textContent = `window.__FORCE_PROJECTOR_RECEIVER = true;`;
+          clone.querySelector('head').appendChild(scriptInject);
+          independentProjectorWin.document.open();
+          independentProjectorWin.document.write('<!DOCTYPE html>\n' + clone.outerHTML);
+          independentProjectorWin.document.close();
+        }
+      }
+
+      if (!independentProjectorWin) {
+        showToast('⚠️ 瀏覽器阻擋了彈出視窗，請允許彈出視窗後再試一次');
+        return;
+      }
+
+      selectSlide(currentSlide, true);
+      showToast('🪟 已彈出獨立大螢幕投影視窗！可拖曳至外接投影螢幕並按 F11 全螢幕');
+    }
+
+    document.addEventListener('keydown', e => {
+      const activeTabIsPpt = !document.getElementById('panel-ppt')?.classList.contains('hidden');
+      if (!isProjectorMode && !activeTabIsPpt) return;
+      if (['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
+
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') {
+        e.preventDefault();
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        e.preventDefault();
+        prevSlide();
+      } else if (e.key === 'Escape' && isProjectorMode && !isProjectorReceiver && !window.__FORCE_PROJECTOR_RECEIVER) {
+        toggleProjectorMode(false);
+      }
+    });
+
+    /* ==================== 8. 下午趣味競賽 ==================== */
+    const GAME_QUOTA_KEY = 'xmas2026_game_quotas';
+    const DEFAULT_GAMES_DATA = [
+      {
+        title: '🎵 第一場：《跨時代金曲猜猜看》',
+        total: '6 人／隊',
+        elder: '3 位長輩',
+        youth: '3 位青年',
+        other: '自由加油團',
+        note: '📢 請各隊隊長於 13:05 前將 3 位長輩＋3 位青年帶至主舞台前方搶答區就位！',
+        rule: '每隊派出指定長輩與青年組成聯隊，播放經典民歌、部落古調、經典聖詩與流行金曲前奏，最快舉起聖誕鈴鐺搶答並合唱兩句者得分。',
+        tip: '💡 年輕人神隊友攻略：經典老歌與傳統聖詩交給長輩聽前奏秒殺，年輕人負責衝刺舉鈴鐺與炒熱氣氛！'
+      },
+      {
+        title: '🎁 第二場：《聖誕好禮接力傳》',
+        total: '12 人／隊',
+        elder: '4 位長輩（可坐姿）',
+        youth: '6 位青年',
+        other: '2 位孩童',
+        note: '📢 長輩可安排在隊伍中段坐椅子傳接，兩端折返跑由青年擔綱，安全第一！',
+        rule: '全隊排成縱隊，使用大型聖誕拐杖糖道具將聖誕禮物盒從隊首傳遞至隊尾，限時 2 分鐘內傳送最多盒者獲勝。',
+        tip: '💡 年輕人神隊友攻略：青年站兩端負責折返跑補貨，中段傳給長輩時放慢節奏確保穩定不掉落！'
+      },
+      {
+        title: '🙌 第三場：《默契比手畫腳大挑戰》',
+        total: '8 人／隊',
+        elder: '3 位長輩',
+        youth: '4 位青年',
+        other: '1 位孩童',
+        note: '📢 輪流上台比動作，禁止說出題目中的任何字眼或諧音，90 秒計時開始！',
+        rule: '題目涵蓋聖經人物、生活日常與部落文化，由青年、長輩與孩童輪流比動作，隊友在 90 秒內猜出最多題者奪冠。',
+        tip: '💡 年輕人神隊友攻略：動作幅度大、善用日常表情，遇到太難的題目果斷喊 Pass 換下一題！'
+      }
+    ];
+
+    let gamesData = JSON.parse(localStorage.getItem(GAME_QUOTA_KEY) || 'null') || JSON.parse(JSON.stringify(DEFAULT_GAMES_DATA));
+    let currentGameIdx = 0;
+
+    function loadGameQuotasFromStorage() {
+      gamesData = JSON.parse(localStorage.getItem(GAME_QUOTA_KEY) || 'null') || JSON.parse(JSON.stringify(DEFAULT_GAMES_DATA));
+      loadGameQuotaForm();
+    }
+
+    function selectGame(idx) {
+      currentGameIdx = idx;
+      document.querySelectorAll('.game-tab-btn').forEach((b, i) => {
+        b.className =
+          i === idx
+            ? 'game-tab-btn rounded-xl bg-xmas-green px-3.5 py-2 text-xs font-black text-white shadow-sm'
+            : 'game-tab-btn rounded-xl bg-gray-100 px-3.5 py-2 text-xs font-bold text-gray-700 hover:bg-gray-200';
+      });
+      renderCurrentGamePanel();
+    }
+
+    function renderCurrentGamePanel() {
+      const box = document.getElementById('game-detail-box');
+      const g = gamesData[currentGameIdx];
+      if (!box || !g) return;
+
+      box.innerHTML = `
+        <div class="space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <h3 data-editable class="text-lg font-black text-xmas-green sm:text-xl">${escapeHtml(g.title)}</h3>
+            <span class="rounded-full bg-xmas-red px-3 py-1 text-xs font-black text-white shadow-sm">每隊出賽編制公告</span>
+          </div>
+
+          <div class="overflow-hidden rounded-2xl border-2 border-xmas-green bg-white shadow-md">
+            <div class="bg-xmas-green px-4 py-2 text-xs font-black tracking-wider text-amber-200">
+              📋 本場次各隊出賽人數規格（即時同步）
+            </div>
+            <div class="grid grid-cols-2 divide-x divide-y divide-emerald-100 sm:grid-cols-4 sm:divide-y-0">
+              <div class="bg-emerald-50/70 p-4 text-center">
+                <div class="text-xs font-bold text-gray-600">每隊總出賽人數</div>
+                <div class="mt-1 text-2xl font-black text-xmas-darkred sm:text-3xl">${escapeHtml(g.total)}</div>
+              </div>
+              <div class="p-4 text-center">
+                <div class="text-xs font-bold text-gray-600">👴👵 長輩名額</div>
+                <div class="mt-1 text-xl font-black text-gray-900 sm:text-2xl">${escapeHtml(g.elder)}</div>
+              </div>
+              <div class="p-4 text-center">
+                <div class="text-xs font-bold text-gray-600">🧑👩 青年名額</div>
+                <div class="mt-1 text-xl font-black text-xmas-green sm:text-2xl">${escapeHtml(g.youth)}</div>
+              </div>
+              <div class="p-4 text-center">
+                <div class="text-xs font-bold text-gray-600">🧒 孩童／其他</div>
+                <div class="mt-1 text-xl font-black text-amber-700 sm:text-2xl">${escapeHtml(g.other)}</div>
+              </div>
+            </div>
+            <div class="border-t border-amber-200 bg-amber-50 px-4 py-2.5 text-xs font-black text-amber-950 sm:text-sm">
+              ${escapeHtml(g.note)}
+            </div>
+          </div>
+
+          <p data-editable class="text-sm leading-relaxed text-gray-700">
+            <strong>規則說明：</strong>${escapeHtml(g.rule)}
+          </p>
+          <p data-editable class="rounded-xl bg-white p-3.5 text-xs font-bold text-amber-900 ring-1 ring-amber-200 sm:text-sm">
+            ${escapeHtml(g.tip)}
+          </p>
+        </div>
+      `;
+    }
+
+    function loadGameQuotaForm() {
+      const sel = document.getElementById('admin-game-select');
+      if (!sel) return;
+      const idx = Number(sel.value || 0);
+      const g = gamesData[idx];
+      if (!g) return;
+      document.getElementById('gq-total').value = g.total;
+      document.getElementById('gq-elder').value = g.elder;
+      document.getElementById('gq-youth').value = g.youth;
+      document.getElementById('gq-other').value = g.other;
+      document.getElementById('gq-note').value = g.note;
+    }
+
+    async function saveGameQuota() {
+      const idx = Number(document.getElementById('admin-game-select').value || 0);
+      gamesData[idx] = {
+        ...gamesData[idx],
+        total: document.getElementById('gq-total').value.trim() || gamesData[idx].total,
+        elder: document.getElementById('gq-elder').value.trim() || gamesData[idx].elder,
+        youth: document.getElementById('gq-youth').value.trim() || gamesData[idx].youth,
+        other: document.getElementById('gq-other').value.trim() || gamesData[idx].other,
+        note: document.getElementById('gq-note').value.trim() || gamesData[idx].note
+      };
+      localStorage.setItem(GAME_QUOTA_KEY, JSON.stringify(gamesData));
+      selectGame(idx);
+      broadcastSync('GAME_QUOTA_UPDATE', { idx });
+
+      try {
+        await callGasPost({
+          action: 'updateGameQuotas',
+          passcode: getAdminPasscode(),
+          quotas: gamesData
+        });
+        showToast('已更新並同步至雲端與所有裝置！');
+      } catch (err) {
+        showToast('已更新本機人數公告（雲端連線稍後重試）');
+      }
+    }
+
+    const SCORE_KEY = 'xmas2026_team_scores';
+    let teamScores = JSON.parse(localStorage.getItem(SCORE_KEY) || '{"red":0,"green":0,"gold":0,"blue":0}');
+
+    function renderScores() {
+      ['red', 'green', 'gold', 'blue'].forEach(team => {
+        const el = document.getElementById('score-' + team);
+        if (el) el.textContent = teamScores[team] || 0;
+      });
+    }
+
+    function updateScore(team, delta) {
+      teamScores[team] = Math.max(0, (teamScores[team] || 0) + delta);
+      localStorage.setItem(SCORE_KEY, JSON.stringify(teamScores));
+      renderScores();
+    }
+
+    function resetScores() {
+      teamScores = { red: 0, green: 0, gold: 0, blue: 0 };
+      localStorage.setItem(SCORE_KEY, JSON.stringify(teamScores));
+      renderScores();
+      showToast('四隊積分已歸零');
+    }
+
+    /* ==================== 9. 心得分享與感動 ==================== */
+    const APPROVED_DANMAKU_KEY = 'xmas2026_approved_danmaku';
+    const PENDING_DANMAKU_KEY = 'xmas2026_pending_danmaku';
+
+    const defaultDanmaku = [
+      {
+        id: 'd1',
+        name: '青年詩班 小雅',
+        text: '今天看到松年長輩跟我們青年一起站在台上唱《榮耀歸於至高真神》，阿嬤唱到眼眶泛淚，那一刻真的深深感受到跨世代合一的感動！'
+      },
+      {
+        id: 'd2',
+        name: '兒主同工 阿哲',
+        text: '小朋友在羅浮高中做完祝福卡後，中午一看到阿公就衝過去抱住他送上卡片，全場都暖起來了！'
+      },
+      {
+        id: 'd3',
+        name: '橄欖山綠隊 小恩',
+        text: '下午金曲猜猜看長輩們前奏一秒就猜出聖詩歌名，直接帶我們整隊逆轉勝，太神啦！'
+      },
+      {
+        id: 'd4',
+        name: '復興青年 阿豪',
+        text: '謝謝籌備團隊把長輩的紙本手冊跟我們的手機網頁設計得這麼貼心，整天陪阿公跑場超順利！'
+      }
+    ];
+
+    function updateCharCount() {
+      const textarea = document.getElementById('ref-text');
+      const len = textarea.value.length;
+      document.getElementById('ref-char-count').textContent = `${len} / 150 字`;
+      const bar = document.getElementById('ref-char-bar');
+      bar.style.width = `${Math.min(100, (len / 150) * 100)}%`;
+      bar.className = len >= 135 ? 'h-full bg-xmas-red transition-all' : 'h-full bg-xmas-green transition-all';
+    }
+
+    function getApprovedDanmaku() {
+      const approved = JSON.parse(localStorage.getItem(APPROVED_DANMAKU_KEY) || '[]');
+      return [...approved, ...defaultDanmaku];
+    }
+
+    function renderDanmakuWall() {
+      const list = getApprovedDanmaku();
+      const half = Math.ceil(list.length / 2);
+      const row1 = list.slice(0, half);
+      const row2 = list.slice(half).length ? list.slice(half) : list;
+
+      const buildTrackHtml = items => {
+        const doubled = [...items, ...items];
+        return doubled
+          .map(
+            item => `
+            <div
+              onclick="copyDanmakuText('${escapeAttr(item.name)}', '${escapeAttr(item.text)}')"
+              class="w-72 shrink-0 cursor-pointer rounded-2xl border border-amber-300/40 bg-white/15 p-3.5 text-white backdrop-blur-md transition hover:scale-[1.02] hover:bg-white/25 sm:w-80"
+            >
+              <p class="line-clamp-3 text-xs font-medium leading-relaxed text-amber-50 sm:text-sm">「${escapeHtml(item.text)}」</p>
+              <div class="mt-2 flex items-center justify-between text-[11px] font-black text-amber-300">
+                <span>— ${escapeHtml(item.name)}</span>
+                <span class="rounded bg-black/25 px-1.5 py-0.5 text-[10px] text-white">點此複製</span>
+              </div>
+            </div>
+          `
+          )
+          .join('');
+      };
+
+      const t1 = document.getElementById('danmaku-track-1');
+      const t2 = document.getElementById('danmaku-track-2');
+      if (t1) t1.innerHTML = buildTrackHtml(row1);
+      if (t2) t2.innerHTML = buildTrackHtml(row2);
+    }
+
+    async function submitReflection(e) {
+      e.preventDefault();
+      const name = document.getElementById('ref-name').value.trim();
+      const text = document.getElementById('ref-text').value.trim();
+      if (!name || !text) return;
+
+      const now = new Date();
+      const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      const newItem = { id: 'p_' + Date.now(), name, text, time: timeStr };
+
+      const pending = JSON.parse(localStorage.getItem(PENDING_DANMAKU_KEY) || '[]');
+      pending.unshift(newItem);
+      localStorage.setItem(PENDING_DANMAKU_KEY, JSON.stringify(pending));
+
+      document.getElementById('ref-text').value = '';
+      updateCharCount();
+      renderPendingModeration();
+      broadcastSync('DANMAKU_UPDATE', {});
+
+      try {
+        await callGasPost({
+          action: 'submitDanmaku',
+          name,
+          text,
+          time: timeStr
+        });
+        showToast('📨 已送出至雲端審核佇列！管理者核准後即會登上祝福彈幕');
+      } catch (err) {
+        showToast('📨 已送出！待大會管理者審核通過後即會登上祝福彈幕');
+      }
+    }
+
+    function renderPendingModeration() {
+      const pending = JSON.parse(localStorage.getItem(PENDING_DANMAKU_KEY) || '[]');
+      const count = pending.length;
+
+      const myBadge = document.getElementById('my-pending-badge');
+      if (myBadge) {
+        myBadge.classList.toggle('hidden', count === 0);
+        myBadge.textContent = `⏳ 目前共有 ${count} 則留言等待管理者審核`;
+      }
+
+      const pill = document.getElementById('pending-count-pill');
+      if (pill) {
+        pill.classList.toggle('hidden', !isAdminAuthorized || count === 0);
+        pill.textContent = `${count}`;
+      }
+
+      const summary = document.getElementById('admin-pending-summary');
+      if (summary) summary.textContent = `待審核：${count} 則`;
+
+      const listEl = document.getElementById('admin-pending-list');
+      if (listEl) {
+        if (count === 0) {
+          listEl.innerHTML = `<div class="rounded-xl border border-dashed border-sky-200 bg-white p-3 text-center text-xs text-gray-500">目前沒有待審核的心得留言</div>`;
+        } else {
+          listEl.innerHTML = pending
+            .map(
+              (item, i) => `
+              <div class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-sky-200 bg-white p-3 shadow-sm">
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-2 text-xs">
+                    <span class="font-black text-gray-900">${escapeHtml(item.name)}</span>
+                    <span class="text-[11px] text-gray-400">${item.time} 投稿</span>
+                  </div>
+                  <p class="mt-1 text-xs leading-relaxed text-gray-700">${escapeHtml(item.text)}</p>
+                </div>
+                <div class="flex shrink-0 gap-1.5">
+                  <button onclick="approveDanmaku(${i})" class="rounded-lg bg-xmas-green px-3 py-1.5 text-xs font-black text-white shadow hover:bg-green-900">
+                    ✓ 核准上彈幕
+                  </button>
+                  <button onclick="rejectDanmaku(${i})" class="rounded-lg bg-red-100 px-3 py-1.5 text-xs font-black text-xmas-red hover:bg-red-200">
+                    ✕ 退回刪除
+                  </button>
+                </div>
+              </div>
+            `
+            )
+            .join('');
+        }
+      }
+
+      const approvedListEl = document.getElementById('admin-approved-list');
+      if (approvedListEl) {
+        const approved = JSON.parse(localStorage.getItem(APPROVED_DANMAKU_KEY) || '[]');
+        if (approved.length === 0) {
+          approvedListEl.innerHTML = `<div class="text-[11px] text-gray-400">目前僅顯示內建預設祝福彈幕</div>`;
+        } else {
+          approvedListEl.innerHTML = approved
+            .map(
+              (item, i) => `
+              <div class="flex items-center justify-between gap-2 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs">
+                <span class="truncate text-gray-700"><strong>${escapeHtml(item.name)}：</strong>${escapeHtml(item.text)}</span>
+                <button onclick="removeApprovedDanmaku(${i})" class="shrink-0 rounded bg-red-50 px-2 py-0.5 text-[11px] font-bold text-xmas-red hover:bg-red-100">下架</button>
+              </div>
+            `
+            )
+            .join('');
+        }
+      }
+    }
+
+    async function removeApprovedDanmaku(index) {
+      const approved = JSON.parse(localStorage.getItem(APPROVED_DANMAKU_KEY) || '[]');
+      const [removed] = approved.splice(index, 1);
+      localStorage.setItem(APPROVED_DANMAKU_KEY, JSON.stringify(approved));
+      renderDanmakuWall();
+      renderPendingModeration();
+      broadcastSync('DANMAKU_UPDATE', {});
+
+      if (removed?.id) {
+        try {
+          await callGasPost({ action: 'deleteDanmaku', passcode: getAdminPasscode(), id: removed.id });
+        } catch (err) {}
+      }
+      showToast('已從公開祝福彈幕牆下架該則留言');
+    }
+
+    async function approveDanmaku(index) {
+      const pending = JSON.parse(localStorage.getItem(PENDING_DANMAKU_KEY) || '[]');
+      const [item] = pending.splice(index, 1);
+      if (!item) return;
+      localStorage.setItem(PENDING_DANMAKU_KEY, JSON.stringify(pending));
+
+      const approved = JSON.parse(localStorage.getItem(APPROVED_DANMAKU_KEY) || '[]');
+      approved.unshift(item);
+      localStorage.setItem(APPROVED_DANMAKU_KEY, JSON.stringify(approved));
+
+      renderDanmakuWall();
+      renderPendingModeration();
+      broadcastSync('DANMAKU_UPDATE', {});
+
+      try {
+        await callGasPost({ action: 'approveDanmaku', passcode: getAdminPasscode(), id: item.id });
+      } catch (err) {}
+      showToast('✨ 已核准並飛入公開祝福彈幕牆！');
+    }
+
+    async function rejectDanmaku(index) {
+      const pending = JSON.parse(localStorage.getItem(PENDING_DANMAKU_KEY) || '[]');
+      const [item] = pending.splice(index, 1);
+      localStorage.setItem(PENDING_DANMAKU_KEY, JSON.stringify(pending));
+      renderPendingModeration();
+      broadcastSync('DANMAKU_UPDATE', {});
+
+      if (item?.id) {
+        try {
+          await callGasPost({ action: 'deleteDanmaku', passcode: getAdminPasscode(), id: item.id });
+        } catch (err) {}
+      }
+      showToast('已退回並刪除該則留言');
+    }
+
+    function copyDanmakuText(name, text) {
+      const shareStr = `🎄【2026 聖誕跨世代同樂日・祝福彈幕】\n💬「${text}」\n—— ${name}`;
+      try {
+        const tempTextarea = document.createElement('textarea');
+        tempTextarea.value = shareStr;
+        tempTextarea.setAttribute('readonly', '');
+        tempTextarea.style.position = 'fixed';
+        tempTextarea.style.opacity = '0';
+        document.body.appendChild(tempTextarea);
+        tempTextarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(tempTextarea);
+        showToast('已複製祝福彈幕，可貼至 LINE 群組！');
+      } catch (err) {
+        showToast('複製完成');
+      }
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+    }
+
+    function escapeAttr(str) {
+      return String(str).replace(/['"\\\n\r]/g, ' ');
+    }
+
+    /* ==================== 10. 禮物後台權限驗證（對接 .gs 指令碼屬性）與參數控管 ==================== */
+    const ADMIN_PASSCODE_KEY = 'xmas2026_admin_passcode';
+    const ADMIN_AUTH_SESSION_KEY = 'xmas2026_admin_authorized';
+    const hasAdminUrlParam = new URLSearchParams(window.location.search).get('admin') === '1';
+    let isAdminAuthorized = hasAdminUrlParam || sessionStorage.getItem(ADMIN_AUTH_SESSION_KEY) === 'true';
+    let isEditMode = false;
+
+    function getAdminPasscode() {
+      return sessionStorage.getItem(ADMIN_PASSCODE_KEY) || localStorage.getItem(ADMIN_PASSCODE_KEY) || '';
+    }
+
+    function updateAdminOnlyVisibility() {
+      const hasSession = Boolean(isAdminAuthorized);
+      const canShowPanelControls = Boolean(isAdminAuthorized && isEditMode);
+
+      document.querySelectorAll('.admin-session-ppt-ctrl').forEach(el => {
+        el.classList.toggle('hidden', !hasSession);
+      });
+
+      document.querySelectorAll('.admin-panel-only-ctrl').forEach(el => {
+        el.classList.toggle('hidden', !canShowPanelControls);
+      });
+
+      const pill = document.getElementById('pending-count-pill');
+      if (pill && !hasSession) {
+        pill.classList.add('hidden');
+      } else if (pill && hasSession) {
+        const pending = JSON.parse(localStorage.getItem(PENDING_DANMAKU_KEY) || '[]');
+        pill.classList.toggle('hidden', pending.length === 0);
+        pill.textContent = `${pending.length}`;
+      }
+    }
+
+    function openAdminAuthModal() {
+      const modal = document.getElementById('admin-auth-modal');
+      const input = document.getElementById('admin-passcode-input');
+      const err = document.getElementById('admin-auth-error');
+      if (!modal || !input) return;
+      input.value = '';
+      err?.classList.add('hidden');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      setTimeout(() => input.focus(), 50);
+    }
+
+    function closeAdminAuthModal() {
+      const modal = document.getElementById('admin-auth-modal');
+      if (!modal) return;
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    async function verifyAdminPasscode(e) {
+      e.preventDefault();
+      const inputVal = document.getElementById('admin-passcode-input')?.value.trim();
+      const err = document.getElementById('admin-auth-error');
+      const submitBtn = document.getElementById('admin-auth-submit-btn');
+      if (!inputVal) return;
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = '驗證中...';
+      }
+
+      try {
+        const res = await callGasPost({ action: 'verifyAdmin', passcode: inputVal });
+        if (res && res.ok) {
+          isAdminAuthorized = true;
+          sessionStorage.setItem(ADMIN_AUTH_SESSION_KEY, 'true');
+          sessionStorage.setItem(ADMIN_PASSCODE_KEY, inputVal);
+          closeAdminAuthModal();
+          applyEditModeState(true);
+          updateAdminOnlyVisibility();
+          await syncFromCloudNow(false);
+          showToast('🔓 管理員權限驗證通過，已開啟禮物後台與上午禮拜投影控制！');
+        } else {
+          err?.classList.remove('hidden');
+          document.getElementById('admin-passcode-input')?.select();
+        }
+      } catch (networkErr) {
+        err?.classList.remove('hidden');
+        showToast('⚠️ 無法連線至後端驗證服務，請確認網路與 Apps Script 部署狀態');
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = '🔓 驗證並進入後台';
+        }
+      }
+    }
+
+    function lockAdminSession() {
+      isAdminAuthorized = false;
+      sessionStorage.removeItem(ADMIN_AUTH_SESSION_KEY);
+      sessionStorage.removeItem(ADMIN_PASSCODE_KEY);
+      applyEditModeState(false);
+      updateAdminOnlyVisibility();
+      showToast('🔒 已鎖定禮物後台並登出管理員權限');
+    }
+
+    function applyEditModeState(enable) {
+      isEditMode = enable;
+      document.body.classList.toggle('edit-mode', isEditMode);
+      const panel = document.getElementById('organizer-panel');
+      const labelSpan = document.querySelector('#toggle-edit-btn > span:last-child');
+      panel.classList.toggle('hidden', !isEditMode);
+
+      document.querySelectorAll('[data-editable]').forEach(el => {
+        if (isEditMode) {
+          el.setAttribute('contenteditable', 'true');
+        } else {
+          el.removeAttribute('contenteditable');
+        }
+      });
+
+      if (labelSpan) {
+        labelSpan.textContent = isEditMode ? '🎁 收合禮物後台' : '🎁 禮物後台';
+      }
+      updateAdminOnlyVisibility();
+    }
+
+    function toggleEditMode() {
+      if (!isEditMode && !isAdminAuthorized) {
+        openAdminAuthModal();
+        return;
+      }
+      applyEditModeState(!isEditMode);
+      showToast(isEditMode ? '🎁 已開啟聖誕禮物盒全參數後台' : '已收合禮物盒後台');
+    }
+
+    async function syncFromCloudNow(showFeedback = false) {
+      try {
+        const data = await callGasGet('getState');
+        if (!data || !data.ok) return;
+
+        if (Array.isArray(data.notices) && data.notices.length > 0) {
+          const prevAdded = JSON.parse(localStorage.getItem(LIVE_NOTICES_KEY) || '[]');
+          const prevTopId = prevAdded[0]?.id || '';
+          localStorage.setItem(LIVE_NOTICES_KEY, JSON.stringify(data.notices));
+          localStorage.setItem('xmas2026_latest_notice_ver', data.notices[0].id);
+          renderNotices();
+          if (prevTopId && data.notices[0].id !== prevTopId) {
+            document.getElementById('live-banner-title').textContent = data.notices[0].title;
+            document.getElementById('live-banner-body').textContent = data.notices[0].body;
+            document.getElementById('live-notice-banner').classList.remove('hidden');
+            syncModalWithLatestNotice(data.notices[0]);
+          }
+        }
+
+        if (Array.isArray(data.gameQuotas) && data.gameQuotas.length === 3) {
+          localStorage.setItem(GAME_QUOTA_KEY, JSON.stringify(data.gameQuotas));
+          loadGameQuotasFromStorage();
+          renderCurrentGamePanel();
+        }
+
+        if (Array.isArray(data.approvedDanmaku)) {
+          localStorage.setItem(APPROVED_DANMAKU_KEY, JSON.stringify(data.approvedDanmaku));
+          renderDanmakuWall();
+        }
+
+        if (Array.isArray(data.pendingDanmaku)) {
+          localStorage.setItem(PENDING_DANMAKU_KEY, JSON.stringify(data.pendingDanmaku));
+          renderPendingModeration();
+        }
+
+        if (showFeedback) {
+          showToast('☁️ 已完成雲端最新狀態同步！');
+        }
+      } catch (err) {
+        if (showFeedback) {
+          showToast('⚠️ 雲端同步暫時無法連線，目前顯示本機資料');
+        }
+      }
+    }
+
+    function resetAllSystemParams() {
+      [
+        SNOW_ENABLED_KEY,
+        SNOW_COUNT_KEY,
+        STAGE_OPEN_KEY,
+        STAGE_SCHEDULE_KEY,
+        LIVE_NOTICES_KEY,
+        'xmas2026_latest_notice_ver',
+        GAME_QUOTA_KEY,
+        SCORE_KEY,
+        PPT_CUSTOM_SLIDES_KEY,
+        PPT_SYNC_SLIDE_KEY
+      ].forEach(k => localStorage.removeItem(k));
+
+      loadSnowSettingsFromStorage();
+      loadStageSettingsFromStorage();
+      updateCountdownTick();
+      renderNotices();
+      loadCustomPptSlides();
+      selectSlide(0, true);
+      loadGameQuotasFromStorage();
+      selectGame(0);
+      teamScores = { red: 0, green: 0, gold: 0, blue: 0 };
+      renderScores();
+      broadcastSync('SNOW_UPDATE', {});
+      broadcastSync('STAGE_UPDATE', {});
+      broadcastSync('GAME_QUOTA_UPDATE', {});
+      broadcastSync('PPT_CUSTOM_UPDATE', {});
+      showToast('↺ 已將所有後台參數恢復為出廠預設值！');
+    }
+
+    function exportCleanHtml() {
+      const clone = document.documentElement.cloneNode(true);
+      clone.querySelector('body').classList.remove('edit-mode');
+      clone.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
+      const orgPanel = clone.querySelector('#organizer-panel');
+      if (orgPanel) orgPanel.classList.add('hidden');
+      const labelSpan = clone.querySelector('#toggle-edit-btn > span:last-child');
+      if (labelSpan) labelSpan.textContent = '🎁 禮物後台';
+
+      const htmlContent = '<!DOCTYPE html>\n' + clone.outerHTML;
+      const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = '2026-christmas-party-guide-final.html';
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('已匯出最新完整 HTML 檔案！');
+    }
+
+    function showToast(msg) {
+      const el = document.getElementById('toast-msg');
+      el.textContent = msg;
+      el.classList.remove('hidden');
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(() => el.classList.add('hidden'), 2800);
+    }
+
+    /* 初始化啟動 */
+    window.onload = async function () {
+      loadStageSettingsFromStorage();
+      updateCountdownTick();
+      renderNotices();
+      renderMarqueePhotos();
+      loadCustomPptSlides();
+      selectSlide(currentSlide, false);
+      loadGameQuotasFromStorage();
+      selectGame(0);
+      renderScores();
+      renderDanmakuWall();
+      renderPendingModeration();
+      updateAdminOnlyVisibility();
+
+      if (isProjectorReceiver || window.__FORCE_PROJECTOR_RECEIVER) {
+        switchMainTab('ppt');
+        document.body.classList.add('ppt-projector-mode');
+        const exitBtn = document.getElementById('exit-projector-btn');
+        if (exitBtn) exitBtn.classList.add('hidden');
+        const hintEl = document.getElementById('projector-hint');
+        if (hintEl) {
+          hintEl.classList.remove('hidden');
+          hintEl.textContent = '🖥️ 獨立投影輸出視窗（與音控主控台及全場手機即時同步中・按 F11 可滿版全螢幕）';
+        }
+        await syncFromCloudNow(false);
+        return;
+      }
+
+      checkMandatoryNotice();
+      await syncFromCloudNow(false);
+      setInterval(() => syncFromCloudNow(false), 10000);
+    };
+  </script>
+</body>
+</html>
