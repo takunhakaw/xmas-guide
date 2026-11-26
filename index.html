@@ -164,6 +164,50 @@
       object-fit: contain !important;
       border-radius: 0 !important;
     }
+  
+    /* 手機 PPT 全螢幕觀看（橫屏） */
+    body.ppt-phone-full {
+      overflow: hidden;
+    }
+    body.ppt-phone-full #ppt-card-wrapper {
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      display: flex;
+      flex-direction: column;
+      border: none !important;
+      border-radius: 0 !important;
+      background: #111827;
+    }
+    body.ppt-phone-full #ppt-slide-tabs {
+      display: none;
+    }
+    body.ppt-phone-full #ppt-stage {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    body.ppt-phone-full #ppt-stage.has-custom-slides {
+      padding: 0 !important;
+      background: #000000 !important;
+    }
+    body.ppt-phone-full #ppt-stage.has-custom-slides img {
+      max-height: calc(100vh - 96px) !important;
+      width: 100% !important;
+      object-fit: contain !important;
+      border-radius: 0 !important;
+    }
+    body.ppt-phone-full #snow-canvas {
+      z-index: 70;
+    }
+    @media (orientation: portrait) {
+      body.ppt-phone-full #phone-rotate-hint {
+        display: inline-block;
+      }
+    }
   </style>
 </head>
 <body class="font-sans antialiased selection:bg-xmas-red selection:text-white">
@@ -679,12 +723,13 @@
             🔄 跟隨現場投影同步：開
           </button>
           <button
-            id="ppt-large-text-btn"
-            onclick="togglePptLargeText()"
-            class="rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-black text-amber-950 transition hover:bg-amber-100"
+            id="ppt-phone-full-btn"
+            onclick="togglePhoneFullscreen(true)"
+            class="rounded-xl bg-xmas-darkred px-3.5 py-2 text-xs font-black text-white shadow transition hover:bg-red-900"
           >
-            🔍 長輩共讀大字模式：關
+            📱 全螢幕觀看（手機請橫放）
           </button>
+          <span id="phone-sync-badge" class="hidden rounded-full bg-gray-100 px-2.5 py-1 text-[11px] font-black text-gray-600"></span>
           <!-- 雪花特效、滿版投影、獨立投影視窗已移至禮物後台 -->
         </div>
       </div>
@@ -714,6 +759,14 @@
               class="hidden rounded-lg bg-amber-400 px-3 py-1 text-xs font-black text-xmas-darkred shadow hover:bg-amber-300"
             >
               ✕ 結束大螢幕投影 (ESC)
+            </button>
+            <span id="phone-rotate-hint" class="hidden rounded-lg bg-amber-300 px-2 py-1 text-[11px] font-black text-xmas-darkred">↻ 請將手機橫放</span>
+            <button
+              id="exit-phone-full-btn"
+              onclick="togglePhoneFullscreen(false)"
+              class="hidden rounded-lg bg-amber-400 px-3 py-1 text-xs font-black text-xmas-darkred shadow hover:bg-amber-300"
+            >
+              ✕ 離開全螢幕
             </button>
           </div>
         </div>
@@ -2216,9 +2269,27 @@
         broadcastSync('PPT_SLIDE_SYNC', { slide });
       }
       const code = sessionStorage.getItem(ADMIN_CODE_SESSION_KEY);
-      if (API_URL && code) {
-        apiPost({ action: 'setPptState', adminPasscode: code, slide, count: getSlideCount(), live });
+      if (!API_URL) {
+        setSyncNote('⚠️ 尚未設定 API_URL，手機收不到同步（僅限同一瀏覽器）');
+      } else if (!code) {
+        setSyncNote('⚠️ 找不到管理員驗證資訊，請鎖定後重新登入');
+      } else {
+        apiPost({ action: 'setPptState', adminPasscode: code, slide, count: getSlideCount(), live }).then(res => {
+          if (res && res.ok) {
+            const t = new Date();
+            setSyncNote(`已推送第 ${slide + 1} 頁（${String(t.getHours()).padStart(2, '0')}:${String(t.getMinutes()).padStart(2, '0')}:${String(t.getSeconds()).padStart(2, '0')}）`);
+          } else {
+            const why = res && res.error === '未知的 action' ? 'Apps Script 尚未重新部署新版' : (res && res.error) || '未知錯誤';
+            setSyncNote('❌ 推送失敗：' + why);
+          }
+        });
       }
+    }
+
+    let syncNote = '';
+    function setSyncNote(note) {
+      syncNote = note;
+      updateSyncMasterUI();
     }
 
     function updateSyncMasterUI() {
@@ -2231,9 +2302,10 @@
         btn.textContent = isSyncMasterOn ? '📡 手機同步廣播：開（點擊關閉）' : '🔒 手機同步廣播：關（點擊開啟）';
       }
       if (status) {
-        status.textContent = isSyncMasterOn
+        const base = isSyncMasterOn
           ? '✅ 廣播中：您的翻頁會即時推送給全場「跟隨」中的手機'
           : '目前未廣播：全場手機維持各自翻閱';
+        status.textContent = syncNote ? base + '｜' + syncNote : base;
       }
     }
 
@@ -2250,11 +2322,22 @@
     }
 
     function startRemoteSlidePolling() {
-      if (!API_URL) return;
+      const badge = document.getElementById('phone-sync-badge');
+      if (!API_URL) {
+        if (badge) {
+          badge.classList.remove('hidden');
+          badge.textContent = '⚠️ 尚未連接同步服務';
+        }
+        return;
+      }
       setInterval(async () => {
         if (canControlSync()) return;
         const res = await apiGet({ action: 'pptState' });
         const st = res && res.state;
+        if (badge) {
+          badge.classList.remove('hidden');
+          badge.textContent = !res ? '⚠️ 無法連線同步服務' : !st ? '⚠️ 同步服務尚未更新' : st.live ? '📡 現場同步中' : '⏸ 管理端尚未廣播';
+        }
         if (!st || !st.live) return;
         const stamp = String(st.updatedAt || '') + ':' + st.slide;
         if (stamp === lastRemotePptStamp) return;
@@ -2275,18 +2358,38 @@
       selectSlide(currentSlide - 1, true);
     }
 
-    function togglePptLargeText() {
-      isPptLarge = !isPptLarge;
-      const stage = document.getElementById('ppt-stage');
-      const btn = document.getElementById('ppt-large-text-btn');
-      stage.classList.toggle('text-xl', isPptLarge);
-      stage.classList.toggle('leading-loose', isPptLarge);
-      btn.textContent = isPptLarge ? '🔍 長輩共讀大字模式：開' : '🔍 長輩共讀大字模式：關';
-      btn.classList.toggle('bg-amber-300', isPptLarge);
+    let isPhoneFull = false;
+
+    async function togglePhoneFullscreen(enable) {
+      isPhoneFull = enable;
+      document.body.classList.toggle('ppt-phone-full', enable);
+      document.getElementById('exit-phone-full-btn')?.classList.toggle('hidden', !enable);
+      if (!enable) document.getElementById('phone-rotate-hint')?.classList.add('hidden');
+      if (enable) {
+        switchMainTab('ppt');
+        window.scrollTo(0, 0);
+        try { await document.documentElement.requestFullscreen(); } catch (e) {}
+        try {
+          await screen.orientation.lock('landscape');
+        } catch (e) {
+          showToast('📱 請將手機轉為橫向以獲得最佳觀看效果');
+        }
+      } else {
+        try { screen.orientation.unlock(); } catch (e) {}
+        if (document.fullscreenElement && document.exitFullscreen) {
+          document.exitFullscreen().catch(() => {});
+        }
+      }
     }
+
+    document.addEventListener('fullscreenchange', () => {
+      // 使用者以系統手勢退出瀏覽器全螢幕時，一併離開手機全螢幕版面
+      if (!document.fullscreenElement && isPhoneFull) togglePhoneFullscreen(false);
+    });
 
     function togglePptFollowSync() {
       isPptFollowSync = !isPptFollowSync;
+      lastRemotePptStamp = '';
       const btn = document.getElementById('ppt-sync-follow-btn');
       if (isPptFollowSync) {
         btn.className = 'rounded-xl bg-emerald-100 px-3 py-2 text-xs font-black text-xmas-green transition hover:bg-emerald-200';
