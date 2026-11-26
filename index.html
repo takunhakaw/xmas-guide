@@ -2,7 +2,10 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>2026 聖誕跨世代同樂日｜年輕人專屬活動手冊與布達</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -165,7 +168,7 @@
       border-radius: 0 !important;
     }
   
-    /* 手機 PPT 全螢幕觀看（橫屏） */
+    /* 手機 PPT 全螢幕觀看（類 YouTube 橫屏滿版：點中間顯示控制列、點左右側或滑動翻頁） */
     body.ppt-phone-full {
       overflow: hidden;
     }
@@ -173,39 +176,80 @@
       position: fixed;
       inset: 0;
       z-index: 60;
-      display: flex;
-      flex-direction: column;
+      margin: 0;
       border: none !important;
       border-radius: 0 !important;
-      background: #111827;
+      background: #000000;
     }
-    body.ppt-phone-full #ppt-slide-tabs {
-      display: none;
+    body.ppt-phone-full #ppt-card-wrapper > div:first-child,
+    body.ppt-phone-full #ppt-card-wrapper > div:last-child {
+      position: absolute;
+      left: 0;
+      right: 0;
+      z-index: 3;
+      transition: opacity 0.25s ease;
+    }
+    body.ppt-phone-full #ppt-card-wrapper > div:first-child {
+      top: 0;
+      background: linear-gradient(to bottom, rgba(0, 0, 0, 0.78), rgba(0, 0, 0, 0)) !important;
+    }
+    body.ppt-phone-full #ppt-card-wrapper > div:last-child {
+      bottom: 0;
+      border: none !important;
+      background: linear-gradient(to top, rgba(0, 0, 0, 0.78), rgba(0, 0, 0, 0)) !important;
+    }
+    body.ppt-phone-full #ppt-card-wrapper:not(.controls-on) > div:first-child,
+    body.ppt-phone-full #ppt-card-wrapper:not(.controls-on) > div:last-child {
+      opacity: 0;
+      pointer-events: none;
+    }
+    body.ppt-phone-full #ppt-slide-tabs,
+    body.ppt-phone-full #projector-hint,
+    body.ppt-phone-full #phone-rotate-hint {
+      display: none !important;
     }
     body.ppt-phone-full #ppt-stage {
-      flex: 1;
+      position: absolute;
+      inset: 0;
+      z-index: 1;
       min-height: 0;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
       justify-content: center;
+      padding: 3.5rem 2.5rem !important;
+      -webkit-overflow-scrolling: touch;
     }
     body.ppt-phone-full #ppt-stage.has-custom-slides {
       padding: 0 !important;
       background: #000000 !important;
     }
-    body.ppt-phone-full #ppt-stage.has-custom-slides img {
-      max-height: calc(100vh - 96px) !important;
+    body.ppt-phone-full #custom-ppt-slides-container,
+    body.ppt-phone-full #custom-ppt-slides-container .ppt-slide {
+      width: 100%;
+      height: 100%;
+    }
+    body.ppt-phone-full #custom-ppt-slides-container .ppt-slide img {
       width: 100% !important;
+      height: 100% !important;
+      max-height: none !important;
       object-fit: contain !important;
       border-radius: 0 !important;
+      box-shadow: none !important;
     }
     body.ppt-phone-full #snow-canvas {
       z-index: 70;
     }
+    /* 無法鎖定橫向時（如 iPhone），直立握持也自動把畫面轉成橫向 */
     @media (orientation: portrait) {
-      body.ppt-phone-full #phone-rotate-hint {
-        display: inline-block;
+      body.ppt-phone-full.rotate-fallback #ppt-card-wrapper {
+        inset: auto;
+        top: 0;
+        left: 100%;
+        width: 100vh;
+        height: 100vw;
+        transform-origin: 0 0;
+        transform: rotate(90deg);
       }
     }
   </style>
@@ -727,7 +771,7 @@
             onclick="togglePhoneFullscreen(true)"
             class="rounded-xl bg-xmas-darkred px-3.5 py-2 text-xs font-black text-white shadow transition hover:bg-red-900"
           >
-            📱 全螢幕觀看（手機請橫放）
+            📱 全螢幕觀看
           </button>
           <span id="phone-sync-badge" class="hidden rounded-full bg-gray-100 px-2.5 py-1 text-[11px] font-black text-gray-600"></span>
           <!-- 雪花特效、滿版投影、獨立投影視窗已移至禮物後台 -->
@@ -1217,6 +1261,47 @@
           </div>
         </div>
 
+        <!-- 區塊 I：常駐公告管理（長期顯示於公告欄，與臨時即時公告分開） -->
+        <div class="rounded-2xl border border-orange-200 bg-orange-50/40 p-4">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h5 class="text-sm font-black text-orange-950">📌 常駐公告管理（長期顯示於公告欄，不會跳出強制已讀視窗）</h5>
+              <p class="text-[11px] text-gray-600">新增、編輯、刪除、調整順序後會立即儲存並同步到所有手機（需已設定 API_URL）。臨時性公告請使用上方「即時發布新重要布達」。</p>
+            </div>
+            <button onclick="resetStickyDefaults()" class="rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-xs font-bold text-gray-600 hover:bg-gray-50">↺ 恢復預設常駐公告</button>
+          </div>
+
+          <div id="sticky-admin-list" class="mt-3 space-y-2"></div>
+
+          <div class="mt-3 rounded-xl border border-orange-200 bg-white p-3">
+            <div id="sticky-form-title" class="text-xs font-black text-orange-950">＋ 新增常駐公告</div>
+            <input type="hidden" id="sticky-edit-id" />
+            <div class="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-12">
+              <input id="sticky-tag" type="text" maxlength="12" placeholder="標籤（如：置頂必讀）" class="rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs sm:col-span-3" />
+              <select id="sticky-color" class="rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs font-bold sm:col-span-3">
+                <option value="red">🔴 紅色（重要）</option>
+                <option value="amber">🟠 橘黃色（提醒）</option>
+                <option value="green">🟢 綠色（活動）</option>
+                <option value="blue">🔵 藍色（資訊）</option>
+                <option value="gray">⚫ 灰色（一般）</option>
+              </select>
+              <input id="sticky-title" type="text" maxlength="80" placeholder="公告標題" class="rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs sm:col-span-6" />
+              <textarea id="sticky-body" rows="3" maxlength="500" placeholder="公告詳細內容（限 500 字）" class="rounded-xl border border-gray-300 bg-white p-3 text-xs sm:col-span-12"></textarea>
+            </div>
+            <div class="mt-2 flex flex-wrap items-center justify-between gap-2">
+              <label class="flex cursor-pointer items-center gap-2 text-xs font-bold text-gray-700">
+                <input id="sticky-expanded" type="checkbox" class="h-4 w-4 rounded border-gray-300" />
+                預設展開內容
+              </label>
+              <div class="flex gap-2">
+                <button onclick="resetStickyForm()" class="rounded-xl bg-gray-100 px-3 py-2 text-xs font-bold text-gray-600 hover:bg-gray-200">清空表單</button>
+                <button onclick="saveStickyForm()" class="rounded-xl bg-orange-600 px-4 py-2 text-xs font-black text-white shadow hover:bg-orange-700">✓ 儲存常駐公告</button>
+              </div>
+            </div>
+          </div>
+          <p id="sticky-status" class="mt-2 text-[11px] font-bold text-orange-900"></p>
+        </div>
+
         <!-- 區塊 G：大螢幕投影與手機同步控制（僅管理端可操作） -->
         <div class="rounded-2xl border border-indigo-200 bg-indigo-50/40 p-4">
           <div class="flex flex-wrap items-center justify-between gap-2">
@@ -1427,6 +1512,9 @@
       } else if (type === 'GAME_QUOTA_UPDATE') {
         loadGameQuotasFromStorage();
         renderCurrentGamePanel();
+      } else if (type === 'STICKY_UPDATE') {
+        renderNotices();
+        renderStickyAdmin();
       } else if (type === 'SCORE_UPDATE') {
         teamScores = JSON.parse(localStorage.getItem(SCORE_KEY) || '{"red":0,"green":0,"gold":0,"blue":0}');
         renderScores();
@@ -1748,31 +1836,219 @@
       }
     ];
 
+    /* --- 常駐公告：管理員可新增／編輯／刪除／排序，並同步到所有手機 --- */
+    const STICKY_KEY = 'xmas2026_sticky_notices';
+    const STICKY_VER_KEY = 'xmas2026_sticky_ver';
+    const NOTICE_COLORS = {
+      red: { badge: 'bg-xmas-red', border: 'border-red-200' },
+      amber: { badge: 'bg-amber-500', border: 'border-amber-200' },
+      green: { badge: 'bg-xmas-green', border: 'border-emerald-200' },
+      blue: { badge: 'bg-sky-600', border: 'border-sky-200' },
+      gray: { badge: 'bg-gray-700', border: 'border-gray-200' }
+    };
+    const STICKY_DEFAULTS = defaultNotices.map((n, i) => ({
+      id: n.id,
+      tag: n.tag,
+      title: n.title,
+      body: n.body,
+      expanded: !!n.expanded,
+      color: ['red', 'amber', 'green', 'gray'][i] || 'red'
+    }));
+
+    function noticeStyle(item) {
+      const c = item.color && NOTICE_COLORS[item.color];
+      if (c) return c;
+      return { badge: item.badgeColor || 'bg-xmas-red', border: item.borderColor || 'border-red-200' };
+    }
+
+    function getStickyNotices() {
+      try {
+        const raw = localStorage.getItem(STICKY_KEY);
+        if (raw) {
+          const arr = JSON.parse(raw);
+          if (Array.isArray(arr)) return arr;
+        }
+      } catch (e) {}
+      return STICKY_DEFAULTS.map(n => ({ ...n }));
+    }
+
     function getAllNotices() {
       const added = JSON.parse(localStorage.getItem(LIVE_NOTICES_KEY) || '[]');
-      return [...added, ...defaultNotices];
+      return [...added, ...getStickyNotices()];
+    }
+
+    function setStickyStatus(msg) {
+      const el = document.getElementById('sticky-status');
+      if (el) el.textContent = msg;
+    }
+
+    function persistSticky(list) {
+      localStorage.setItem(STICKY_KEY, JSON.stringify(list));
+      renderNotices();
+      renderStickyAdmin();
+      broadcastSync('STICKY_UPDATE', {});
+      const code = sessionStorage.getItem(ADMIN_CODE_SESSION_KEY);
+      if (!API_URL) {
+        setStickyStatus('⚠️ 尚未設定 API_URL：僅此瀏覽器可見，手機收不到');
+        return;
+      }
+      if (!code) {
+        setStickyStatus('⚠️ 找不到管理員驗證資訊，請鎖定後重新登入');
+        return;
+      }
+      setStickyStatus('⏳ 同步中…');
+      apiPost({ action: 'saveStickyNotices', adminPasscode: code, notices: list }).then(res => {
+        if (res && res.ok) {
+          if (res.updatedAt) localStorage.setItem(STICKY_VER_KEY, String(res.updatedAt));
+          const t = new Date();
+          setStickyStatus(`✅ 已儲存並同步到手機（${String(t.getHours()).padStart(2, '0')}:${String(t.getMinutes()).padStart(2, '0')}:${String(t.getSeconds()).padStart(2, '0')}）`);
+        } else {
+          const why = res && res.error === '未知的 action' ? 'Apps Script 尚未重新部署新版' : (res && res.error) || '未知錯誤';
+          setStickyStatus('❌ 同步失敗：' + why);
+        }
+      });
+    }
+
+    function renderStickyAdmin() {
+      const box = document.getElementById('sticky-admin-list');
+      if (!box) return;
+      const list = getStickyNotices();
+      if (!list.length) {
+        box.innerHTML = '<div class="rounded-xl border border-dashed border-orange-200 bg-white p-3 text-center text-xs text-gray-500">目前沒有常駐公告</div>';
+        return;
+      }
+      box.innerHTML = list
+        .map(
+          (n, i) => `
+          <div class="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-orange-200 bg-white p-2.5">
+            <div class="min-w-0 flex-1">
+              <span class="rounded ${noticeStyle(n).badge} px-1.5 py-0.5 text-[10px] font-black text-white">${escapeHtml(n.tag)}</span>
+              <span class="ml-1.5 text-xs font-black text-gray-900">${escapeHtml(n.title)}</span>
+            </div>
+            <div class="flex shrink-0 gap-1">
+              <button onclick="moveSticky(${i}, -1)" class="rounded-lg bg-gray-100 px-2 py-1 text-xs font-black text-gray-700 hover:bg-gray-200">↑</button>
+              <button onclick="moveSticky(${i}, 1)" class="rounded-lg bg-gray-100 px-2 py-1 text-xs font-black text-gray-700 hover:bg-gray-200">↓</button>
+              <button onclick="editSticky(${i})" class="rounded-lg bg-amber-100 px-2.5 py-1 text-xs font-black text-amber-900 hover:bg-amber-200">編輯</button>
+              <button onclick="deleteSticky(${i})" class="rounded-lg bg-red-100 px-2.5 py-1 text-xs font-black text-xmas-red hover:bg-red-200">刪除</button>
+            </div>
+          </div>
+        `
+        )
+        .join('');
+    }
+
+    function resetStickyForm() {
+      ['sticky-edit-id', 'sticky-tag', 'sticky-title', 'sticky-body'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+      const color = document.getElementById('sticky-color');
+      if (color) color.value = 'red';
+      const exp = document.getElementById('sticky-expanded');
+      if (exp) exp.checked = false;
+      const title = document.getElementById('sticky-form-title');
+      if (title) title.textContent = '＋ 新增常駐公告';
+    }
+
+    function editSticky(i) {
+      const n = getStickyNotices()[i];
+      if (!n) return;
+      document.getElementById('sticky-edit-id').value = n.id;
+      document.getElementById('sticky-tag').value = n.tag || '';
+      document.getElementById('sticky-color').value = NOTICE_COLORS[n.color] ? n.color : 'red';
+      document.getElementById('sticky-title').value = n.title || '';
+      document.getElementById('sticky-body').value = n.body || '';
+      document.getElementById('sticky-expanded').checked = !!n.expanded;
+      document.getElementById('sticky-form-title').textContent = '✏️ 編輯常駐公告（修改後按儲存）';
+      document.getElementById('sticky-title').scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }
+
+    function saveStickyForm() {
+      const tag = document.getElementById('sticky-tag').value.trim() || '常駐公告';
+      const title = document.getElementById('sticky-title').value.trim();
+      const body = document.getElementById('sticky-body').value.trim();
+      if (!title || !body) {
+        showToast('請輸入公告標題與內容');
+        return;
+      }
+      const editId = document.getElementById('sticky-edit-id').value;
+      const item = {
+        id: editId || 's' + Date.now(),
+        tag: tag.slice(0, 12),
+        title: title.slice(0, 80),
+        body: body.slice(0, 500),
+        color: document.getElementById('sticky-color').value,
+        expanded: document.getElementById('sticky-expanded').checked
+      };
+      const list = getStickyNotices();
+      const idx = editId ? list.findIndex(n => n.id === editId) : -1;
+      if (idx >= 0) list[idx] = item;
+      else list.push(item);
+      persistSticky(list);
+      resetStickyForm();
+      showToast(idx >= 0 ? '已更新常駐公告' : '已新增常駐公告');
+    }
+
+    function deleteSticky(i) {
+      const list = getStickyNotices();
+      if (!list[i]) return;
+      if (!confirm(`確定刪除常駐公告「${list[i].title}」？`)) return;
+      list.splice(i, 1);
+      persistSticky(list);
+      resetStickyForm();
+      showToast('已刪除常駐公告');
+    }
+
+    function moveSticky(i, dir) {
+      const list = getStickyNotices();
+      const j = i + dir;
+      if (!list[i] || j < 0 || j >= list.length) return;
+      [list[i], list[j]] = [list[j], list[i]];
+      persistSticky(list);
+    }
+
+    function resetStickyDefaults() {
+      if (!confirm('確定恢復為預設的 4 則常駐公告？目前自訂內容將被取代。')) return;
+      persistSticky(STICKY_DEFAULTS.map(n => ({ ...n })));
+      resetStickyForm();
+    }
+
+    // 會眾端：定時向後端取得最新常駐公告
+    async function fetchStickyFromServer() {
+      if (!API_URL || isAdminAuthorized) return;
+      const res = await apiGet({ action: 'stickyNotices' });
+      if (!res || !res.ok || !Array.isArray(res.notices)) return;
+      const ver = String(res.updatedAt || '');
+      if (ver && ver === localStorage.getItem(STICKY_VER_KEY)) return;
+      localStorage.setItem(STICKY_KEY, JSON.stringify(res.notices));
+      localStorage.setItem(STICKY_VER_KEY, ver);
+      renderNotices();
     }
 
     function renderNotices() {
       const list = getAllNotices();
       const container = document.getElementById('announcement-list');
       if (!container) return;
+      if (!list.length) {
+        container.innerHTML = '<div class="rounded-2xl border border-dashed border-gray-300 bg-white p-6 text-center text-sm text-gray-500 md:col-span-2">目前沒有公告</div>';
+        return;
+      }
       container.innerHTML = list
         .map(
           item => `
-          <article class="notice-card overflow-hidden rounded-2xl border-2 ${item.borderColor || 'border-red-200'} bg-white shadow-sm transition hover:shadow-md">
+          <article class="notice-card overflow-hidden rounded-2xl border-2 ${noticeStyle(item).border} bg-white shadow-sm transition hover:shadow-md">
             <button onclick="toggleNoticeDetail(this)" class="flex w-full items-start justify-between gap-3 p-4 text-left">
               <div>
                 <div class="flex items-center gap-2">
-                  <span class="rounded-md ${item.badgeColor || 'bg-xmas-red'} px-2 py-0.5 text-[11px] font-black text-white">${escapeHtml(item.tag)}</span>
+                  <span class="rounded-md ${noticeStyle(item).badge} px-2 py-0.5 text-[11px] font-black text-white">${escapeHtml(item.tag)}</span>
                   ${item.time ? `<span class="text-[11px] font-bold text-gray-400">${item.time} 發布</span>` : ''}
                 </div>
-                <h3 data-editable class="mt-1.5 text-base font-black text-gray-900">${escapeHtml(item.title)}</h3>
+                <h3 class="mt-1.5 text-base font-black text-gray-900">${escapeHtml(item.title)}</h3>
               </div>
               <span class="notice-arrow mt-1 shrink-0 rounded-full bg-red-50 px-2 py-1 text-xs font-bold text-xmas-red">${item.expanded ? '收合 ▲' : '展開 ▼'}</span>
             </button>
             <div class="notice-detail ${item.expanded ? '' : 'hidden'} border-t border-gray-100 bg-amber-50/30 px-4 py-3 text-sm leading-relaxed text-gray-700">
-              <p data-editable>${escapeHtml(item.body)}</p>
+              <p>${escapeHtml(item.body)}</p>
             </div>
           </article>
         `
@@ -2359,33 +2635,124 @@
     }
 
     let isPhoneFull = false;
+    let phoneCtlTimer = null;
+    let phoneWakeLock = null;
+    let phoneFsSwitching = false;
 
-    async function togglePhoneFullscreen(enable) {
-      isPhoneFull = enable;
-      document.body.classList.toggle('ppt-phone-full', enable);
-      document.getElementById('exit-phone-full-btn')?.classList.toggle('hidden', !enable);
-      if (!enable) document.getElementById('phone-rotate-hint')?.classList.add('hidden');
-      if (enable) {
-        switchMainTab('ppt');
-        window.scrollTo(0, 0);
-        try { await document.documentElement.requestFullscreen(); } catch (e) {}
-        try {
-          await screen.orientation.lock('landscape');
-        } catch (e) {
-          showToast('📱 請將手機轉為橫向以獲得最佳觀看效果');
-        }
+    function showPhoneControls(autoHide = true) {
+      const w = document.getElementById('ppt-card-wrapper');
+      if (!w) return;
+      w.classList.add('controls-on');
+      clearTimeout(phoneCtlTimer);
+      if (autoHide) phoneCtlTimer = setTimeout(() => w.classList.remove('controls-on'), 3000);
+    }
+
+    function togglePhoneControls() {
+      const w = document.getElementById('ppt-card-wrapper');
+      if (!w) return;
+      if (w.classList.contains('controls-on')) {
+        clearTimeout(phoneCtlTimer);
+        w.classList.remove('controls-on');
       } else {
-        try { screen.orientation.unlock(); } catch (e) {}
-        if (document.fullscreenElement && document.exitFullscreen) {
-          document.exitFullscreen().catch(() => {});
-        }
+        showPhoneControls();
       }
     }
 
-    document.addEventListener('fullscreenchange', () => {
-      // 使用者以系統手勢退出瀏覽器全螢幕時，一併離開手機全螢幕版面
-      if (!document.fullscreenElement && isPhoneFull) togglePhoneFullscreen(false);
-    });
+    async function togglePhoneFullscreen(enable) {
+      const wrapper = document.getElementById('ppt-card-wrapper');
+      if (!wrapper) return;
+      isPhoneFull = enable;
+      document.body.classList.toggle('ppt-phone-full', enable);
+      document.getElementById('exit-phone-full-btn')?.classList.toggle('hidden', !enable);
+
+      if (enable) {
+        switchMainTab('ppt');
+        window.scrollTo(0, 0);
+        document.body.classList.remove('rotate-fallback');
+
+        // 1) 瀏覽器原生全螢幕（隱藏網址列，如 YouTube）
+        let fsOk = false;
+        const req = wrapper.requestFullscreen || wrapper.webkitRequestFullscreen;
+        if (req) {
+          try { await req.call(wrapper); fsOk = true; } catch (e) {}
+        }
+        // 2) 鎖定橫向；失敗則改用「直立自動轉橫」的版面
+        let locked = false;
+        if (fsOk && screen.orientation && screen.orientation.lock) {
+          try { await screen.orientation.lock('landscape'); locked = true; } catch (e) {}
+        }
+        if (!locked) {
+          if (fsOk) {
+            phoneFsSwitching = true;
+            try { await (document.exitFullscreen || document.webkitExitFullscreen).call(document); } catch (e) {}
+            phoneFsSwitching = false;
+          }
+          document.body.classList.add('rotate-fallback');
+        }
+        // 3) 保持螢幕不熄滅
+        try {
+          if (navigator.wakeLock) phoneWakeLock = await navigator.wakeLock.request('screen');
+        } catch (e) {}
+
+        showPhoneControls();
+        showToast('📱 點畫面中央顯示控制列・點左右側或滑動翻頁');
+      } else {
+        clearTimeout(phoneCtlTimer);
+        wrapper.classList.remove('controls-on');
+        document.body.classList.remove('rotate-fallback');
+        try { screen.orientation.unlock(); } catch (e) {}
+        if (document.fullscreenElement || document.webkitFullscreenElement) {
+          phoneFsSwitching = true;
+          try { await (document.exitFullscreen || document.webkitExitFullscreen).call(document); } catch (e) {}
+          phoneFsSwitching = false;
+        }
+        try { if (phoneWakeLock) await phoneWakeLock.release(); } catch (e) {}
+        phoneWakeLock = null;
+      }
+    }
+
+    function onFullscreenChange() {
+      // 使用者以系統手勢退出全螢幕時，一併離開手機全螢幕版面
+      if (!phoneFsSwitching && isPhoneFull && !document.fullscreenElement && !document.webkitFullscreenElement) {
+        togglePhoneFullscreen(false);
+      }
+    }
+    document.addEventListener('fullscreenchange', onFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', onFullscreenChange);
+
+    // 手勢：點左 30% 上一頁、點右 30% 下一頁、點中間顯示/隱藏控制列、左右滑動翻頁
+    (function initPhoneGestures() {
+      const stage = document.getElementById('ppt-stage');
+      if (!stage) return;
+      const axis = (cx, cy) => {
+        const rotated = document.body.classList.contains('rotate-fallback') && window.matchMedia('(orientation: portrait)').matches;
+        return rotated
+          ? { pos: cy, size: window.innerHeight, cross: cx }
+          : { pos: cx, size: window.innerWidth, cross: cy };
+      };
+      let start = null;
+      stage.addEventListener('touchstart', e => {
+        if (!isPhoneFull) return;
+        const t = e.changedTouches[0];
+        start = axis(t.clientX, t.clientY);
+      }, { passive: true });
+      stage.addEventListener('touchend', e => {
+        if (!isPhoneFull || !start) return;
+        const t = e.changedTouches[0];
+        const end = axis(t.clientX, t.clientY);
+        const dMain = end.pos - start.pos;
+        const dCross = end.cross - start.cross;
+        start = null;
+        if (Math.abs(dMain) > 50 && Math.abs(dMain) > Math.abs(dCross)) {
+          if (dMain < 0) nextSlide(); else prevSlide();
+        } else if (Math.abs(dMain) < 12 && Math.abs(dCross) < 12) {
+          const ratio = end.pos / end.size;
+          if (ratio < 0.3) prevSlide();
+          else if (ratio > 0.7) nextSlide();
+          else togglePhoneControls();
+        }
+      });
+    })();
 
     function togglePptFollowSync() {
       isPptFollowSync = !isPptFollowSync;
@@ -3037,12 +3404,12 @@
       showToast('已匯出最新完整 HTML 檔案！');
     }
 
-    function showToast(msg) {
+    function showToast(msg, ms = 2800) {
       const el = document.getElementById('toast-msg');
       el.textContent = msg;
       el.classList.remove('hidden');
       clearTimeout(window.__toastTimer);
-      window.__toastTimer = setTimeout(() => el.classList.add('hidden'), 2800);
+      window.__toastTimer = setTimeout(() => el.classList.add('hidden'), ms);
     }
 
     /* 初始化啟動 */
@@ -3060,6 +3427,9 @@
       renderPendingModeration();
       updateSyncMasterUI();
       startRemoteSlidePolling();
+      renderStickyAdmin();
+      fetchStickyFromServer();
+      if (API_URL) setInterval(fetchStickyFromServer, 15000);
 
       if (isProjectorReceiver || window.__FORCE_PROJECTOR_RECEIVER) {
         switchMainTab('ppt');
