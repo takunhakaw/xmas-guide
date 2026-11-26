@@ -2336,7 +2336,7 @@
         const st = res && res.state;
         if (badge) {
           badge.classList.remove('hidden');
-          badge.textContent = !res ? '⚠️ 無法連線同步服務' : !st ? '⚠️ 同步服務尚未更新' : st.live ? '📡 現場同步中' : '⏸ 管理端尚未廣播';
+          badge.textContent = !res ? '⚠️ 無法連線同步服務' : !st ? (res.data ? '⚠️ 後端為舊版，請重新部署新版本' : res.error ? '⚠️ 後端錯誤：' + res.error : '⚠️ 同步服務回應異常') : st.live ? '📡 現場同步中' : '⏸ 管理端尚未廣播';
         }
         if (!st || !st.live) return;
         const stamp = String(st.updatedAt || '') + ':' + st.slide;
