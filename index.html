@@ -74,6 +74,15 @@
     .urgent-pulse { animation: urgentPulse 1.1s ease-in-out infinite; }
     html.urgent-open, html.urgent-open body { overflow: hidden !important; }
 
+    /* 場配導覽分頁：全寬、隱藏照片橫幅，讓地圖盡量大 */
+    body.tab-map #official-marquee-section { display: none; }
+    body.tab-map main { max-width: 1600px; padding-top: 2.25rem; padding-bottom: 0.5rem; }
+    @media (min-width: 640px) { body.tab-map main { padding-top: 1.25rem; } }
+    @media (max-width: 639px) { body.tab-map #stage-float { display: none; } }
+    #map-frame { display: block; width: 100%; border: 0; border-radius: 16px; background: #E2E8F0;
+      height: calc(100vh - var(--nav-h) - 3.25rem); height: calc(100dvh - var(--nav-h) - env(safe-area-inset-bottom, 0px) - 3.25rem); }
+    @media (min-width: 640px) { #map-frame { height: max(640px, calc(100vh - 6rem)); height: max(640px, calc(100dvh - 6rem)); } }
+
     /* 系統資訊開啟：隱藏紅色標題區，把版面讓給內容（手機、電腦皆同） */
     html.sysinfo-open header { display: none !important; }
 
@@ -656,6 +665,10 @@
           <span class="relative text-xl leading-none sm:text-sm">✍️</span>
           <span class="text-[11px] leading-tight sm:text-sm"><span class="sm:hidden">心得</span><span class="hidden sm:inline">心得分享與感動</span></span>
         </button>
+        <button data-tab="map" onclick="switchMainTab('map')" class="main-tab-btn relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl bg-white px-1 py-1.5 font-bold text-gray-700 ring-1 ring-gray-200 transition hover:bg-amber-50 sm:flex-none sm:flex-row sm:gap-1.5 sm:px-3.5 sm:py-2">
+          <span class="relative text-xl leading-none sm:text-sm">🗺️</span>
+          <span class="text-[11px] leading-tight sm:text-sm"><span class="sm:hidden">場配</span><span class="hidden sm:inline">場配與路線導覽</span></span>
+        </button>
       </div>
     </div>
   </nav>
@@ -1100,6 +1113,10 @@
         </form>
       </div>
     </section>
+    <!-- ==================== 分頁 6：場配與互動路線導覽（3D） ==================== -->
+    <section id="panel-map" class="tab-panel hidden">
+      <iframe id="map-frame" title="羅浮校園 3D 場配與路線導覽" allow="fullscreen"></iframe>
+    </section>
   </main>
 
   <!-- 頁尾與聖誕禮物盒後台 -->
@@ -1152,6 +1169,10 @@
           <div class="admin-rail-group">運動競賽類</div>
           <button data-pane-btn="quota" onclick="showAdminPane('quota')" class="admin-rail-btn" aria-current="false"><span class="ico">🏆</span><span class="sm:hidden">人數</span><span class="hidden sm:inline">競賽出賽人數</span></button>
           <button data-pane-btn="score" onclick="showAdminPane('score')" class="admin-rail-btn" aria-current="false"><span class="ico">📊</span><span class="sm:hidden">積分</span><span class="hidden sm:inline">戰隊與積分</span></button>
+          <div class="admin-rail-sep"></div>
+          <div class="admin-rail-group">場地導覽類</div>
+          <button data-pane-btn="booths" onclick="showAdminPane('booths')" class="admin-rail-btn" aria-current="false"><span class="ico">🗺️</span><span class="sm:hidden">場名</span><span class="hidden sm:inline">場配名稱編輯</span></button>
+          <button data-pane-btn="routelink" onclick="showAdminPane('routelink')" class="admin-rail-btn" aria-current="false"><span class="ico">🔗</span><span class="sm:hidden">連結</span><span class="hidden sm:inline">導覽連結產生器</span></button>
           <div class="admin-rail-sep"></div>
           <div class="admin-rail-group">資料上傳類</div>
           <button data-pane-btn="ppt" onclick="showAdminPane('ppt')" class="admin-rail-btn" aria-current="false"><span class="ico">📖</span><span class="sm:hidden">PPT</span><span class="hidden sm:inline">禮拜 PPT 上傳</span></button>
@@ -1542,11 +1563,1588 @@
         </div>
 
           </section>
+          <section data-pane="booths" class="admin-pane hidden space-y-4">
+        <!-- 區塊 L1：場配名稱編輯（來自「後台.html」模組；已改為同步到手機） -->
+        <div class="rounded-2xl border border-indigo-200 bg-indigo-50/40 p-4">
+          <h5 class="text-sm font-black text-indigo-950">🗺️ 攤位與休息區名稱管理（報到組、醫護組、音響組與 1–27 號休息區，共 30 格）</h5>
+          <p class="mt-1 text-[11px] font-bold text-gray-600">修改後按「儲存並同步到手機」，所有人的「場配導覽」地圖標籤與查詢清單會即時更新。</p>
+          <div class="mt-3 flex flex-wrap items-center gap-2">
+            <button onclick="luofuSave()" class="rounded-xl bg-indigo-600 px-4 py-2 text-xs font-black text-white shadow hover:bg-indigo-700">💾 儲存並同步到手機</button>
+            <button onclick="luofuExport()" class="rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs font-bold text-gray-700 hover:bg-gray-50">⬇️ 匯出 JSON 備份</button>
+            <label class="cursor-pointer rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs font-bold text-gray-700 hover:bg-gray-50">⬆️ 匯入 JSON
+              <input id="luofu-import" type="file" accept=".json" class="hidden" onchange="luofuImport(event)" />
+            </label>
+            <button onclick="luofuReset()" class="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700 hover:bg-rose-100">↺ 恢復預設值</button>
+          </div>
+          <p id="luofu-sync-status" class="mt-2 text-[11px] font-bold text-indigo-950"></p>
+          <div id="luofu-grid" class="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2"></div>
+        </div>
+          </section>
+          <section data-pane="routelink" class="admin-pane hidden space-y-4">
+        <!-- 區塊 L2：導覽連結產生器（來自「後台.html」模組；網址改指向本頁的場配導覽分頁） -->
+        <div class="rounded-2xl border border-emerald-200 bg-emerald-50/40 p-4">
+          <h5 class="text-sm font-black text-emerald-950">🔗 「下一場活動休息區」導覽連結產生器</h5>
+          <p class="mt-1 text-[11px] font-bold text-gray-600">產生專屬網址或 iframe 語法，貼到公告、群組或其他網站；點開會直接進入場配導覽並規劃好路線。</p>
+          <div class="mt-3 grid grid-cols-1 gap-3">
+            <div>
+              <label class="block text-[11px] font-black text-gray-700">1. 預設出發點</label>
+              <select id="luofu-from" onchange="luofuUpdateUrl()" class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm font-bold"></select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-black text-gray-700">2. 下一場目標休息區／教學場地</label>
+              <select id="luofu-target" onchange="luofuUpdateUrl()" class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm font-bold"></select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-black text-gray-700">3. 活動場次標籤（選填）</label>
+              <input id="luofu-session" type="text" oninput="luofuUpdateUrl()" placeholder="例如：第二場次小組休息區" class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm font-bold focus:border-emerald-600 focus:outline-none" />
+            </div>
+          </div>
+          <div class="mt-3 rounded-xl bg-slate-900 p-3 text-xs">
+            <div id="luofu-url" class="select-all break-all font-mono text-emerald-300"></div>
+            <div class="mt-2.5 flex flex-wrap gap-2">
+              <button onclick="luofuCopyUrl()" class="rounded-lg bg-emerald-600 px-3 py-1.5 font-bold text-white hover:bg-emerald-500">複製網址</button>
+              <button onclick="luofuCopyIframe()" class="rounded-lg bg-slate-700 px-3 py-1.5 font-bold text-white hover:bg-slate-600">複製 iframe 語法</button>
+              <a id="luofu-open" href="#" target="_blank" rel="noopener" class="rounded-lg bg-white/10 px-3 py-1.5 font-bold text-white hover:bg-white/20">在新分頁預覽</a>
+            </div>
+          </div>
+        </div>
+          </section>
           </div>
         </div>
       </div>
     </div>
   </footer>
+
+    <!-- 場配與 3D 路線導覽（前台模組）：第一次開啟「場配導覽」分頁時才載入 -->
+  <script type="text/plain" id="luofu-guide-src">
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>羅浮校園活動場配與 3D 路線導覽（使用者前台）</title>
+  <script src="https://cdn.tailwindcss.com"><\/script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Inter', 'Noto Sans TC', sans-serif;
+      background:
+        radial-gradient(circle at 12% 8%, rgba(254, 243, 199, 0.45) 0%, transparent 38%),
+        radial-gradient(circle at 88% 15%, rgba(224, 231, 255, 0.65) 0%, transparent 45%),
+        linear-gradient(160deg, #f8fafc 0%, #eef2f6 52%, #e2e8f0 100%);
+      overscroll-behavior-y: none;
+    }
+
+    #canvas3dContainer {
+      background:
+        radial-gradient(circle at 50% 28%, #ffffff 0%, #f8fafc 42%, #e0f2fe 78%, #dbeafe 100%);
+      touch-action: none;
+      cursor: grab;
+    }
+    #canvas3dContainer:active {
+      cursor: grabbing;
+    }
+
+    .label-3d {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      user-select: none;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.18s ease, box-shadow 0.18s ease;
+    }
+    .label-3d.clickable {
+      pointer-events: auto;
+      cursor: pointer;
+    }
+    .label-3d.clickable:hover {
+      transform: translate(-50%, -60%) scale(1.12);
+      box-shadow: 0 10px 22px -4px rgba(15, 23, 42, 0.28);
+      z-index: 40 !important;
+    }
+
+    @keyframes pulseFloat {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); }
+      50% { transform: translate(-50%, -56%) scale(1.05); }
+    }
+    .chapel-badge-anim {
+      animation: pulseFloat 2.8s ease-in-out infinite;
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    .custom-scroll::-webkit-scrollbar {
+      width: 6px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col text-slate-800 antialiased selection:bg-indigo-100 selection:text-indigo-900">
+
+  <!-- 頂部導覽列（使用者前台精品玻璃質感） -->
+  <header class="hidden bg-gradient-to-r from-[#0f172a] via-[#1e1b4b] to-[#172554] text-white shadow-xl shadow-indigo-950/15 border-b border-white/10 z-30 shrink-0">
+    <div class="max-w-[1600px] mx-auto px-3 sm:px-5 py-2.5 sm:py-3.5 flex items-center justify-between gap-2">
+      <div class="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
+        <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-gradient-to-br from-amber-400 via-rose-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-rose-500/30 shrink-0 ring-2 ring-white/25">
+          <svg class="w-5 h-5 sm:w-6 sm:h-6 text-white drop-shadow-xs" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+          </svg>
+        </div>
+        <div class="min-w-0">
+          <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+            <h1 class="text-sm sm:text-lg font-black tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-white via-amber-100 to-indigo-200 truncate">
+              羅浮校園 3D 智慧場配導覽
+            </h1>
+            <span id="headerStartBadge" class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[11px] font-bold rounded-full bg-amber-400/15 text-amber-200 border border-amber-300/30 shadow-2xs">
+              <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+              出發點：大門入口
+            </span>
+          </div>
+          <p class="text-[11px] sm:text-xs text-indigo-200/85 mt-0.5 truncate">單指旋轉・雙指縮放・點擊場地或休息區即刻規劃 3D 路線</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        <button id="btnViewAngle" type="button" class="hidden sm:flex px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/15 backdrop-blur-md border border-white/15 text-xs sm:text-sm font-semibold text-slate-100 transition items-center gap-1.5 cursor-pointer">
+          <svg class="w-4 h-4 text-sky-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+          </svg>
+          <span id="viewAngleText">切換俯視角</span>
+        </button>
+
+        <button id="btnResetView" type="button" class="hidden sm:flex px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/15 backdrop-blur-md border border-white/15 text-xs sm:text-sm font-semibold text-slate-100 transition items-center gap-1.5 cursor-pointer">
+          <svg class="w-4 h-4 text-amber-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+          重設視角
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 主要內容區 -->
+  <main class="flex-1 max-w-[1600px] w-full mx-auto p-2 sm:p-5 grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-5">
+
+    <!-- 左側：3D 互動場配圖畫布 (8欄) -->
+    <div class="lg:col-span-8 flex flex-col bg-white/95 backdrop-blur-md rounded-2xl sm:rounded-3xl shadow-xl shadow-slate-300/50 border border-white overflow-hidden">
+      <!-- 畫布頂部起點自由切換器 -->
+      <div class="px-3 sm:px-4 py-2 sm:py-2.5 bg-white/95 backdrop-blur-sm border-b border-slate-200/80 flex items-center justify-between gap-2 text-xs">
+        <div class="flex items-center gap-1.5 sm:gap-2 flex-1 min-w-0">
+          <div class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-rose-50 text-rose-800 font-bold border border-rose-200 flex-1 sm:flex-initial min-w-0">
+            <span class="w-2 h-2 rounded-full bg-rose-600 inline-block animate-ping shrink-0"></span>
+            <label for="startPointSelect" class="shrink-0">🚩 出發：</label>
+            <select id="startPointSelect" class="bg-white text-rose-900 font-extrabold text-xs px-2 py-1 rounded-lg border border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-500 cursor-pointer flex-1 sm:w-[220px] truncate"></select>
+          </div>
+
+          <button id="btnSwapPoints" type="button" title="互換出發點與目的地" class="hidden px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 font-bold border border-slate-200 transition cursor-pointer shrink-0">
+            ⇄ 互換
+          </button>
+        </div>
+
+        <div class="hidden md:flex flex-wrap items-center gap-2.5 text-[11px] shrink-0">
+          <span class="inline-flex items-center gap-1 text-slate-600 font-semibold">
+            <span class="w-2.5 h-2.5 rounded-xs bg-orange-400 inline-block"></span>1F宣導攤位
+          </span>
+          <span class="inline-flex items-center gap-1 text-slate-600 font-semibold">
+            <span class="w-2.5 h-2.5 rounded-xs bg-rose-500 inline-block"></span>兒主教學場地
+          </span>
+          <span class="inline-flex items-center gap-1 text-slate-600 font-semibold">
+            <span class="w-2.5 h-2.5 rounded-xs bg-cyan-400/70 border border-cyan-600 inline-block"></span>4F天橋
+          </span>
+          <span class="text-slate-400 hidden xl:inline">🖱️ 左鍵旋轉・右鍵平移・滾輪縮放</span>
+        </div>
+      </div>
+
+      <!-- 3D WebGL 畫布與懸浮 HTML 標籤層 -->
+      <div id="canvas3dContainer" class="relative w-full h-[54vh] min-h-[360px] sm:h-[600px] overflow-hidden">
+        <div id="labelsLayer" class="absolute inset-0 pointer-events-none overflow-hidden"></div>
+
+        <!-- 手機版懸浮快捷操作列 -->
+        <div class="absolute top-3 right-3 z-30 flex flex-col gap-2">
+          <button id="btnMobileTopView" type="button" class="px-3 py-2 rounded-xl bg-slate-900/80 backdrop-blur-md text-white text-xs font-bold shadow-lg border border-white/20 active:scale-95 transition">
+            👁️ 俯視/3D
+          </button>
+          <button id="btnMobileResetView" type="button" class="px-3 py-2 rounded-xl bg-slate-900/80 backdrop-blur-md text-white text-xs font-bold shadow-lg border border-white/20 active:scale-95 transition">
+            🔄 重設
+          </button>
+        </div>
+
+        <button id="btnOpenMobileDrawer" type="button"
+          class="lg:hidden absolute bottom-3.5 left-1/2 -translate-x-1/2 z-30 px-5 py-3 rounded-full bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-extrabold text-sm shadow-xl shadow-indigo-950/40 border-2 border-white/80 flex items-center gap-2 active:scale-95 transition whitespace-nowrap">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+          🔍 查詢休息區 / 教學場地
+        </button>
+      </div>
+
+      <!-- 底部動態路線導引面板 -->
+      <div id="routeGuideBox" class="p-3.5 sm:p-5 bg-gradient-to-r from-[#0f172a] via-[#1e1b4b] to-[#172554] text-white border-t border-white/10 flex flex-col gap-3">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div class="flex items-start gap-3">
+            <div id="guideIcon" class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-rose-600 flex items-center justify-center font-black text-sm sm:text-base shrink-0 shadow-lg shadow-rose-950/50 border border-white/30">
+              導覽
+            </div>
+            <div class="min-w-0">
+              <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                <h2 id="guideTitle" class="font-extrabold text-sm sm:text-lg text-white tracking-tight">請點擊地圖或下方「查詢」選擇目標</h2>
+                <span id="guideZoneBadge" class="hidden px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-400/20 text-amber-200 border border-amber-300/35"></span>
+              </div>
+              <div id="guideDesc" class="text-xs sm:text-sm text-indigo-100/90 mt-1.5 leading-relaxed">
+                上方可自由切換任意「出發點」，點擊地圖目標後將自動顯示跨樓層／天橋／步道的 3D 步行指引。
+              </div>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2 shrink-0 w-full sm:w-auto justify-end">
+            <button id="btnSetAsStart" type="button" class="hidden flex-1 sm:flex-initial justify-center px-3 py-2.5 sm:py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-xs font-bold text-white shadow-md transition cursor-pointer">
+              🚩 設為出發點
+            </button>
+
+            <button id="btnCopyShareLink" type="button" class="hidden flex-1 sm:flex-initial justify-center px-3 py-2.5 sm:py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white shadow-md transition cursor-pointer">
+              🔗 複製連結
+            </button>
+
+            <button id="btnClearRoute" type="button" class="hidden px-3 py-2.5 sm:py-2 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-semibold text-slate-200 border border-white/10 transition cursor-pointer">
+              清除
+            </button>
+          </div>
+        </div>
+
+        <!-- 相關點位交叉連結列 -->
+        <div id="crossLinksRow" class="hidden pt-2.5 border-t border-white/10 flex flex-wrap items-center gap-1.5 sm:gap-2 text-xs">
+          <span class="text-slate-400 font-bold shrink-0">🔀 相關點位：</span>
+          <div id="crossLinksContainer" class="flex flex-wrap items-center gap-1.5"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 手機版抽屜背景遮罩 -->
+    <div id="mobileDrawerBackdrop" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-40 hidden lg:hidden"></div>
+
+    <!-- 右側：快速查詢與各區休息區/攤位清單 -->
+    <div id="searchDrawerPanel"
+      class="fixed inset-x-0 bottom-0 z-50 h-[84vh] translate-y-full transition-transform duration-300 ease-out rounded-t-3xl lg:static lg:translate-y-0 lg:z-auto lg:h-auto lg:col-span-4 flex flex-col bg-white backdrop-blur-md lg:rounded-3xl shadow-2xl lg:shadow-xl shadow-slate-900/40 lg:shadow-slate-300/50 border-t lg:border border-slate-200 lg:border-white overflow-hidden">
+
+      <div class="lg:hidden pt-2.5 pb-1 px-4 bg-slate-50 flex items-center justify-between border-b border-slate-100 shrink-0">
+        <div class="w-10"></div>
+        <div class="w-12 h-1.5 rounded-full bg-slate-300"></div>
+        <button id="btnCloseMobileDrawer" type="button" class="px-2.5 py-1 rounded-lg text-xs font-bold text-slate-500 hover:bg-slate-200">
+          ✕ 收合
+        </button>
+      </div>
+
+      <div class="p-3.5 sm:p-5 border-b border-slate-200/80 bg-gradient-to-b from-slate-50/90 to-white space-y-3 shrink-0">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-5 rounded-full bg-indigo-600 inline-block"></span>
+            <h3 class="font-extrabold text-base text-slate-800">場地、教學區與休息區查詢</h3>
+          </div>
+          <span id="totalCountBadge" class="text-xs font-bold px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200/80">共 38 處</span>
+        </div>
+
+        <div class="relative">
+          <input id="searchInput" type="text" placeholder="輸入號碼 (1-27) 或場地 (視聽室/會議室/宣導)..."
+            class="w-full pl-9 pr-8 py-2.5 rounded-xl border border-slate-300 bg-white text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition" />
+          <svg class="w-4 h-4 text-slate-400 absolute left-3 top-3.5 sm:top-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+          <button id="btnClearSearch" type="button" class="hidden absolute right-2.5 top-2.5 w-6 h-6 rounded-full bg-slate-200 text-slate-600 text-xs font-bold items-center justify-center">
+            ✕
+          </button>
+        </div>
+
+        <div class="flex lg:flex-wrap gap-1.5 overflow-x-auto no-scrollbar pb-0.5" id="zoneFilterTabs">
+          <button data-zone="ALL" class="zone-tab active shrink-0 px-3 py-2 sm:py-1.5 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow-sm shadow-indigo-500/25 transition cursor-pointer">全部</button>
+          <button data-zone="CHILDREN" class="zone-tab shrink-0 px-3 py-2 sm:py-1.5 rounded-xl text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 transition cursor-pointer">兒主教學場地</button>
+          <button data-zone="BUILDING" class="zone-tab shrink-0 px-3 py-2 sm:py-1.5 rounded-xl text-xs font-semibold bg-slate-100/80 text-slate-600 hover:bg-slate-200/70 transition cursor-pointer">主要場館/宣導/大門</button>
+          <button data-zone="ENTRANCE" class="zone-tab shrink-0 px-3 py-2 sm:py-1.5 rounded-xl text-xs font-semibold bg-slate-100/80 text-slate-600 hover:bg-slate-200/70 transition cursor-pointer">主通道 (報到/醫護)</button>
+          <button data-zone="CORRIDOR" class="zone-tab shrink-0 px-3 py-2 sm:py-1.5 rounded-xl text-xs font-semibold bg-slate-100/80 text-slate-600 hover:bg-slate-200/70 transition cursor-pointer">中央走廊 (音響・1-7)</button>
+          <button data-zone="LEFT_TRACK" class="zone-tab shrink-0 px-3 py-2 sm:py-1.5 rounded-xl text-xs font-semibold bg-slate-100/80 text-slate-600 hover:bg-slate-200/70 transition cursor-pointer">操場左側 (8-17)</button>
+          <button data-zone="RIGHT_TRACK" class="zone-tab shrink-0 px-3 py-2 sm:py-1.5 rounded-xl text-xs font-semibold bg-slate-100/80 text-slate-600 hover:bg-slate-200/70 transition cursor-pointer">操場右側 (18-27)</button>
+        </div>
+      </div>
+
+      <div id="boothListContainer" class="flex-1 overflow-y-auto p-3.5 space-y-2.5 custom-scroll bg-slate-50/40"></div>
+    </div>
+  </main>
+
+  <!-- 提示訊息 Toast -->
+  <div id="toastBanner" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/95 backdrop-blur-md text-white px-5 py-3 rounded-2xl shadow-2xl border border-white/10 text-sm font-medium z-50 opacity-0 pointer-events-none transition-opacity duration-300">
+    提示訊息
+  </div>
+
+  <script>
+    // =========================================================================
+    // 1. 座標轉換、預設資料結構（與後台 admin-editor.html 共用 localStorage 金鑰）
+    // =========================================================================
+    const STORAGE_KEY = 'luofu_campus_booths_v6';
+
+    function to3D(px, py) {
+      return {
+        x: (px - 500) * 0.088,
+        z: (py - 310) * 0.068
+      };
+    }
+
+    const FLOOR_H = 1.65;
+    const Y_GROUND = 0.25;
+    const Y_4F = 4 * FLOOR_H + 0.1;
+
+    const DEFAULT_BOOTH_NAMES = {
+      A: '報到組',
+      B: '醫護組',
+      C: '音響組'
+    };
+    for (let i = 1; i <= 27; i++) {
+      DEFAULT_BOOTH_NAMES[String(i)] = '休息區';
+    }
+
+    const SPECIAL_BOOTH_STYLES = {
+      A: {
+        shortLabel: '報到組',
+        hex3D: 0xf59e0b,
+        badgeBg: '#f59e0b',
+        badgeBorder: '#b45309',
+        badgeText: '#ffffff',
+        cardIconBg: 'bg-amber-500 text-white border-amber-600'
+      },
+      B: {
+        shortLabel: '醫護組',
+        hex3D: 0x10b981,
+        badgeBg: '#10b981',
+        badgeBorder: '#047857',
+        badgeText: '#ffffff',
+        cardIconBg: 'bg-emerald-600 text-white border-emerald-700'
+      },
+      C: {
+        shortLabel: '音響組',
+        hex3D: 0x8b5cf6,
+        badgeBg: '#8b5cf6',
+        badgeBorder: '#5b21b6',
+        badgeText: '#ffffff',
+        cardIconBg: 'bg-violet-600 text-white border-violet-700'
+      }
+    };
+
+    let boothNames = { ...DEFAULT_BOOTH_NAMES };
+    try {
+      const saved = window.__LUOFU_BOOTHS ? JSON.stringify(window.__LUOFU_BOOTHS) : localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        boothNames = { ...DEFAULT_BOOTH_NAMES, ...parsed };
+      }
+    } catch (e) {
+      console.warn('讀取儲存設定失敗，使用預設名稱', e);
+    }
+
+    // 主頁（工作室）改名後即時推送：不依賴 storage 事件，跨裝置同步後也能更新
+    function applyBoothNames(obj) {
+      boothNames = { ...DEFAULT_BOOTH_NAMES, ...obj };
+      if (!window.__luofuReady) return;
+      populateStartPointSelect();
+      updateBoothLabelTexts();
+      renderBoothList();
+      if (selectedId) selectTarget(selectedId);
+    }
+    window.addEventListener('message', (event) => {
+      const d = event.data;
+      if (!d) return;
+      if (d.type === 'LUOFU_BOOTHS' && d.names) applyBoothNames(d.names);
+      if (d.type === 'LUOFU_PAUSE') window.__luofuPaused = !!d.paused;
+    });
+
+    // 監聽後台分頁修改時的即時同步
+    window.addEventListener('storage', (e) => {
+      if (e.key === STORAGE_KEY && e.newValue) {
+        try {
+          boothNames = { ...DEFAULT_BOOTH_NAMES, ...JSON.parse(e.newValue) };
+          populateStartPointSelect();
+          updateBoothLabelTexts();
+          renderBoothList();
+          if (selectedId) selectTarget(selectedId);
+        } catch (err) {}
+      }
+    });
+
+    // =========================================================================
+    // 2. 校園雙向交叉路徑網格 (Path Graph + Dijkstra 最短路徑演算法)
+    // =========================================================================
+    const GRAPH_NODES = {
+      CHAPEL_4F:     { px: 285, py: 350, y: Y_4F,   desc: '羅浮國小 4F禮拜堂' },
+      ELEM_STAIR_4F: { px: 344, py: 432, y: Y_4F,   desc: '羅浮國小 4F 樓梯口' },
+      ELEM_EXIT_1F:  { px: 344, py: 444, y: Y_GROUND, desc: '羅浮國小 1F ┐ 轉角出口' },
+      BRIDGE_WEST:   { px: 372, py: 432, y: Y_4F,   desc: '4F連接天橋（西端）' },
+      BRIDGE_EAST:   { px: 428, py: 432, y: Y_4F,   desc: '4F連接天橋（東端）' },
+      HIGH_4F_HUB:   { px: 480, py: 400, y: Y_4F,   desc: '羅浮高中 4F 走廊' },
+      HIGH_4F_EAST:  { px: 625, py: 345, y: Y_4F,   desc: '羅浮高中東側 4F 走廊' },
+      HIGH_4F_AV:    { px: 642, py: 325, y: Y_4F,   desc: '4F視聽室（兒童主日學）' },
+      HIGH_STAIR_E4: { px: 615, py: 380, y: Y_4F,   desc: '羅浮高中東側 4F 樓梯口' },
+      HIGH_STAIR_E1: { px: 615, py: 380, y: Y_GROUND, desc: '羅浮高中東側 1F 走廊' },
+      HIGH_1F_MEET:  { px: 608, py: 345, y: Y_GROUND, desc: '1F會議室（兒童主日學）' },
+      HIGH_1F_STUDY: { px: 608, py: 392, y: Y_GROUND, desc: '1F自習室（兒童主日學）' },
+      HIGH_STAIR_W4: { px: 445, py: 405, y: Y_4F,   desc: '羅浮高中西側 4F 樓梯' },
+      HIGH_1F_PROMO: { px: 465, py: 385, y: Y_GROUND, desc: '1F宣導攤位' },
+      HIGH_1F_MAIN:  { px: 525, py: 370, y: Y_GROUND, desc: '羅浮高中 1F宣導及義賣攤位' },
+      HIGH_WEST_DOOR:{ px: 416, py: 392, y: Y_GROUND, desc: '羅浮高中西側 1F 入口' },
+      SOUTH_CORNER:  { px: 344, py: 466, y: Y_GROUND, desc: '羅浮國小南側步道' },
+      MAIN_GATE:     { px: 396, py: 472, y: Y_GROUND, desc: '大門入口' },
+      ALLEY_SOUTH:   { px: 396, py: 425, y: Y_GROUND, desc: '主通道南段' },
+      ALLEY_MID:     { px: 396, py: 372, y: Y_GROUND, desc: '主通道中段' },
+      ALLEY_NORTH:   { px: 396, py: 274, y: Y_GROUND, desc: '中央主走廊西口' },
+      CORRIDOR_C:    { px: 432, py: 274, y: Y_GROUND, desc: '中央主走廊（音響組前）' },
+      CORRIDOR_MID:  { px: 545, py: 274, y: Y_GROUND, desc: '中央主走廊中段' },
+      CORRIDOR_EAST: { px: 650, py: 274, y: Y_GROUND, desc: '中央主走廊東側' },
+      LEFT_TRACK_S:  { px: 300, py: 248, y: Y_GROUND, desc: '操場左側步道南端' },
+      LEFT_TRACK_N:  { px: 282, py: 80,  y: Y_GROUND, desc: '操場左側步道北端' },
+      RIGHT_TRACK_S: { px: 635, py: 248, y: Y_GROUND, desc: '操場右側步道南端' },
+      RIGHT_TRACK_N: { px: 618, py: 75,  y: Y_GROUND, desc: '操場右側步道北端' },
+      FIELD_CENTER:  { px: 445, py: 165, y: Y_GROUND, desc: '操場活動區' },
+      POOL_DOOR:     { px: 222, py: 252, y: Y_GROUND, desc: '游泳池入口' },
+      JUNIOR_DOOR:   { px: 690, py: 274, y: Y_GROUND, desc: '羅浮高中國中部 (3F)' },
+      ELEM_DORM:     { px: 165, py: 260, y: Y_GROUND, desc: '羅浮國小宿舍' },
+      KINDERGARTEN:  { px: 225, py: 425, y: Y_GROUND, desc: '附設幼兒園' },
+      HIGH_DORM:     { px: 695, py: 465, y: Y_GROUND, desc: '羅浮高中宿舍' }
+    };
+
+    const GRAPH_EDGES = [
+      ['CHAPEL_4F', 'ELEM_STAIR_4F', 3.5],
+      ['ELEM_STAIR_4F', 'ELEM_EXIT_1F', 2.2],
+      ['ELEM_STAIR_4F', 'BRIDGE_WEST', 1.5],
+      ['BRIDGE_WEST', 'BRIDGE_EAST', 2.0],
+      ['BRIDGE_EAST', 'HIGH_4F_HUB', 2.2],
+      ['HIGH_4F_HUB', 'HIGH_STAIR_W4', 4.5],
+      ['HIGH_STAIR_W4', 'HIGH_1F_PROMO', 5.5],
+      ['HIGH_4F_HUB', 'HIGH_4F_EAST', 4.2],
+      ['HIGH_4F_EAST', 'HIGH_4F_AV', 1.5],
+      ['HIGH_4F_EAST', 'HIGH_STAIR_E4', 6.5],
+      ['HIGH_STAIR_E4', 'HIGH_STAIR_E1', 6.5],
+      ['HIGH_STAIR_E1', 'HIGH_1F_MEET', 1.6],
+      ['HIGH_STAIR_E1', 'HIGH_1F_STUDY', 1.4],
+      ['HIGH_1F_PROMO', 'HIGH_1F_MAIN', 2.4],
+      ['HIGH_1F_MAIN', 'HIGH_STAIR_E1', 3.0],
+      ['HIGH_1F_PROMO', 'HIGH_WEST_DOOR', 1.6],
+      ['HIGH_WEST_DOOR', 'ALLEY_MID', 1.4],
+      ['ELEM_EXIT_1F', 'SOUTH_CORNER', 1.2],
+      ['SOUTH_CORNER', 'MAIN_GATE', 2.0],
+      ['MAIN_GATE', 'ALLEY_SOUTH', 1.6],
+      ['ALLEY_SOUTH', 'ALLEY_MID', 1.8],
+      ['ALLEY_MID', 'ALLEY_NORTH', 3.2],
+      ['ALLEY_NORTH', 'CORRIDOR_C', 1.5],
+      ['CORRIDOR_C', 'CORRIDOR_MID', 3.5],
+      ['CORRIDOR_MID', 'CORRIDOR_EAST', 3.5],
+      ['ALLEY_NORTH', 'LEFT_TRACK_S', 3.4],
+      ['LEFT_TRACK_S', 'LEFT_TRACK_N', 6.5],
+      ['CORRIDOR_EAST', 'RIGHT_TRACK_S', 1.8],
+      ['RIGHT_TRACK_S', 'RIGHT_TRACK_N', 6.5],
+      ['CORRIDOR_MID', 'FIELD_CENTER', 4.0],
+      ['LEFT_TRACK_S', 'POOL_DOOR', 2.8],
+      ['POOL_DOOR', 'ELEM_DORM', 2.5],
+      ['CORRIDOR_EAST', 'JUNIOR_DOOR', 2.0],
+      ['SOUTH_CORNER', 'KINDERGARTEN', 3.8],
+      ['MAIN_GATE', 'HIGH_DORM', 9.5]
+    ];
+
+    // =========================================================================
+    // 3. 建立所有可點擊導航目標（30 個攤位/休息區 + 特殊教學場地 + 場館）
+    // =========================================================================
+    function buildAllTargets() {
+      const list = [];
+
+      // A、B 入口通道
+      list.push({
+        id: 'A', numLabel: 'A', zone: 'ENTRANCE', zoneName: '主通道（入口側）',
+        px: 382, py: 406, y: Y_GROUND, attachNode: 'ALLEY_SOUTH',
+        relatedIds: ['B', 'MAIN_GATE', 'START_CHAPEL', 'BLD_HIGH_PROMO']
+      });
+      list.push({
+        id: 'B', numLabel: 'B', zone: 'ENTRANCE', zoneName: '主通道（入口側）',
+        px: 382, py: 368, y: Y_GROUND, attachNode: 'ALLEY_MID',
+        relatedIds: ['A', 'C', 'BLD_HIGH_PROMO', 'MAIN_GATE']
+      });
+
+      // C（音響組） + 1～7 號休息區（中央走廊）
+      const corridorIds = ['C', '1', '2', '3', '4', '5', '6', '7'];
+      corridorIds.forEach((cid, idx) => {
+        const px = 424 + idx * 33;
+        const py = 258;
+        let attachNode = 'CORRIDOR_C';
+        if (idx >= 2 && idx <= 5) attachNode = 'CORRIDOR_MID';
+        else if (idx >= 6) attachNode = 'CORRIDOR_EAST';
+        list.push({
+          id: cid, numLabel: cid, zone: 'CORRIDOR', zoneName: '中央走廊（操場南側）',
+          px, py, y: Y_GROUND, attachNode,
+          relatedIds: ['B', 'BLD_FIELD', 'BLD_HIGH', idx < 4 ? '17' : '27']
+        });
+      });
+
+      // 8～17 號休息區（操場左側）
+      for (let i = 0; i < 10; i++) {
+        const num = String(8 + i);
+        const px = 274 + i * 2.0;
+        const py = 74 + i * 19.2;
+        list.push({
+          id: num, numLabel: num, zone: 'LEFT_TRACK', zoneName: '操場左側（泳池旁）',
+          px, py, y: Y_GROUND, attachNode: i < 5 ? 'LEFT_TRACK_N' : 'LEFT_TRACK_S',
+          relatedIds: ['BLD_FIELD', 'BLD_POOL', 'C', '1']
+        });
+      }
+
+      // 18～27 號休息區（操場右側）
+      for (let i = 0; i < 10; i++) {
+        const num = String(18 + i);
+        const px = 610 + i * 2.0;
+        const py = 68 + i * 19.6;
+        list.push({
+          id: num, numLabel: num, zone: 'RIGHT_TRACK', zoneName: '操場右側',
+          px, py, y: Y_GROUND, attachNode: i < 5 ? 'RIGHT_TRACK_N' : 'RIGHT_TRACK_S',
+          relatedIds: ['BLD_FIELD', 'BLD_JUNIOR', '7', 'VENUE_4F_AV']
+        });
+      }
+
+      // 特殊場地與主要建築
+      const specialVenues = [
+        {
+          id: 'MAIN_GATE', numLabel: '大門', customTitle: '大門入口',
+          zone: 'BUILDING', zoneName: '校園主出入口',
+          px: 396, py: 472, y: Y_GROUND, attachNode: 'MAIN_GATE', isBuilding: true,
+          relatedIds: ['A', 'B', 'START_CHAPEL', 'BLD_HIGH_PROMO']
+        },
+        {
+          id: 'START_CHAPEL', numLabel: '4F禮拜', customTitle: '羅浮國小 4F禮拜堂',
+          zone: 'BUILDING', zoneName: '羅浮國小 4F 主日禮拜場地',
+          px: 285, py: 350, y: Y_4F, attachNode: 'CHAPEL_4F', isBuilding: true,
+          relatedIds: ['VENUE_4F_AV', 'VENUE_1F_MEET', 'VENUE_1F_STUDY', 'MAIN_GATE']
+        },
+        {
+          id: 'BLD_HIGH_PROMO', numLabel: '1F宣導', customTitle: '1F宣導攤位（羅浮高中西側）',
+          zone: 'BUILDING', zoneName: '羅浮高中 1F 西側宣導區',
+          px: 465, py: 385, y: Y_GROUND, attachNode: 'HIGH_1F_PROMO', isBuilding: true,
+          relatedIds: ['BLD_HIGH', 'B', 'MAIN_GATE', 'VENUE_1F_MEET']
+        },
+        {
+          id: 'VENUE_4F_AV', numLabel: '4F視聽', customTitle: '4F視聽室（兒童主日學）',
+          zone: 'CHILDREN', zoneName: '兒童主日學教學場地（4F）',
+          px: 642, py: 325, y: Y_4F, attachNode: 'HIGH_4F_AV', isBuilding: true,
+          relatedIds: ['START_CHAPEL', 'VENUE_1F_MEET', 'VENUE_1F_STUDY', 'BLD_JUNIOR']
+        },
+        {
+          id: 'VENUE_1F_MEET', numLabel: '1F會議', customTitle: '1F會議室（兒童主日學）',
+          zone: 'CHILDREN', zoneName: '兒童主日學教學場地（1F）',
+          px: 608, py: 345, y: Y_GROUND, attachNode: 'HIGH_1F_MEET', isBuilding: true,
+          relatedIds: ['VENUE_1F_STUDY', 'VENUE_4F_AV', 'START_CHAPEL', 'BLD_HIGH']
+        },
+        {
+          id: 'VENUE_1F_STUDY', numLabel: '1F自習', customTitle: '1F自習室（兒童主日學）',
+          zone: 'CHILDREN', zoneName: '兒童主日學教學場地（1F）',
+          px: 608, py: 392, y: Y_GROUND, attachNode: 'HIGH_1F_STUDY', isBuilding: true,
+          relatedIds: ['VENUE_1F_MEET', 'VENUE_4F_AV', 'START_CHAPEL', 'BLD_HIGH']
+        },
+        {
+          id: 'BLD_HIGH', numLabel: '義賣區', customTitle: '羅浮高中 — 1F宣導及義賣攤位',
+          zone: 'BUILDING', zoneName: '羅浮高中 1F 展售區',
+          px: 525, py: 370, y: Y_GROUND, attachNode: 'HIGH_1F_MAIN', isBuilding: true,
+          relatedIds: ['BLD_HIGH_PROMO', 'VENUE_1F_MEET', 'VENUE_1F_STUDY', 'MAIN_GATE']
+        },
+        {
+          id: 'BLD_FIELD', numLabel: '操場', customTitle: '操場活動區',
+          zone: 'BUILDING', zoneName: '戶外運動場',
+          px: 445, py: 165, y: Y_GROUND, attachNode: 'FIELD_CENTER', isBuilding: true,
+          relatedIds: ['1', '12', '22', 'BLD_POOL']
+        },
+        {
+          id: 'BLD_JUNIOR', numLabel: '國中部', customTitle: '羅浮高中國中部 (3F)',
+          zone: 'BUILDING', zoneName: '東側教學大樓',
+          px: 690, py: 274, y: Y_GROUND, attachNode: 'JUNIOR_DOOR', isBuilding: true,
+          relatedIds: ['7', '27', 'VENUE_4F_AV']
+        },
+        {
+          id: 'BLD_POOL', numLabel: '游泳池', customTitle: '游泳池',
+          zone: 'BUILDING', zoneName: '西北側運動設施',
+          px: 205, py: 185, y: Y_GROUND, attachNode: 'POOL_DOOR', isBuilding: true,
+          relatedIds: ['12', '17', 'BLD_FIELD']
+        }
+      ];
+
+      return [...list, ...specialVenues];
+    }
+
+    const ALL_TARGETS = buildAllTargets();
+    let selectedStartId = 'MAIN_GATE';
+    let selectedId = null;
+    let activeZoneFilter = 'ALL';
+    let externalSessionTitle = '';
+
+    function getTargetDisplayName(target) {
+      if (target.customTitle) return target.customTitle;
+      const custom = boothNames[target.id] || DEFAULT_BOOTH_NAMES[target.id] || '休息區';
+      if (['A', 'B', 'C'].includes(target.id)) return custom;
+      return `${target.id}號 ${custom}`;
+    }
+
+    // =========================================================================
+    // 4. Dijkstra 最短路徑搜尋引擎
+    // =========================================================================
+    function findShortestGraphPath(startNodeKey, endNodeKey) {
+      if (startNodeKey === endNodeKey) return [startNodeKey];
+      const adj = {};
+      Object.keys(GRAPH_NODES).forEach(k => { adj[k] = []; });
+      GRAPH_EDGES.forEach(([u, v, w]) => {
+        adj[u].push({ to: v, w });
+        adj[v].push({ to: u, w });
+      });
+
+      const dist = {};
+      const prev = {};
+      const visited = new Set();
+      Object.keys(GRAPH_NODES).forEach(k => { dist[k] = Infinity; });
+      dist[startNodeKey] = 0;
+
+      while (visited.size < Object.keys(GRAPH_NODES).length) {
+        let u = null;
+        let minD = Infinity;
+        for (const k of Object.keys(GRAPH_NODES)) {
+          if (!visited.has(k) && dist[k] < minD) {
+            minD = dist[k];
+            u = k;
+          }
+        }
+        if (!u || u === endNodeKey) break;
+        visited.add(u);
+
+        for (const edge of adj[u]) {
+          if (visited.has(edge.to)) continue;
+          const alt = dist[u] + edge.w;
+          if (alt < dist[edge.to]) {
+            dist[edge.to] = alt;
+            prev[edge.to] = u;
+          }
+        }
+      }
+
+      const path = [];
+      let curr = endNodeKey;
+      while (curr) {
+        path.unshift(curr);
+        curr = prev[curr];
+      }
+      return path[0] === startNodeKey ? path : [startNodeKey, endNodeKey];
+    }
+
+    // =========================================================================
+    // 5. Three.js 3D 校園場景建構
+    // =========================================================================
+    let scene, camera, renderer;
+    let routeGroup = new THREE.Group();
+    let routeAnimBeads = [];
+    let boothMeshMap = {};
+    let labelElements = [];
+
+    let camTarget = new THREE.Vector3(0, 1.5, 1.5);
+    let camSpherical = { radius: 66, theta: 0.06, phi: 0.72 };
+    let isDragging = false;
+    let isPanning = false;
+    let prevPointer = { x: 0, y: 0 };
+    let pinchStartDist = 0;
+    let pinchStartRadius = 66;
+    let prevPinchCenter = { x: 0, y: 0 };
+
+    function updateCameraPosition() {
+      camSpherical.phi = Math.max(0.14, Math.min(1.42, camSpherical.phi));
+      camSpherical.radius = Math.max(22, Math.min(130, camSpherical.radius));
+      const sinPhi = Math.sin(camSpherical.phi);
+      camera.position.set(
+        camTarget.x + camSpherical.radius * sinPhi * Math.sin(camSpherical.theta),
+        camTarget.y + camSpherical.radius * Math.cos(camSpherical.phi),
+        camTarget.z + camSpherical.radius * sinPhi * Math.cos(camSpherical.theta)
+      );
+      camera.lookAt(camTarget);
+    }
+
+    function createExtrudedShape(points2D, height, colorHex, opacity = 0.62, yOffset = 0) {
+      const shape = new THREE.Shape();
+      points2D.forEach(([px, py], i) => {
+        const pt = to3D(px, py);
+        if (i === 0) shape.moveTo(pt.x, -pt.z);
+        else shape.lineTo(pt.x, -pt.z);
+      });
+      shape.closePath();
+
+      const geo = new THREE.ExtrudeGeometry(shape, { depth: height, bevelEnabled: false });
+      geo.rotateX(-Math.PI / 2);
+
+      const mat = new THREE.MeshPhysicalMaterial({
+        color: colorHex,
+        transparent: opacity < 1,
+        opacity,
+        roughness: 0.25,
+        metalness: 0.05,
+        depthWrite: opacity >= 0.9
+      });
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.y = yOffset;
+      mesh.receiveShadow = true;
+
+      const edges = new THREE.EdgesGeometry(geo);
+      const line = new THREE.LineSegments(
+        edges,
+        new THREE.LineBasicMaterial({ color: 0x334155, transparent: true, opacity: 0.45 })
+      );
+      mesh.add(line);
+      return mesh;
+    }
+
+    function buildRunningTrack3D() {
+      const trackGroup = new THREE.Group();
+      const cx = 445, cy = 165;
+      const rxOut = 148, ryOut = 78;
+      const rxIn = 112, ryIn = 46;
+      const segs = 72;
+
+      const shape = new THREE.Shape();
+      for (let i = 0; i <= segs; i++) {
+        const ang = (i / segs) * Math.PI * 2;
+        const pt = to3D(cx + Math.cos(ang) * rxOut, cy + Math.sin(ang) * ryOut);
+        if (i === 0) shape.moveTo(pt.x, -pt.z);
+        else shape.lineTo(pt.x, -pt.z);
+      }
+
+      const hole = new THREE.Path();
+      for (let i = segs; i >= 0; i--) {
+        const ang = (i / segs) * Math.PI * 2;
+        const pt = to3D(cx + Math.cos(ang) * rxIn, cy + Math.sin(ang) * ryIn);
+        if (i === segs) hole.moveTo(pt.x, -pt.z);
+        else hole.lineTo(pt.x, -pt.z);
+      }
+      shape.holes.push(hole);
+
+      const geo = new THREE.ExtrudeGeometry(shape, { depth: 0.14, bevelEnabled: false });
+      geo.rotateX(-Math.PI / 2);
+      const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: 0xb87333, roughness: 0.85 }));
+      mesh.position.y = 0.04;
+      trackGroup.add(mesh);
+
+      // 白色跑道分道線
+      const lanePts = [];
+      for (let i = 0; i <= segs; i++) {
+        const ang = (i / segs) * Math.PI * 2;
+        const pt = to3D(cx + Math.cos(ang) * 130, cy + Math.sin(ang) * 62);
+        lanePts.push(new THREE.Vector3(pt.x, 0.2, pt.z));
+      }
+      trackGroup.add(new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints(lanePts),
+        new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.75 })
+      ));
+
+      // 操場中央草地與籃球場
+      trackGroup.add(createExtrudedShape(
+        [[345, 125], [545, 125], [545, 205], [345, 205]],
+        0.1, 0x86efac, 0.9, 0.03
+      ));
+      trackGroup.add(createExtrudedShape(
+        [[362, 134], [435, 134], [435, 196], [362, 196]],
+        0.12, 0x3b82f6, 0.88, 0.04
+      ));
+      trackGroup.add(createExtrudedShape(
+        [[455, 134], [528, 134], [528, 196], [455, 196]],
+        0.12, 0x3b82f6, 0.88, 0.04
+      ));
+
+      scene.add(trackGroup);
+    }
+
+    function init3DScene() {
+      const container = document.getElementById('canvas3dContainer');
+      scene = new THREE.Scene();
+
+      camera = new THREE.PerspectiveCamera(42, container.clientWidth / container.clientHeight, 0.5, 450);
+      updateCameraPosition();
+
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setSize(container.clientWidth, container.clientHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.08;
+      container.insertBefore(renderer.domElement, container.firstChild);
+
+      // 燈光系統
+      scene.add(new THREE.HemisphereLight(0xffffff, 0xdbeafe, 0.95));
+      const dirLight = new THREE.DirectionalLight(0xfffbeb, 0.75);
+      dirLight.position.set(35, 65, 45);
+      scene.add(dirLight);
+
+      // 周圍綠意草地底座
+      const lawnGeo = new THREE.CircleGeometry(140, 64);
+      lawnGeo.rotateX(-Math.PI / 2);
+      const lawnMesh = new THREE.Mesh(lawnGeo, new THREE.MeshStandardMaterial({ color: 0xecfdf5, roughness: 1 }));
+      lawnMesh.position.y = -0.15;
+      scene.add(lawnMesh);
+
+      // 校園圍牆外框白底
+      const boundaryPts = [
+        [205, 58], [678, 38], [692, 245], [775, 265],
+        [662, 515], [630, 518], [625, 422], [352, 468],
+        [325, 485], [240, 442], [185, 442], [112, 232]
+      ];
+      scene.add(createExtrudedShape(boundaryPts, 0.08, 0xf8fafc, 0.98, -0.08));
+
+      // 主要半透明建築物
+      // 1. 羅浮國小 (4F) - 含南側 ┐ 轉角造型
+      const elemPts = [
+        [218, 285], [362, 285], [362, 444],
+        [344, 444], [344, 462], [292, 462], [292, 442], [218, 442]
+      ];
+      scene.add(createExtrudedShape(elemPts, 4 * FLOOR_H, 0xfbbf24, 0.56, 0));
+
+      // 2. 附設幼兒園 (2F)
+      scene.add(createExtrudedShape(
+        [[186, 315], [218, 315], [218, 428], [192, 428], [192, 395], [176, 395], [176, 345], [186, 345]],
+        2 * FLOOR_H, 0xf43f5e, 0.58, 0
+      ));
+
+      // 3. 羅浮國小宿舍 (3F)
+      scene.add(createExtrudedShape(
+        [[112, 232], [184, 165], [202, 245], [148, 302]],
+        3 * FLOOR_H, 0xf472b6, 0.56, 0
+      ));
+
+      // 4. 游泳池
+      scene.add(createExtrudedShape(
+        [[186, 130], [234, 126], [244, 245], [196, 250]],
+        0.35, 0x38bdf8, 0.72, 0
+      ));
+
+      // 5. 羅浮高中主建築 (4F)
+      const highPts = [
+        [432, 285], [648, 285], [648, 372],
+        [715, 372], [715, 422], [432, 422]
+      ];
+      scene.add(createExtrudedShape(highPts, 4 * FLOOR_H, 0x34d399, 0.50, 0));
+
+      // 高中內部分區立體色塊：1F宣導攤位（西側）
+      scene.add(createExtrudedShape(
+        [[436, 305], [496, 305], [496, 416], [436, 416]],
+        FLOOR_H * 0.9, 0xfb923c, 0.68, 0.05
+      ));
+
+      // 兒童主日學 3 個教學場地立體色塊
+      // 1F會議室
+      scene.add(createExtrudedShape(
+        [[585, 318], [626, 318], [626, 362], [585, 362]],
+        FLOOR_H * 0.9, 0xe11d48, 0.72, 0.05
+      ));
+      // 1F自習室
+      scene.add(createExtrudedShape(
+        [[585, 368], [626, 368], [626, 414], [585, 414]],
+        FLOOR_H * 0.9, 0xe11d48, 0.72, 0.05
+      ));
+      // 4F視聽室（4樓高度）
+      scene.add(createExtrudedShape(
+        [[628, 292], [662, 292], [662, 365], [628, 365]],
+        FLOOR_H * 0.92, 0xf43f5e, 0.78, 3 * FLOOR_H
+      ));
+
+      // 6. 4F 連接天橋（大門口南側，連接羅浮國小 4F ↔ 羅浮高中 4F）
+      scene.add(createExtrudedShape(
+        [[362, 424], [432, 424], [432, 440], [362, 440]],
+        FLOOR_H * 0.75, 0x22d3ee, 0.74, 3 * FLOOR_H
+      ));
+
+      // 7. 羅浮高中國中部 (3F)
+      scene.add(createExtrudedShape(
+        [[678, 178], [732, 178], [744, 295], [668, 295], [668, 250], [678, 250]],
+        3 * FLOOR_H, 0xfacc15, 0.62, 0
+      ));
+
+      // 8. 羅浮高中宿舍 (3F)
+      scene.add(createExtrudedShape(
+        [[725, 418], [765, 448], [692, 535], [652, 505]],
+        3 * FLOOR_H, 0x0ea5e9, 0.60, 0
+      ));
+
+      // 9. 大門入口立體拱門地標
+      const gateLeft = to3D(382, 472);
+      const gateRight = to3D(410, 472);
+      const pillarGeo = new THREE.BoxGeometry(0.45, 2.2, 0.45);
+      const pillarMat = new THREE.MeshStandardMaterial({ color: 0x1e293b });
+      const pL = new THREE.Mesh(pillarGeo, pillarMat);
+      pL.position.set(gateLeft.x, 1.1, gateLeft.z);
+      const pR = new THREE.Mesh(pillarGeo, pillarMat);
+      pR.position.set(gateRight.x, 1.1, gateRight.z);
+      const beamGeo = new THREE.BoxGeometry(Math.abs(gateRight.x - gateLeft.x) + 0.8, 0.45, 0.65);
+      const beam = new THREE.Mesh(beamGeo, new THREE.MeshStandardMaterial({ color: 0xf59e0b }));
+      beam.position.set((gateLeft.x + gateRight.x) / 2, 2.35, gateLeft.z);
+      scene.add(pL, pR, beam);
+
+      // 10. 操場與土色跑道
+      buildRunningTrack3D();
+
+      // 11. 攤位地面立體方塊
+      buildBoothTiles3D();
+
+      // 12. 校園植栽點綴小樹
+      const treeCoords = [
+        [235, 95], [320, 75], [560, 62], [655, 62],
+        [728, 335], [712, 395], [645, 465], [168, 315], [168, 415]
+      ];
+      treeCoords.forEach(([tx, ty]) => {
+        const pt = to3D(tx, ty);
+        const crown = new THREE.Mesh(
+          new THREE.SphereGeometry(0.85, 12, 12),
+          new THREE.MeshStandardMaterial({ color: 0x34d399, roughness: 0.7 })
+        );
+        crown.position.set(pt.x, 1.0, pt.z);
+        scene.add(crown);
+      });
+
+      scene.add(routeGroup);
+      createHTMLLabels();
+      bindCanvasEvents(container);
+      animateLoop();
+    }
+
+    function buildBoothTiles3D() {
+      ALL_TARGETS.filter(t => !t.isBuilding).forEach(t => {
+        const pt = to3D(t.px, t.py);
+        const spec = SPECIAL_BOOTH_STYLES[t.id];
+        const colorHex = spec ? spec.hex3D : 0xf43f5e;
+        const geo = new THREE.BoxGeometry(1.75, 0.22, 1.15);
+        const mat = new THREE.MeshStandardMaterial({ color: colorHex, roughness: 0.4 });
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.position.set(pt.x, 0.14, pt.z);
+        scene.add(mesh);
+        boothMeshMap[t.id] = mesh;
+      });
+    }
+
+    // =========================================================================
+    // 6. 懸浮 HTML 標籤建立與投影更新
+    // =========================================================================
+    function createHTMLLabels() {
+      const layer = document.getElementById('labelsLayer');
+      layer.innerHTML = '';
+      labelElements = [];
+
+      // 固定建築與地標標籤
+      const staticLabels = [
+        { text: '國小宿舍', px: 152, py: 230, y: 3 * FLOOR_H + 0.5, cls: 'bg-pink-100/90 text-pink-900 border-pink-300' },
+        { text: '附設幼兒園', px: 196, py: 372, y: 2 * FLOOR_H + 0.5, cls: 'bg-rose-100/90 text-rose-900 border-rose-300' },
+        { text: '🚪 1F轉角出口', px: 344, py: 448, y: 0.8, cls: 'bg-slate-800/90 text-white border-slate-600' },
+        { text: '🌉 4F連接天橋', px: 397, py: 432, y: 4 * FLOOR_H + 0.6, cls: 'bg-cyan-50/95 text-cyan-900 border-cyan-400' },
+        { text: '高中宿舍', px: 710, py: 475, y: 3 * FLOOR_H + 0.5, cls: 'bg-sky-100/90 text-sky-900 border-sky-300' }
+      ];
+
+      staticLabels.forEach(sl => {
+        const pt = to3D(sl.px, sl.py);
+        const el = document.createElement('div');
+        el.className = `label-3d px-2 py-0.5 rounded-lg text-[10px] sm:text-xs font-extrabold border shadow-sm whitespace-nowrap ${sl.cls}`;
+        el.textContent = sl.text;
+        layer.appendChild(el);
+        labelElements.push({ el, pos3D: new THREE.Vector3(pt.x, sl.y, pt.z) });
+      });
+
+      // 可點擊場館與教學場地標籤
+      ALL_TARGETS.filter(t => t.isBuilding).forEach(t => {
+        const pt = to3D(t.px, t.py);
+        const el = document.createElement('button');
+        el.type = 'button';
+        let styleCls = 'bg-white/95 text-slate-800 border-slate-300';
+        let yH = 1.6;
+        if (t.id === 'START_CHAPEL') {
+          styleCls = 'bg-rose-600 text-white border-rose-300 chapel-badge-anim';
+          yH = Y_4F + 0.9;
+        } else if (t.id === 'MAIN_GATE') {
+          styleCls = 'bg-amber-500 text-white border-amber-200';
+          yH = 2.7;
+        } else if (t.id === 'BLD_HIGH_PROMO') {
+          styleCls = 'bg-orange-500 text-white border-orange-200';
+          yH = FLOOR_H + 0.7;
+        } else if (t.zone === 'CHILDREN') {
+          styleCls = 'bg-rose-600 text-white border-rose-200';
+          yH = t.id === 'VENUE_4F_AV' ? Y_4F + 0.7 : FLOOR_H + 0.7;
+        } else if (t.id === 'BLD_HIGH') {
+          styleCls = 'bg-emerald-700 text-white border-emerald-300';
+          yH = 4 * FLOOR_H + 0.7;
+        } else if (t.id === 'BLD_JUNIOR') {
+          yH = 3 * FLOOR_H + 0.6;
+        }
+
+        el.className = `label-3d clickable px-2.5 py-1 rounded-xl text-[10px] sm:text-xs font-black border shadow-md whitespace-nowrap ${styleCls}`;
+        el.textContent = t.customTitle;
+        el.addEventListener('click', (e) => {
+          e.stopPropagation();
+          selectTarget(t.id);
+        });
+        layer.appendChild(el);
+        labelElements.push({ el, pos3D: new THREE.Vector3(pt.x, yH, pt.z), targetId: t.id });
+      });
+
+      // 30 個攤位與 1-27 休息區標籤
+      ALL_TARGETS.filter(t => !t.isBuilding).forEach(t => {
+        const pt = to3D(t.px, t.py);
+        const spec = SPECIAL_BOOTH_STYLES[t.id];
+        const el = document.createElement('button');
+        el.type = 'button';
+        el.dataset.boothLabelId = t.id;
+
+        if (spec) {
+          el.className = 'label-3d clickable px-2 py-0.5 rounded-lg text-[10px] sm:text-[11px] font-black shadow-md border whitespace-nowrap';
+          el.style.backgroundColor = spec.badgeBg;
+          el.style.borderColor = spec.badgeBorder;
+          el.style.color = spec.badgeText;
+          el.textContent = boothNames[t.id] || spec.shortLabel;
+        } else {
+          el.className = 'label-3d clickable w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-white/95 text-rose-700 border-2 border-rose-500 text-[10px] sm:text-xs font-black flex items-center justify-center shadow-sm';
+          el.textContent = t.numLabel;
+          el.title = getTargetDisplayName(t);
+        }
+
+        el.addEventListener('click', (e) => {
+          e.stopPropagation();
+          selectTarget(t.id);
+        });
+        layer.appendChild(el);
+        labelElements.push({ el, pos3D: new THREE.Vector3(pt.x, 0.75, pt.z), targetId: t.id });
+      });
+    }
+
+    function updateBoothLabelTexts() {
+      document.querySelectorAll('[data-booth-label-id]').forEach(el => {
+        const id = el.dataset.boothLabelId;
+        const t = ALL_TARGETS.find(item => item.id === id);
+        if (!t) return;
+        if (SPECIAL_BOOTH_STYLES[id]) {
+          el.textContent = boothNames[id] || SPECIAL_BOOTH_STYLES[id].shortLabel;
+        } else {
+          el.title = getTargetDisplayName(t);
+        }
+      });
+    }
+
+    function updateLabelsScreenPosition() {
+      const container = document.getElementById('canvas3dContainer');
+      const w = container.clientWidth;
+      const h = container.clientHeight;
+      const projVec = new THREE.Vector3();
+
+      labelElements.forEach(item => {
+        projVec.copy(item.pos3D).project(camera);
+        if (projVec.z > 1) {
+          item.el.style.display = 'none';
+        } else {
+          item.el.style.display = '';
+          item.el.style.left = `${(projVec.x * 0.5 + 0.5) * w}px`;
+          item.el.style.top = `${(-projVec.y * 0.5 + 0.5) * h}px`;
+        }
+      });
+    }
+
+    // =========================================================================
+    // 7. 3D 發光動態導航路線繪製
+    // =========================================================================
+    function draw3DRoute(startTarget, endTarget) {
+      while (routeGroup.children.length > 0) {
+        routeGroup.remove(routeGroup.children[0]);
+      }
+      routeAnimBeads = [];
+
+      const nodeKeys = findShortestGraphPath(startTarget.attachNode, endTarget.attachNode);
+      const points3D = [];
+
+      const startPt = to3D(startTarget.px, startTarget.py);
+      points3D.push(new THREE.Vector3(startPt.x, startTarget.y + 0.35, startPt.z));
+
+      nodeKeys.forEach(nk => {
+        const gn = GRAPH_NODES[nk];
+        const pt = to3D(gn.px, gn.py);
+        points3D.push(new THREE.Vector3(pt.x, gn.y + 0.35, pt.z));
+      });
+
+      const endPt = to3D(endTarget.px, endTarget.py);
+      points3D.push(new THREE.Vector3(endPt.x, endTarget.y + 0.35, endPt.z));
+
+      // 去除重複相鄰點
+      const cleanPts = [points3D[0]];
+      for (let i = 1; i < points3D.length; i++) {
+        if (points3D[i].distanceTo(cleanPts[cleanPts.length - 1]) > 0.15) {
+          cleanPts.push(points3D[i]);
+        }
+      }
+      if (cleanPts.length < 2) return nodeKeys;
+
+      const curve = new THREE.CatmullRomCurve3(cleanPts, false, 'catmullrom', 0.12);
+      const tubeGeo = new THREE.TubeGeometry(curve, 90, 0.22, 10, false);
+      const tubeMat = new THREE.MeshBasicMaterial({ color: 0xf43f5e });
+      routeGroup.add(new THREE.Mesh(tubeGeo, tubeMat));
+
+      const glowGeo = new THREE.TubeGeometry(curve, 90, 0.42, 10, false);
+      const glowMat = new THREE.MeshBasicMaterial({ color: 0xfda4af, transparent: true, opacity: 0.45 });
+      routeGroup.add(new THREE.Mesh(glowGeo, glowMat));
+
+      // 終點光柱
+      const endPos = cleanPts[cleanPts.length - 1];
+      const beaconGeo = new THREE.CylinderGeometry(0.35, 0.85, 3.2, 20, 1, true);
+      const beaconMat = new THREE.MeshBasicMaterial({ color: 0xf59e0b, transparent: true, opacity: 0.55, side: THREE.DoubleSide });
+      const beacon = new THREE.Mesh(beaconGeo, beaconMat);
+      beacon.position.set(endPos.x, endPos.y + 1.6, endPos.z);
+      routeGroup.add(beacon);
+
+      // 動態流光光點
+      const beadGeo = new THREE.SphereGeometry(0.34, 12, 12);
+      const beadMat = new THREE.MeshBasicMaterial({ color: 0xfef08a });
+      for (let i = 0; i < 6; i++) {
+        const bead = new THREE.Mesh(beadGeo, beadMat);
+        routeGroup.add(bead);
+        routeAnimBeads.push({ mesh: bead, curve, offset: i / 6 });
+      }
+
+      return nodeKeys;
+    }
+
+    function animateLoop() {
+      requestAnimationFrame(animateLoop);
+      if (window.__luofuPaused) return;
+      const now = performance.now() * 0.00028;
+      routeAnimBeads.forEach(item => {
+        const t = (now + item.offset) % 1;
+        item.mesh.position.copy(item.curve.getPointAt(t));
+      });
+      updateLabelsScreenPosition();
+      renderer.render(scene, camera);
+    }
+
+    // =========================================================================
+    // 8. 互動邏輯、起訖點切換與手機抽屜控制
+    // =========================================================================
+    function populateStartPointSelect() {
+      const sel = document.getElementById('startPointSelect');
+      sel.innerHTML = '';
+      ALL_TARGETS.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t.id;
+        opt.textContent = getTargetDisplayName(t);
+        if (t.id === selectedStartId) opt.selected = true;
+        sel.appendChild(opt);
+      });
+      const startObj = ALL_TARGETS.find(t => t.id === selectedStartId);
+      const badge = document.getElementById('headerStartBadge');
+      if (badge && startObj) {
+        badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span> 出發點：${getTargetDisplayName(startObj)}`;
+      }
+    }
+
+    function selectTarget(id) {
+      const target = ALL_TARGETS.find(t => t.id === id);
+      const startTarget = ALL_TARGETS.find(t => t.id === selectedStartId);
+      if (!target || !startTarget) return;
+
+      selectedId = id;
+      const nodeKeys = draw3DRoute(startTarget, target);
+
+      const startName = getTargetDisplayName(startTarget);
+      const endName = getTargetDisplayName(target);
+      const prefix = externalSessionTitle ? `【${externalSessionTitle}】` : '';
+
+      document.getElementById('guideIcon').textContent = target.numLabel;
+      document.getElementById('guideTitle').textContent = `${prefix}${startName} ➔ ${endName}`;
+
+      const badge = document.getElementById('guideZoneBadge');
+      badge.textContent = target.zoneName;
+      badge.classList.remove('hidden');
+
+      // 步進式路線文字說明
+      const steps = [startName];
+      nodeKeys.forEach(nk => {
+        const d = GRAPH_NODES[nk].desc;
+        if (d !== steps[steps.length - 1] && d !== endName) {
+          steps.push(d);
+        }
+      });
+      if (steps[steps.length - 1] !== endName) steps.push(endName);
+
+      document.getElementById('guideDesc').innerHTML = steps.map((s, i) => {
+        if (i === 0) return `<span class="inline-block px-2 py-0.5 rounded bg-rose-500/30 text-rose-100 font-bold border border-rose-400/30">${s}</span>`;
+        if (i === steps.length - 1) return `<span class="inline-block px-2 py-0.5 rounded bg-amber-500/30 text-amber-100 font-bold border border-amber-400/30">${s}</span>`;
+        return `<span class="text-indigo-200">${s}</span>`;
+      }).join(' <span class="text-amber-300 font-bold mx-0.5">➔</span> ');
+
+      document.getElementById('btnClearRoute').classList.remove('hidden');
+      document.getElementById('btnCopyShareLink').classList.remove('hidden');
+      document.getElementById('btnSetAsStart').classList.remove('hidden');
+      document.getElementById('btnSwapPoints').classList.remove('hidden');
+
+      renderCrossLinks(target);
+      renderBoothList();
+      closeMobileDrawer();
+    }
+
+    function renderCrossLinks(target) {
+      const row = document.getElementById('crossLinksRow');
+      const box = document.getElementById('crossLinksContainer');
+      box.innerHTML = '';
+
+      if (!target.relatedIds || target.relatedIds.length === 0) {
+        row.classList.add('hidden');
+        return;
+      }
+
+      row.classList.remove('hidden');
+      target.relatedIds.forEach(rid => {
+        const rel = ALL_TARGETS.find(t => t.id === rid);
+        if (!rel) return;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'px-2.5 py-1 rounded-lg bg-white/10 hover:bg-amber-400/25 text-amber-100 border border-white/15 text-[11px] font-bold transition cursor-pointer';
+        btn.textContent = `➔ ${getTargetDisplayName(rel)}`;
+        btn.addEventListener('click', () => selectTarget(rel.id));
+        box.appendChild(btn);
+      });
+    }
+
+    function clearRoute() {
+      selectedId = null;
+      while (routeGroup.children.length > 0) {
+        routeGroup.remove(routeGroup.children[0]);
+      }
+      routeAnimBeads = [];
+      document.getElementById('guideIcon').textContent = '導覽';
+      document.getElementById('guideTitle').textContent = '請點擊地圖或下方「查詢」選擇目標';
+      document.getElementById('guideZoneBadge').classList.add('hidden');
+      document.getElementById('guideDesc').textContent = '上方可自由切換任意「出發點」，點擊地圖目標後將自動顯示跨樓層／天橋／步道的 3D 步行指引。';
+      document.getElementById('btnClearRoute').classList.add('hidden');
+      document.getElementById('btnCopyShareLink').classList.add('hidden');
+      document.getElementById('btnSetAsStart').classList.add('hidden');
+      document.getElementById('btnSwapPoints').classList.add('hidden');
+      document.getElementById('crossLinksRow').classList.add('hidden');
+      renderBoothList();
+    }
+
+    function renderBoothList() {
+      const container = document.getElementById('boothListContainer');
+      const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
+      container.innerHTML = '';
+
+      const filtered = ALL_TARGETS.filter(t => {
+        if (activeZoneFilter !== 'ALL' && t.zone !== activeZoneFilter) return false;
+        if (!keyword) return true;
+        const fullName = getTargetDisplayName(t).toLowerCase();
+        return fullName.includes(keyword) || t.id.toLowerCase().includes(keyword) || t.zoneName.toLowerCase().includes(keyword);
+      });
+
+      document.getElementById('totalCountBadge').textContent = `共 ${filtered.length} 處`;
+
+      filtered.forEach(t => {
+        const isSelected = (t.id === selectedId);
+        const isStart = (t.id === selectedStartId);
+        const spec = SPECIAL_BOOTH_STYLES[t.id];
+        let iconCls = 'bg-rose-100 text-rose-700 border-rose-300';
+        if (spec) iconCls = spec.cardIconBg;
+        else if (t.zone === 'CHILDREN') iconCls = 'bg-rose-600 text-white border-rose-700';
+        else if (t.isBuilding) iconCls = 'bg-indigo-600 text-white border-indigo-700';
+
+        const card = document.createElement('div');
+        card.className = `p-3 rounded-2xl border transition flex items-center justify-between gap-2.5 cursor-pointer ${
+          isSelected
+            ? 'bg-indigo-50 border-indigo-500 shadow-md ring-2 ring-indigo-500/20'
+            : 'bg-white border-slate-200/80 hover:border-indigo-300 hover:shadow-sm'
+        }`;
+
+        card.innerHTML = `
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="w-11 h-11 rounded-xl border flex items-center justify-center font-black text-xs shrink-0 ${iconCls}">
+              ${t.numLabel}
+            </div>
+            <div class="min-w-0">
+              <div class="flex items-center gap-1.5">
+                <span class="font-extrabold text-sm text-slate-800 truncate">${getTargetDisplayName(t)}</span>
+                ${isStart ? '<span class="px-1.5 py-0.5 rounded bg-rose-100 text-rose-700 text-[10px] font-black shrink-0">出發點</span>' : ''}
+              </div>
+              <div class="text-xs text-slate-500 truncate mt-0.5">${t.zoneName}</div>
+            </div>
+          </div>
+          <span class="px-2.5 py-1.5 rounded-xl text-xs font-bold shrink-0 ${
+            isSelected ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700'
+          }">
+            ${isSelected ? '導航中' : '前往 ➔'}
+          </span>
+        `;
+
+        card.addEventListener('click', () => selectTarget(t.id));
+        container.appendChild(card);
+      });
+    }
+
+    function openMobileDrawer() {
+      const panel = document.getElementById('searchDrawerPanel');
+      const backdrop = document.getElementById('mobileDrawerBackdrop');
+      backdrop.classList.remove('hidden');
+      panel.classList.remove('translate-y-full');
+    }
+
+    function closeMobileDrawer() {
+      const panel = document.getElementById('searchDrawerPanel');
+      const backdrop = document.getElementById('mobileDrawerBackdrop');
+      panel.classList.add('translate-y-full');
+      backdrop.classList.add('hidden');
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toastBanner');
+      toast.textContent = msg;
+      toast.classList.remove('opacity-0');
+      setTimeout(() => toast.classList.add('opacity-0'), 2600);
+    }
+
+    function copyTextToClipboard(text) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); } catch (e) {}
+      document.body.removeChild(ta);
+    }
+
+    function bindCanvasEvents(container) {
+      container.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        isPanning = (e.button === 2 || e.shiftKey);
+        prevPointer = { x: e.clientX, y: e.clientY };
+      });
+
+      window.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        const dx = e.clientX - prevPointer.x;
+        const dy = e.clientY - prevPointer.y;
+        prevPointer = { x: e.clientX, y: e.clientY };
+
+        if (isPanning) {
+          camTarget.x -= dx * 0.06;
+          camTarget.z -= dy * 0.06;
+        } else {
+          camSpherical.theta -= dx * 0.007;
+          camSpherical.phi -= dy * 0.007;
+        }
+        updateCameraPosition();
+      });
+
+      window.addEventListener('mouseup', () => {
+        isDragging = false;
+      });
+
+      container.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 1) {
+          isDragging = true;
+          isPanning = false;
+          prevPointer = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        } else if (e.touches.length === 2) {
+          isDragging = false;
+          const t1 = e.touches[0], t2 = e.touches[1];
+          pinchStartDist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+          pinchStartRadius = camSpherical.radius;
+          prevPinchCenter = {
+            x: (t1.clientX + t2.clientX) * 0.5,
+            y: (t1.clientY + t2.clientY) * 0.5
+          };
+        }
+      }, { passive: true });
+
+      container.addEventListener('touchmove', (e) => {
+        if (e.touches.length === 1 && isDragging) {
+          const dx = e.touches[0].clientX - prevPointer.x;
+          const dy = e.touches[0].clientY - prevPointer.y;
+          prevPointer = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+          camSpherical.theta -= dx * 0.008;
+          camSpherical.phi -= dy * 0.008;
+          updateCameraPosition();
+        } else if (e.touches.length === 2) {
+          const t1 = e.touches[0], t2 = e.touches[1];
+          const currDist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+          if (pinchStartDist > 0 && currDist > 0) {
+            camSpherical.radius = pinchStartRadius * (pinchStartDist / currDist);
+          }
+          const currCenter = {
+            x: (t1.clientX + t2.clientX) * 0.5,
+            y: (t1.clientY + t2.clientY) * 0.5
+          };
+          camTarget.x -= (currCenter.x - prevPinchCenter.x) * 0.065;
+          camTarget.z -= (currCenter.y - prevPinchCenter.y) * 0.065;
+          prevPinchCenter = currCenter;
+          updateCameraPosition();
+        }
+      }, { passive: true });
+
+      container.addEventListener('touchend', () => {
+        isDragging = false;
+        pinchStartDist = 0;
+      });
+
+      container.addEventListener('contextmenu', e => e.preventDefault());
+
+      container.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        camSpherical.radius += e.deltaY * 0.04;
+        updateCameraPosition();
+      }, { passive: false });
+
+      window.addEventListener('resize', () => {
+        const w = container.clientWidth;
+        const h = container.clientHeight;
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+        renderer.setSize(w, h);
+      });
+    }
+
+    // =========================================================================
+    // 9. 初始化與外部網址參數串接
+    // =========================================================================
+    window.addEventListener('load', () => {
+      init3DScene();
+      populateStartPointSelect();
+      renderBoothList();
+
+      // 出發點切換與起訖互換
+      document.getElementById('startPointSelect').addEventListener('change', (e) => {
+        selectedStartId = e.target.value;
+        populateStartPointSelect();
+        renderBoothList();
+        if (selectedId) selectTarget(selectedId);
+      });
+
+      document.getElementById('btnSetAsStart').addEventListener('click', () => {
+        if (!selectedId) return;
+        selectedStartId = selectedId;
+        populateStartPointSelect();
+        clearRoute();
+        showToast('已將此地點設為新的出發點！');
+      });
+
+      document.getElementById('btnSwapPoints').addEventListener('click', () => {
+        if (!selectedId) return;
+        const oldStart = selectedStartId;
+        selectedStartId = selectedId;
+        populateStartPointSelect();
+        selectTarget(oldStart);
+      });
+
+      // 視角切換與重設
+      let isTopView = false;
+      function toggleTopView() {
+        isTopView = !isTopView;
+        camSpherical.phi = isTopView ? 0.16 : 0.72;
+        camSpherical.theta = isTopView ? 0.0 : 0.06;
+        document.getElementById('viewAngleText').textContent = isTopView ? '切換 3D 斜角' : '切換俯視角';
+        updateCameraPosition();
+      }
+      function resetCameraView() {
+        isTopView = false;
+        camTarget.set(0, 1.5, 1.5);
+        camSpherical = { radius: window.innerWidth < 640 ? 78 : 66, theta: 0.06, phi: 0.72 };
+        document.getElementById('viewAngleText').textContent = '切換俯視角';
+        updateCameraPosition();
+      }
+
+      if (window.innerWidth < 640) {
+        camSpherical.radius = 78;
+        updateCameraPosition();
+      }
+
+      document.getElementById('btnViewAngle').addEventListener('click', toggleTopView);
+      document.getElementById('btnResetView').addEventListener('click', resetCameraView);
+      document.getElementById('btnMobileTopView').addEventListener('click', toggleTopView);
+      document.getElementById('btnMobileResetView').addEventListener('click', resetCameraView);
+
+      // 手機版抽屜開關
+      document.getElementById('btnOpenMobileDrawer').addEventListener('click', openMobileDrawer);
+      document.getElementById('btnCloseMobileDrawer').addEventListener('click', closeMobileDrawer);
+      document.getElementById('mobileDrawerBackdrop').addEventListener('click', closeMobileDrawer);
+
+      document.getElementById('btnClearRoute').addEventListener('click', clearRoute);
+
+      document.getElementById('btnCopyShareLink').addEventListener('click', () => {
+        if (!selectedId) return;
+        const url = new URL(window.__SHARE_BASE || window.location.href.split('?')[0]);
+        if (selectedStartId !== 'MAIN_GATE') url.searchParams.set('from', selectedStartId);
+        url.searchParams.set('target', selectedId);
+        if (externalSessionTitle) url.searchParams.set('session', externalSessionTitle);
+        copyTextToClipboard(url.toString());
+        showToast('已複製此起訖路線的專屬導覽連結！');
+      });
+
+      // 搜尋與分區頁籤
+      const searchInputEl = document.getElementById('searchInput');
+      const clearSearchBtn = document.getElementById('btnClearSearch');
+      searchInputEl.addEventListener('input', () => {
+        clearSearchBtn.classList.toggle('hidden', !searchInputEl.value);
+        clearSearchBtn.classList.toggle('flex', Boolean(searchInputEl.value));
+        renderBoothList();
+      });
+      clearSearchBtn.addEventListener('click', () => {
+        searchInputEl.value = '';
+        clearSearchBtn.classList.add('hidden');
+        clearSearchBtn.classList.remove('flex');
+        renderBoothList();
+      });
+
+      document.querySelectorAll('.zone-tab').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.zone-tab').forEach(b => {
+            b.className = 'zone-tab shrink-0 px-3 py-2 sm:py-1.5 rounded-xl text-xs font-semibold bg-slate-100/80 text-slate-600 hover:bg-slate-200/70 transition cursor-pointer';
+          });
+          btn.className = 'zone-tab active shrink-0 px-3 py-2 sm:py-1.5 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow-sm shadow-indigo-500/25 transition cursor-pointer';
+          activeZoneFilter = btn.dataset.zone;
+          renderBoothList();
+        });
+      });
+
+      // 支援 URL 參數 (?from=...&target=...&session=...) 與 PostMessage 串接
+      const params = new URLSearchParams(window.__guideSearch !== undefined ? window.__guideSearch : window.location.search);
+      const qFrom = params.get('from');
+      const qTarget = params.get('target');
+      const qSession = params.get('session');
+      if (qSession) externalSessionTitle = qSession;
+      if (qFrom && ALL_TARGETS.some(t => t.id === qFrom)) {
+        selectedStartId = qFrom;
+        populateStartPointSelect();
+      }
+      if (qTarget && ALL_TARGETS.some(t => t.id === qTarget)) {
+        selectTarget(qTarget);
+      }
+
+      window.__luofuReady = true;
+      window.addEventListener('message', (event) => {
+        const data = event.data;
+        if (!data || data.type !== 'LUOFU_NAVIGATE') return;
+        if (data.session !== undefined) externalSessionTitle = data.session;
+        if (data.from && ALL_TARGETS.some(t => t.id === data.from)) {
+          selectedStartId = data.from;
+          populateStartPointSelect();
+        }
+        if (data.target && ALL_TARGETS.some(t => t.id === data.target)) {
+          selectTarget(data.target);
+        }
+      });
+    });
+  <\/script>
+</body>
+</html>
+  </script>
 
   <script>
     /* ==================== 後端 API（Google Apps Script 網頁應用程式網址） ==================== */
@@ -2371,6 +3969,270 @@
       resetStickyForm();
     }
 
+    /* ==================== 場配與互動路線導覽（3D 模組）＋ 後台管理 ==================== */
+    const LUOFU_KEY = 'luofu_campus_booths_v6'; // 與原模組相同的金鑰
+    const LUOFU_DEFAULT_NAMES = (() => {
+      const o = { A: '報到組', B: '醫護組', C: '音響組' };
+      for (let i = 1; i <= 27; i++) o[String(i)] = '休息區';
+      return o;
+    })();
+    const LUOFU_META = (() => {
+      const list = [
+        { id: 'A', zone: '主通道（入口側）', badge: 'bg-amber-500 text-white' },
+        { id: 'B', zone: '主通道（入口側）', badge: 'bg-emerald-600 text-white' },
+        { id: 'C', zone: '中央走廊（操場南側）', badge: 'bg-violet-600 text-white' }
+      ];
+      for (let i = 1; i <= 27; i++) {
+        let zone = '中央走廊（操場南側）';
+        if (i >= 8 && i <= 17) zone = '操場左側（泳池旁）';
+        else if (i >= 18) zone = '操場右側';
+        list.push({ id: String(i), zone, badge: 'bg-rose-100 text-rose-700 border border-rose-300' });
+      }
+      return list;
+    })();
+    const LUOFU_SPECIAL = [
+      { id: 'MAIN_GATE', label: '大門入口' },
+      { id: 'START_CHAPEL', label: '羅浮國小 4F禮拜堂' },
+      { id: 'BLD_HIGH_PROMO', label: '1F宣導攤位（羅浮高中西側）' },
+      { id: 'VENUE_4F_AV', label: '4F視聽室（兒童主日學）' },
+      { id: 'VENUE_1F_MEET', label: '1F會議室（兒童主日學）' },
+      { id: 'VENUE_1F_STUDY', label: '1F自習室（兒童主日學）' },
+      { id: 'BLD_HIGH', label: '羅浮高中 — 1F宣導及義賣攤位' },
+      { id: 'BLD_FIELD', label: '操場活動區' },
+      { id: 'BLD_JUNIOR', label: '羅浮高中國中部 (3F)' }
+    ];
+
+    function loadLuofuNames() {
+      try {
+        const sv = localStorage.getItem(LUOFU_KEY);
+        if (sv) return { ...LUOFU_DEFAULT_NAMES, ...JSON.parse(sv) };
+      } catch (e) {}
+      return { ...LUOFU_DEFAULT_NAMES };
+    }
+    let luofuNames = loadLuofuNames();
+    let luofuDirty = false;
+    let luofuBusy = false;
+    let luofuTimer = null;
+    let mapLoaded = false;
+
+    // 網址帶 ?tab=map&from=...&target=...&session=... 時，開啟場配導覽並規劃好路線
+    const MAP_DEEPLINK = (() => {
+      const q = new URLSearchParams(location.search);
+      const g = new URLSearchParams();
+      ['from', 'target', 'session'].forEach(k => q.get(k) && g.set(k, q.get(k)));
+      return { open: q.get('tab') === 'map', search: g.toString() };
+    })();
+
+    function ensureMapLoaded() {
+      if (mapLoaded) return;
+      const frame = document.getElementById('map-frame');
+      const tpl = document.getElementById('luofu-guide-src');
+      if (!frame || !tpl) return;
+      mapLoaded = true;
+      const js = o => JSON.stringify(o).replace(/</g, '\\u003c');
+      const base = location.href.split(/[?#]/)[0] + '?tab=map';
+      const inject = `<script>window.__LUOFU_BOOTHS=${js(luofuNames)};window.__SHARE_BASE=${js(base)};window.__guideSearch=${js(MAP_DEEPLINK.search)};<\/script>`;
+      frame.srcdoc = tpl.textContent.replace(/<\\\/script/gi, '</script').replace('<head>', () => '<head>' + inject);
+    }
+
+    function postToMap(msg) {
+      const f = document.getElementById('map-frame');
+      if (mapLoaded && f && f.contentWindow) f.contentWindow.postMessage(msg, '*');
+    }
+
+    function setLuofuStatus(msg) {
+      const el = document.getElementById('luofu-sync-status');
+      if (el) el.textContent = msg;
+    }
+
+    function renderLuofuGrid() {
+      const grid = document.getElementById('luofu-grid');
+      if (!grid) return;
+      grid.innerHTML = LUOFU_META.map(
+        it => `<div class="flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-3">
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-black ${it.badge}">${it.id}</div>
+          <div class="min-w-0 flex-1">
+            <div class="mb-1 text-[11px] font-semibold text-gray-500">${it.zone}</div>
+            <input type="text" maxlength="20" data-luofu-id="${it.id}" value="${escapeAttr(luofuNames[it.id] || LUOFU_DEFAULT_NAMES[it.id])}" class="luofu-name-input w-full rounded-lg border border-gray-300 px-2.5 py-1.5 text-sm font-bold text-gray-800 focus:border-indigo-600 focus:outline-none" />
+          </div>
+        </div>`
+      ).join('');
+    }
+
+    function populateLuofuSelectors() {
+      const opts = [
+        ...LUOFU_SPECIAL.map(v => ({ id: v.id, text: v.label })),
+        ...LUOFU_META.map(b => ({
+          id: b.id,
+          text: ['A', 'B', 'C'].includes(b.id) ? `${luofuNames[b.id] || LUOFU_DEFAULT_NAMES[b.id]} (${b.id})` : `${b.id}號 ${luofuNames[b.id] || '休息區'}`
+        }))
+      ];
+      const fromSel = document.getElementById('luofu-from');
+      const tgtSel = document.getElementById('luofu-target');
+      if (!fromSel || !tgtSel) return;
+      const keepFrom = fromSel.value || 'MAIN_GATE';
+      const keepTgt = tgtSel.value || '1';
+      const html = opts.map(o => `<option value="${escapeAttr(o.id)}">${escapeHtml(o.text)}</option>`).join('');
+      fromSel.innerHTML = html;
+      tgtSel.innerHTML = html;
+      fromSel.value = keepFrom;
+      tgtSel.value = keepTgt;
+    }
+
+    function luofuBuildUrl() {
+      const from = document.getElementById('luofu-from').value;
+      const target = document.getElementById('luofu-target').value;
+      const session = document.getElementById('luofu-session').value.trim();
+      const p = new URLSearchParams();
+      p.set('tab', 'map');
+      if (from && from !== 'MAIN_GATE') p.set('from', from);
+      p.set('target', target);
+      if (session) p.set('session', session);
+      return location.href.split(/[?#]/)[0] + '?' + p.toString();
+    }
+
+    function luofuUpdateUrl() {
+      const el = document.getElementById('luofu-url');
+      if (!el) return;
+      const url = luofuBuildUrl();
+      el.textContent = url;
+      const a = document.getElementById('luofu-open');
+      if (a) a.href = url;
+    }
+
+    function luofuCopy(text, okMsg) {
+      const done = () => showToast(okMsg);
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(done, () => luofuCopyFallback(text, done));
+      } else {
+        luofuCopyFallback(text, done);
+      }
+    }
+    function luofuCopyFallback(text, done) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.cssText = 'position:fixed;opacity:0';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+      } catch (e) {}
+      document.body.removeChild(ta);
+      done();
+    }
+    function luofuCopyUrl() {
+      luofuCopy(luofuBuildUrl(), '已複製導覽連結！');
+    }
+    function luofuCopyIframe() {
+      luofuCopy(`<iframe src="${luofuBuildUrl()}" width="100%" height="680" style="border:0;border-radius:16px;" loading="lazy"></iframe>`, '已複製 iframe 嵌入語法！');
+    }
+
+    // 套用名稱：寫入本機、更新後台畫面、推送給 3D 模組
+    function luofuCommit(names, fromServer) {
+      luofuNames = { ...LUOFU_DEFAULT_NAMES, ...names };
+      localStorage.setItem(LUOFU_KEY, JSON.stringify(luofuNames));
+      renderLuofuGrid();
+      populateLuofuSelectors();
+      luofuUpdateUrl();
+      postToMap({ type: 'LUOFU_BOOTHS', names: luofuNames });
+      if (!fromServer) {
+        luofuDirty = true;
+        setLuofuStatus(API_URL ? '⏳ 同步中…' : '⚠️ 尚未設定 API_URL：只有此瀏覽器看得到，手機收不到');
+        clearTimeout(luofuTimer);
+        luofuTimer = setTimeout(pushLuofuNames, 200);
+      }
+    }
+
+    function luofuSave() {
+      if (!isAdminAuthorized) return showToast('⚠️ 僅管理員可修改');
+      const next = { ...luofuNames };
+      document.querySelectorAll('.luofu-name-input').forEach(inp => {
+        const id = inp.dataset.luofuId;
+        next[id] = inp.value.trim() || LUOFU_DEFAULT_NAMES[id];
+      });
+      luofuCommit(next, false);
+    }
+
+    function luofuReset() {
+      if (!isAdminAuthorized) return showToast('⚠️ 僅管理員可修改');
+      if (!confirm('確定恢復預設組別與 1–27 休息區名稱？')) return;
+      luofuCommit({ ...LUOFU_DEFAULT_NAMES }, false);
+      showToast('已恢復為預設名稱');
+    }
+
+    function luofuExport() {
+      const blob = new Blob([JSON.stringify(luofuNames, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'luofu_campus_booths.json';
+      a.click();
+      showToast('已匯出 JSON 備份檔');
+    }
+
+    function luofuImport(e) {
+      if (!isAdminAuthorized) return showToast('⚠️ 僅管理員可修改');
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        try {
+          const imported = JSON.parse(ev.target.result);
+          if (!imported || typeof imported !== 'object') throw new Error('bad');
+          const clean = {};
+          Object.keys(LUOFU_DEFAULT_NAMES).forEach(id => {
+            if (typeof imported[id] === 'string' && imported[id].trim()) clean[id] = imported[id].trim().slice(0, 20);
+          });
+          luofuCommit({ ...luofuNames, ...clean }, false);
+          showToast('已成功匯入並套用 JSON 設定！');
+        } catch (err) {
+          showToast('匯入失敗：JSON 格式不正確');
+        }
+      };
+      reader.readAsText(file);
+      e.target.value = '';
+    }
+
+    async function pushLuofuNames() {
+      if (!API_URL) {
+        luofuDirty = false;
+        return;
+      }
+      if (luofuBusy) {
+        luofuTimer = setTimeout(pushLuofuNames, 300);
+        return;
+      }
+      const code = sessionStorage.getItem(ADMIN_CODE_SESSION_KEY);
+      if (!code) return setLuofuStatus('⚠️ 找不到管理員驗證資訊，請鎖定後重新登入');
+      luofuBusy = true;
+      const snapshot = JSON.stringify(luofuNames);
+      const res = await apiPost({ action: 'setBoothNames', adminPasscode: code, names: luofuNames });
+      luofuBusy = false;
+      if (res && res.ok) {
+        if (JSON.stringify(luofuNames) === snapshot) luofuDirty = false;
+        setLuofuStatus(`✅ 已同步到手機（${nowHMS()}）`);
+        showToast('✅ 場配名稱已同步到所有手機');
+      } else {
+        setLuofuStatus('❌ 同步失敗：' + syncErrText(res) + '（5 秒後自動重試）');
+        showToast('❌ 場配名稱同步失敗：' + syncErrText(res), 4500);
+        clearTimeout(luofuTimer);
+        luofuTimer = setTimeout(pushLuofuNames, 5000);
+      }
+    }
+
+    // 後端 → 本機（管理員有尚未送出的修改時略過）
+    function applyBoothsFromServer(b) {
+      if (!b || !b.names || typeof b.names !== 'object' || luofuBusy || luofuDirty) return;
+      const merged = { ...LUOFU_DEFAULT_NAMES, ...b.names };
+      if (JSON.stringify(merged) === JSON.stringify(luofuNames)) return;
+      const typing = document.activeElement && document.activeElement.classList.contains('luofu-name-input');
+      luofuNames = merged;
+      localStorage.setItem(LUOFU_KEY, JSON.stringify(luofuNames));
+      if (!typing) renderLuofuGrid();
+      populateLuofuSelectors();
+      luofuUpdateUrl();
+      postToMap({ type: 'LUOFU_BOOTHS', names: luofuNames });
+    }
+
     /* ==================== 即時布達：全螢幕遮罩 ==================== */
     const URGENT_ACK_KEY = 'xmas2026_urgent_ack_at';
     const URGENT_FRESH_MS = 30 * 60 * 1000;
@@ -2531,6 +4393,7 @@
         applyLiveNotices(live.notices, live.latestNoticeId, initial);
         applyScoreboardFromServer(live.scoreboard);
         applyGameQuotasFromServer(live.gameQuotas, initial);
+        applyBoothsFromServer(live.booths);
         applyStickyFromServer(live.sticky);
         updateWelcomeStatus(`已連線・${nowHMS()} 更新`);
       } finally {
@@ -2888,6 +4751,11 @@
       document.querySelectorAll('.main-tab-btn').forEach(btn => {
         btn.className = btn.dataset.tab === tabName ? TAB_ON : TAB_OFF;
       });
+
+      // 場配導覽：第一次打開才載入 3D 模組；離開時暫停繪圖省電
+      document.body.classList.toggle('tab-map', tabName === 'map');
+      if (tabName === 'map') ensureMapLoaded();
+      postToMap({ type: 'LUOFU_PAUSE', paused: tabName !== 'map' });
 
       // 手機：切換分頁後直接把內容頂端帶到螢幕上緣，不必再滑過標題區與照片橫幅
       if (window.matchMedia('(max-width: 639px)').matches && !document.body.classList.contains('ppt-phone-full')) {
@@ -4472,6 +6340,9 @@
       startRemoteSlidePolling();
       renderStickyAdmin();
       renderLiveAdminList();
+      renderLuofuGrid();
+      populateLuofuSelectors();
+      luofuUpdateUrl();
       startLiveStatePolling();
 
       if (isProjectorReceiver || window.__FORCE_PROJECTOR_RECEIVER) {
@@ -4489,6 +6360,7 @@
 
       // 等第一次同步（最多 2.5 秒）再決定要不要跳出重要布達；歡迎介面期間不跳，開放後才跳
       Promise.race([window.__liveInitial || Promise.resolve(), new Promise(r => setTimeout(r, 2500))]).then(() => {
+        if (MAP_DEEPLINK.open && !isWelcomeMode()) switchMainTab('map');
         if (!isWelcomeMode()) checkMandatoryNotice();
       });
     };
