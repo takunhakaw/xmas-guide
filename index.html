@@ -1238,17 +1238,7 @@
 
       <!-- 三場競賽切換與大版面人數看板 -->
       <div class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
-        <div class="flex flex-wrap gap-2">
-          <button onclick="selectGame(0)" data-game-btn="0" class="game-tab-btn rounded-xl bg-xmas-green px-3.5 py-2 text-xs font-black text-white">
-            第一場：跨時代金曲猜猜看
-          </button>
-          <button onclick="selectGame(1)" data-game-btn="1" class="game-tab-btn rounded-xl bg-gray-100 px-3.5 py-2 text-xs font-bold text-gray-700 hover:bg-gray-200">
-            第二場：聖誕好禮接力傳
-          </button>
-          <button onclick="selectGame(2)" data-game-btn="2" class="game-tab-btn rounded-xl bg-gray-100 px-3.5 py-2 text-xs font-bold text-gray-700 hover:bg-gray-200">
-            第三場：默契比手畫腳大挑戰
-          </button>
-        </div>
+        <div id="game-tabs" class="flex flex-wrap gap-2"></div>
 
         <div id="game-detail-box" class="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50/40 p-4 sm:p-5">
           <!-- 動態渲染當前場次的大版面人數看板與規則 -->
@@ -1393,7 +1383,7 @@
           <button data-pane-btn="projector" onclick="showAdminPane('projector')" class="admin-rail-btn" aria-current="false"><span class="ico">🖥️</span><span class="sm:hidden">投影</span><span class="hidden sm:inline">大螢幕投影同步</span></button>
           <div class="admin-rail-sep"></div>
           <div class="admin-rail-group">運動競賽類</div>
-          <button data-pane-btn="quota" onclick="showAdminPane('quota')" class="admin-rail-btn" aria-current="false"><span class="ico">🏆</span><span class="sm:hidden">人數</span><span class="hidden sm:inline">競賽出賽人數</span></button>
+          <button data-pane-btn="quota" onclick="showAdminPane('quota')" class="admin-rail-btn" aria-current="false"><span class="ico">🏆</span><span class="sm:hidden">競賽</span><span class="hidden sm:inline">競賽場次管理</span></button>
           <button data-pane-btn="score" onclick="showAdminPane('score')" class="admin-rail-btn" aria-current="false"><span class="ico">📊</span><span class="sm:hidden">積分</span><span class="hidden sm:inline">戰隊與積分</span></button>
           <div class="admin-rail-sep"></div>
           <div class="admin-rail-group">場地導覽類</div>
@@ -1563,42 +1553,59 @@
 
           </section>
           <section data-pane="quota" class="admin-pane hidden space-y-4">
-        <!-- 區塊 B：下午趣味競賽各場次出賽人數即時設定 -->
+        <!-- 區塊 B：下午趣味競賽場次管理（新增／編輯／刪除競賽、規則與出賽人數；同步到所有手機） -->
         <div class="rounded-2xl border border-emerald-200 bg-emerald-50/40 p-4">
           <div class="flex flex-wrap items-center justify-between gap-2">
-            <h5 class="text-sm font-black text-xmas-green">🏆 下午趣味競賽：各場次出賽人數即時設定（大看板同步更新）</h5>
-            <select id="admin-game-select" onchange="loadGameQuotaForm()" class="rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-xs font-bold">
-              <option value="0">第一場：跨時代金曲猜猜看</option>
-              <option value="1">第二場：聖誕好禮接力傳</option>
-              <option value="2">第三場：默契比手畫腳大挑戰</option>
-            </select>
+            <div>
+              <h5 class="text-sm font-black text-xmas-green">🏆 下午趣味競賽場次管理（新增競賽、規則與出賽人數，手機即時同步）</h5>
+              <p class="text-[11px] text-gray-600">內建的三場競賽也可以直接刪除。順序即為前台頁籤順序。</p>
+            </div>
+            <button onclick="resetGameDefaults()" class="rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-xs font-bold text-gray-600 hover:bg-gray-50">↺ 恢復內建三場競賽</button>
           </div>
-          <div class="mt-3 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-            <div>
-              <label class="block text-[11px] font-bold text-gray-700">每隊總出賽人數</label>
-              <input id="gq-total" type="text" placeholder="如：6 人" class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-xs font-black" />
+
+          <div id="gq-list" class="mt-3 space-y-2"></div>
+
+          <div class="mt-3 rounded-xl border border-emerald-200 bg-white p-3">
+            <div id="gq-form-title" class="text-xs font-black text-xmas-green">＋ 新增競賽</div>
+            <input type="hidden" id="gq-edit-index" value="-1" />
+            <div class="mt-2 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+              <div class="col-span-2 sm:col-span-4">
+                <label class="block text-[11px] font-bold text-gray-700">競賽名稱</label>
+                <input id="gq-title" type="text" maxlength="60" placeholder="如：🎯 第四場：《聖誕套圈圈》" class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-xs font-black" />
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-gray-700">每隊總出賽人數</label>
+                <input id="gq-total" type="text" maxlength="40" placeholder="如：6 人" class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-xs font-black" />
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-gray-700">長輩名額</label>
+                <input id="gq-elder" type="text" maxlength="40" placeholder="如：3 位長輩" class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-xs font-black" />
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-gray-700">青年名額</label>
+                <input id="gq-youth" type="text" maxlength="40" placeholder="如：3 位青年" class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-xs font-black" />
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-gray-700">孩童 / 其他名額</label>
+                <input id="gq-other" type="text" maxlength="40" placeholder="如：自由加油團" class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-xs font-black" />
+              </div>
+              <div class="col-span-2 sm:col-span-4">
+                <label class="block text-[11px] font-bold text-gray-700">大看板即時召集令 / 補充公告</label>
+                <input id="gq-note" type="text" maxlength="200" placeholder="輸入大看板醒目召集提示..." class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-xs" />
+              </div>
+              <div class="col-span-2 sm:col-span-4">
+                <label class="block text-[11px] font-bold text-gray-700">規則說明</label>
+                <textarea id="gq-rule" rows="3" maxlength="600" placeholder="輸入這場競賽的玩法與計分規則..." class="mt-1 w-full rounded-xl border border-gray-300 bg-white p-3 text-xs"></textarea>
+              </div>
+              <div class="col-span-2 sm:col-span-4">
+                <label class="block text-[11px] font-bold text-gray-700">小提醒 / 神隊友攻略（選填）</label>
+                <input id="gq-tip" type="text" maxlength="300" placeholder="如：💡 長輩負責…，青年負責…" class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-xs" />
+              </div>
             </div>
-            <div>
-              <label class="block text-[11px] font-bold text-gray-700">長輩名額</label>
-              <input id="gq-elder" type="text" placeholder="如：3 位長輩" class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-xs font-black" />
+            <div class="mt-2.5 flex flex-wrap justify-end gap-2">
+              <button onclick="resetGameForm()" class="rounded-xl bg-gray-100 px-3 py-2 text-xs font-bold text-gray-600 hover:bg-gray-200">清空表單</button>
+              <button onclick="saveGameForm()" class="rounded-xl bg-xmas-green px-4 py-2 text-xs font-black text-white shadow hover:bg-green-900">✓ 儲存並即時同步</button>
             </div>
-            <div>
-              <label class="block text-[11px] font-bold text-gray-700">青年名額</label>
-              <input id="gq-youth" type="text" placeholder="如：3 位青年" class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-xs font-black" />
-            </div>
-            <div>
-              <label class="block text-[11px] font-bold text-gray-700">孩童 / 其他名額</label>
-              <input id="gq-other" type="text" placeholder="如：自由加油團" class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-xs font-black" />
-            </div>
-            <div class="col-span-2 sm:col-span-4">
-              <label class="block text-[11px] font-bold text-gray-700">大看板即時召集令 / 補充公告</label>
-              <input id="gq-note" type="text" placeholder="輸入大看板醒目召集提示..." class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-xs" />
-            </div>
-          </div>
-          <div class="mt-2.5 flex justify-end">
-            <button onclick="saveGameQuota()" class="rounded-xl bg-xmas-green px-4 py-2 text-xs font-black text-white shadow hover:bg-green-900">
-              ✓ 套用並即時同步人數公告
-            </button>
           </div>
           <p id="gq-sync-status" class="mt-2 text-[11px] font-bold text-emerald-900"></p>
         </div>
@@ -3164,7 +3171,6 @@
         updateCountdownTick();
       } else if (type === 'GAME_QUOTA_UPDATE') {
         loadGameQuotasFromStorage();
-        renderCurrentGamePanel();
       } else if (type === 'STICKY_UPDATE') {
         renderNotices();
         renderStickyAdmin();
@@ -5421,34 +5427,63 @@
       }
     ];
 
-    let gamesData = JSON.parse(localStorage.getItem(GAME_QUOTA_KEY) || 'null') || JSON.parse(JSON.stringify(DEFAULT_GAMES_DATA));
+    function cloneDefaultGames() {
+      return JSON.parse(JSON.stringify(DEFAULT_GAMES_DATA));
+    }
+
+    function readGamesFromStorage() {
+      try {
+        const v = JSON.parse(localStorage.getItem(GAME_QUOTA_KEY) || 'null');
+        if (Array.isArray(v)) return v;
+      } catch (e) {}
+      return cloneDefaultGames();
+    }
+
+    let gamesData = readGamesFromStorage();
     let currentGameIdx = 0;
+    const GAME_MAX = 20;
+    const QUOTA_FIELDS = ['title', 'total', 'elder', 'youth', 'other', 'note', 'rule', 'tip'];
 
     function loadGameQuotasFromStorage() {
-      gamesData = JSON.parse(localStorage.getItem(GAME_QUOTA_KEY) || 'null') || JSON.parse(JSON.stringify(DEFAULT_GAMES_DATA));
-      loadGameQuotaForm();
+      gamesData = readGamesFromStorage();
+      selectGame(currentGameIdx);
+      renderGameAdmin();
+    }
+
+    function renderGameTabs() {
+      const box = document.getElementById('game-tabs');
+      if (!box) return;
+      box.innerHTML = gamesData
+        .map((g, i) => {
+          const cls = i === currentGameIdx
+            ? 'game-tab-btn rounded-xl bg-xmas-green px-3.5 py-2 text-xs font-black text-white shadow-sm'
+            : 'game-tab-btn rounded-xl bg-gray-100 px-3.5 py-2 text-xs font-bold text-gray-700 hover:bg-gray-200';
+          return `<button onclick="selectGame(${i})" data-game-btn="${i}" class="${cls}">${escapeHtml(g.title || '未命名競賽')}</button>`;
+        })
+        .join('');
     }
 
     function selectGame(idx) {
-      currentGameIdx = idx;
-      document.querySelectorAll('.game-tab-btn').forEach((b, i) => {
-        b.className =
-          i === idx
-            ? 'game-tab-btn rounded-xl bg-xmas-green px-3.5 py-2 text-xs font-black text-white shadow-sm'
-            : 'game-tab-btn rounded-xl bg-gray-100 px-3.5 py-2 text-xs font-bold text-gray-700 hover:bg-gray-200';
-      });
+      idx = Number(idx) || 0;
+      currentGameIdx = Math.max(0, Math.min(idx, gamesData.length - 1));
+      renderGameTabs();
       renderCurrentGamePanel();
     }
 
     function renderCurrentGamePanel() {
       const box = document.getElementById('game-detail-box');
+      if (!box) return;
       const g = gamesData[currentGameIdx];
-      if (!box || !g) return;
+      if (!g) {
+        box.innerHTML = '<div class="py-8 text-center text-sm font-bold text-gray-500">🏆 目前還沒有競賽場次，請稍後等待大會公布！</div>';
+        return;
+      }
+      const v = x => escapeHtml(x || '—');
 
       box.innerHTML = `
         <div class="space-y-4">
           <div class="flex flex-wrap items-center justify-between gap-2">
-            <h3 data-editable class="text-lg font-black text-xmas-green sm:text-xl">${escapeHtml(g.title)}</h3>
+            <h3 class="text-lg font-black text-xmas-green sm:text-xl">${escapeHtml(g.title || '未命名競賽')}</h3>
             <span class="rounded-full bg-xmas-red px-3 py-1 text-xs font-black text-white shadow-sm">每隊出賽編制公告</span>
           </div>
 
@@ -5460,51 +5495,146 @@
             <div class="grid grid-cols-2 divide-x divide-y divide-emerald-100 sm:grid-cols-4 sm:divide-y-0">
               <div class="bg-emerald-50/70 p-4 text-center">
                 <div class="text-xs font-bold text-gray-600">每隊總出賽人數</div>
-                <div class="mt-1 text-2xl font-black text-xmas-darkred sm:text-3xl">${escapeHtml(g.total)}</div>
+                <div class="mt-1 text-2xl font-black text-xmas-darkred sm:text-3xl">${v(g.total)}</div>
               </div>
               <div class="p-4 text-center">
                 <div class="text-xs font-bold text-gray-600">👴👵 長輩名額</div>
-                <div class="mt-1 text-xl font-black text-gray-900 sm:text-2xl">${escapeHtml(g.elder)}</div>
+                <div class="mt-1 text-xl font-black text-gray-900 sm:text-2xl">${v(g.elder)}</div>
               </div>
               <div class="p-4 text-center">
                 <div class="text-xs font-bold text-gray-600">🧑👩 青年名額</div>
-                <div class="mt-1 text-xl font-black text-xmas-green sm:text-2xl">${escapeHtml(g.youth)}</div>
+                <div class="mt-1 text-xl font-black text-xmas-green sm:text-2xl">${v(g.youth)}</div>
               </div>
               <div class="p-4 text-center">
                 <div class="text-xs font-bold text-gray-600">🧒 孩童／其他</div>
-                <div class="mt-1 text-xl font-black text-amber-700 sm:text-2xl">${escapeHtml(g.other)}</div>
+                <div class="mt-1 text-xl font-black text-amber-700 sm:text-2xl">${v(g.other)}</div>
               </div>
             </div>
-            <div class="border-t border-amber-200 bg-amber-50 px-4 py-2.5 text-xs font-black text-amber-950 sm:text-sm">
-              ${escapeHtml(g.note)}
-            </div>
+            ${g.note ? `<div class="border-t border-amber-200 bg-amber-50 px-4 py-2.5 text-xs font-black text-amber-950 sm:text-sm">${escapeHtml(g.note)}</div>` : ''}
           </div>
 
-          <p data-editable class="text-sm leading-relaxed text-gray-700">
-            <strong>規則說明：</strong>${escapeHtml(g.rule)}
-          </p>
-          <p data-editable class="rounded-xl bg-white p-3.5 text-xs font-bold text-amber-900 ring-1 ring-amber-200 sm:text-sm">
-            ${escapeHtml(g.tip)}
-          </p>
+          ${g.rule ? `<p class="whitespace-pre-wrap text-sm leading-relaxed text-gray-700"><strong>規則說明：</strong>${escapeHtml(g.rule)}</p>` : ''}
+          ${g.tip ? `<p class="whitespace-pre-wrap rounded-xl bg-white p-3.5 text-xs font-bold text-amber-900 ring-1 ring-amber-200 sm:text-sm">${escapeHtml(g.tip)}</p>` : ''}
         </div>
       `;
     }
 
-    function loadGameQuotaForm() {
-      const sel = document.getElementById('admin-game-select');
-      if (!sel) return;
-      const idx = Number(sel.value || 0);
-      const g = gamesData[idx];
-      if (!g) return;
-      document.getElementById('gq-total').value = g.total;
-      document.getElementById('gq-elder').value = g.elder;
-      document.getElementById('gq-youth').value = g.youth;
-      document.getElementById('gq-other').value = g.other;
-      document.getElementById('gq-note').value = g.note;
+    /* ---- 後台：競賽場次管理 ---- */
+    function renderGameAdmin() {
+      const box = document.getElementById('gq-list');
+      if (!box) return;
+      if (!gamesData.length) {
+        box.innerHTML = '<div class="rounded-xl border border-dashed border-emerald-200 bg-white p-3 text-center text-xs text-gray-500">目前沒有任何競賽，前台會顯示「尚未公布」。請在下方新增。</div>';
+        return;
+      }
+      box.innerHTML = gamesData
+        .map(
+          (g, i) => `
+          <div class="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-emerald-200 bg-white p-2.5">
+            <div class="min-w-0 flex-1">
+              <div class="truncate text-xs font-black text-gray-900">${i + 1}. ${escapeHtml(g.title || '未命名競賽')}</div>
+              <div class="truncate text-[11px] text-gray-500">${escapeHtml([g.total, g.elder, g.youth, g.other].filter(Boolean).join('｜'))}</div>
+            </div>
+            <div class="flex shrink-0 gap-1">
+              <button onclick="moveGame(${i}, -1)" class="rounded-lg bg-gray-100 px-2 py-1 text-xs font-black text-gray-700 hover:bg-gray-200">↑</button>
+              <button onclick="moveGame(${i}, 1)" class="rounded-lg bg-gray-100 px-2 py-1 text-xs font-black text-gray-700 hover:bg-gray-200">↓</button>
+              <button onclick="editGame(${i})" class="rounded-lg bg-amber-100 px-2.5 py-1 text-xs font-black text-amber-900 hover:bg-amber-200">編輯</button>
+              <button onclick="deleteGame(${i})" class="rounded-lg bg-red-100 px-2.5 py-1 text-xs font-black text-xmas-red hover:bg-red-200">刪除</button>
+            </div>
+          </div>`
+        )
+        .join('');
     }
 
-    /* ---- 出賽人數同步（管理員設定 → 後端 → 所有手機） ---- */
-    const QUOTA_FIELDS = ['total', 'elder', 'youth', 'other', 'note'];
+    function resetGameForm() {
+      ['gq-title', 'gq-total', 'gq-elder', 'gq-youth', 'gq-other', 'gq-note', 'gq-rule', 'gq-tip'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+      const idx = document.getElementById('gq-edit-index');
+      if (idx) idx.value = '-1';
+      const t = document.getElementById('gq-form-title');
+      if (t) t.textContent = '＋ 新增競賽';
+    }
+
+    function editGame(i) {
+      const g = gamesData[i];
+      if (!g) return;
+      document.getElementById('gq-edit-index').value = String(i);
+      QUOTA_FIELDS.forEach(k => {
+        const el = document.getElementById('gq-' + k);
+        if (el) el.value = g[k] || '';
+      });
+      document.getElementById('gq-form-title').textContent = `✏️ 編輯競賽：${g.title || ''}（修改後按儲存）`;
+      document.getElementById('gq-title').scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }
+
+    function requireGameAdmin() {
+      if (!isAdminAuthorized) {
+        showToast('⚠️ 僅管理員可修改競賽場次');
+        return false;
+      }
+      return true;
+    }
+
+    function saveGameForm() {
+      if (!requireGameAdmin()) return;
+      const item = {};
+      QUOTA_FIELDS.forEach(k => {
+        item[k] = (document.getElementById('gq-' + k).value || '').trim();
+      });
+      if (!item.title) {
+        showToast('請輸入競賽名稱');
+        return;
+      }
+      const editIdx = Number(document.getElementById('gq-edit-index').value);
+      if (editIdx >= 0 && gamesData[editIdx]) {
+        gamesData[editIdx] = item;
+        currentGameIdx = editIdx;
+      } else {
+        if (gamesData.length >= GAME_MAX) {
+          showToast(`最多 ${GAME_MAX} 場競賽`);
+          return;
+        }
+        gamesData.push(item);
+        currentGameIdx = gamesData.length - 1;
+      }
+      resetGameForm();
+      commitGameQuotas();
+      showToast(editIdx >= 0 ? '已更新競賽' : '已新增競賽');
+    }
+
+    function deleteGame(i) {
+      if (!requireGameAdmin()) return;
+      const g = gamesData[i];
+      if (!g) return;
+      if (!confirm(`確定刪除競賽「${g.title || '未命名'}」？手機端也會一起移除。`)) return;
+      gamesData.splice(i, 1);
+      if (currentGameIdx >= gamesData.length) currentGameIdx = Math.max(0, gamesData.length - 1);
+      resetGameForm();
+      commitGameQuotas();
+      showToast('已刪除競賽');
+    }
+
+    function moveGame(i, dir) {
+      if (!requireGameAdmin()) return;
+      const j = i + dir;
+      if (!gamesData[i] || j < 0 || j >= gamesData.length) return;
+      [gamesData[i], gamesData[j]] = [gamesData[j], gamesData[i]];
+      currentGameIdx = j;
+      commitGameQuotas();
+    }
+
+    function resetGameDefaults() {
+      if (!requireGameAdmin()) return;
+      if (!confirm('確定恢復為內建的三場競賽？目前自訂的競賽將被取代。')) return;
+      gamesData = cloneDefaultGames();
+      currentGameIdx = 0;
+      resetGameForm();
+      commitGameQuotas();
+    }
+
+    /* ---- 競賽場次同步（管理員設定 → 後端 → 所有手機） ---- */
     let gqDirty = false;
     let gqBusy = false;
     let gqTimer = null;
@@ -5524,6 +5654,9 @@
 
     function commitGameQuotas() {
       localStorage.setItem(GAME_QUOTA_KEY, JSON.stringify(gamesData));
+      selectGame(currentGameIdx);
+      renderGameAdmin();
+      broadcastSync('GAME_QUOTA_UPDATE', {});
       gqDirty = true;
       setGqStatus(API_URL ? '⏳ 同步中…' : '⚠️ 尚未設定 API_URL：只有此瀏覽器看得到，手機收不到');
       clearTimeout(gqTimer);
@@ -5552,47 +5685,33 @@
       if (res && res.ok) {
         if (JSON.stringify(quotaView(gamesData)) === snapshot) gqDirty = false;
         setGqStatus(`✅ 已同步到手機（${nowHMS()}）`);
-        showToast('✅ 出賽人數已同步到所有手機');
+        showToast('✅ 競賽場次已同步到所有手機');
       } else {
         setGqStatus('❌ 同步失敗：' + syncErrText(res) + '（5 秒後自動重試）');
-        showToast('❌ 出賽人數同步失敗：' + syncErrText(res), 4500);
+        showToast('❌ 競賽場次同步失敗：' + syncErrText(res), 4500);
         clearTimeout(gqTimer);
         gqTimer = setTimeout(pushGameQuotas, 5000);
       }
     }
 
-    // 後端 → 本機：只更新「人數與召集令」五個欄位，其餘（標題、規則）維持原樣
+    // 後端 → 本機：以後端的競賽清單為準（管理員有尚未送出的修改時略過）
     function applyGameQuotasFromServer(gq, initial) {
-      if (!gq || !Array.isArray(gq.quotas) || !gq.quotas.length || gqBusy || gqDirty) return;
-      const merged = gamesData.map((g, i) => {
-        const sv = gq.quotas[i];
-        if (!sv) return g;
-        const o = { ...g };
-        QUOTA_FIELDS.forEach(k => {
-          if (sv[k]) o[k] = String(sv[k]);
-        });
+      if (!gq || !Array.isArray(gq.quotas) || gqBusy || gqDirty) return;
+      const merged = gq.quotas.map((sv, i) => {
+        const o = {};
+        QUOTA_FIELDS.forEach(k => (o[k] = String((sv && sv[k]) || '')));
+        // 舊版後端只存人數欄位：沒有名稱時，沿用本機同一位置的名稱與規則
+        if (!o.title && gamesData[i]) {
+          ['title', 'rule', 'tip'].forEach(k => (o[k] = gamesData[i][k] || ''));
+        }
         return o;
       });
       if (JSON.stringify(quotaView(merged)) === JSON.stringify(quotaView(gamesData))) return;
       gamesData = merged;
       localStorage.setItem(GAME_QUOTA_KEY, JSON.stringify(gamesData));
-      renderCurrentGamePanel();
-      if (!initial && !isAdminAuthorized) showToast('🏆 下午競賽出賽人數已更新', 3500);
-    }
-
-    function saveGameQuota() {
-      const idx = Number(document.getElementById('admin-game-select').value || 0);
-      gamesData[idx] = {
-        ...gamesData[idx],
-        total: document.getElementById('gq-total').value.trim() || gamesData[idx].total,
-        elder: document.getElementById('gq-elder').value.trim() || gamesData[idx].elder,
-        youth: document.getElementById('gq-youth').value.trim() || gamesData[idx].youth,
-        other: document.getElementById('gq-other').value.trim() || gamesData[idx].other,
-        note: document.getElementById('gq-note').value.trim() || gamesData[idx].note
-      };
-      selectGame(idx);
-      broadcastSync('GAME_QUOTA_UPDATE', { idx });
-      commitGameQuotas();
+      selectGame(currentGameIdx);
+      renderGameAdmin();
+      if (!initial && !isAdminAuthorized) showToast('🏆 下午競賽場次已更新', 3500);
     }
 
     const SCORE_KEY = 'xmas2026_team_scores'; // 舊版固定四隊（僅用來搬移舊資料）
