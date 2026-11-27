@@ -14,6 +14,7 @@
         var open = localStorage.getItem('xmas2026_stage_info_open') === 'true';
         var admin = sessionStorage.getItem('xmas2026_admin_authorized') === 'true';
         if (!open && !admin && !projector) document.documentElement.classList.add('welcome-mode');
+        if (open) document.documentElement.classList.add('sysinfo-open');
       } catch (e) {}
     })();
   </script>
@@ -72,6 +73,23 @@
     @keyframes urgentPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
     .urgent-pulse { animation: urgentPulse 1.1s ease-in-out infinite; }
     html.urgent-open, html.urgent-open body { overflow: hidden !important; }
+
+    /* 系統資訊開啟：隱藏紅色標題區，把版面讓給內容（手機、電腦皆同） */
+    html.sysinfo-open header { display: none !important; }
+
+    /* 後台兩欄：左側功能頁籤、右側操作介面 */
+    .admin-rail-btn { position: relative; display: flex; width: 100%; flex-direction: column; align-items: center; gap: 2px; border-radius: 12px; padding: 8px 2px; text-align: center; font-size: 10px; font-weight: 800; line-height: 1.2; color: #44403c; }
+    .admin-rail-btn .ico { font-size: 20px; line-height: 1; }
+    .admin-rail-btn[aria-current="true"] { background: #B91C1C; color: #fff; }
+    .admin-rail-btn:not([aria-current="true"]):hover { background: #FEF3C7; }
+    .admin-rail-group { display: none; }
+    .admin-rail-sep { height: 1px; margin: 6px 4px; background: #FDE68A; }
+    @media (min-width: 640px) {
+      .admin-rail-btn { flex-direction: row; gap: 8px; padding: 9px 10px; text-align: left; font-size: 13px; }
+      .admin-rail-btn .ico { font-size: 16px; }
+      .admin-rail-group { display: block; padding: 10px 10px 2px; font-size: 11px; font-weight: 900; color: #92400E; }
+      .admin-rail-sep { display: none; }
+    }
 
     /* 鎖定畫面：紅色區塊滿版（整個螢幕高度），內容垂直置中 */
     html.welcome-mode header {
@@ -476,18 +494,19 @@
   <div id="toast-msg" class="fixed bottom-6 left-1/2 z-50 hidden -translate-x-1/2 rounded-full bg-gray-900/95 px-5 py-2.5 text-xs font-bold text-white shadow-xl"></div>
 
   <!-- 頁首橫幅 Hero -->
-  <header class="relative overflow-hidden bg-gradient-to-br from-xmas-darkred via-xmas-red to-xmas-green text-white shadow-lg">
-    <!-- 聖誕老人的工作室（管理後台入口）：縮小並固定在版面右上角 -->
+    <!-- 聖誕老人的工作室（管理後台入口）：固定在視窗右上角 -->
     <button
       id="toggle-edit-btn"
       onclick="toggleEditMode()"
       aria-label="開啟聖誕老人的工作室（管理後台）"
       title="聖誕老人的工作室"
-      class="absolute right-3 top-3 z-20 inline-flex items-center gap-1 rounded-full border border-amber-300/60 bg-black/25 px-2.5 py-1 text-[11px] font-black text-amber-200 shadow backdrop-blur-sm transition hover:bg-black/40 sm:right-5 sm:top-4 sm:text-xs"
+      class="fixed right-2 top-2 z-40 inline-flex items-center gap-1 rounded-full border border-amber-300/70 bg-xmas-darkred/90 px-2.5 py-1 text-[10px] font-black text-amber-200 shadow-lg backdrop-blur-sm transition hover:bg-xmas-darkred sm:right-4 sm:top-3 sm:text-xs"
     >
       <span id="pending-count-pill" class="hidden absolute -right-1.5 -top-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-amber-400 px-1 text-[10px] font-black text-xmas-darkred ring-2 ring-white">0</span>
       <span>🎅 聖誕老人的工作室</span>
     </button>
+
+  <header class="relative overflow-hidden bg-gradient-to-br from-xmas-darkred via-xmas-red to-xmas-green text-white shadow-lg">
     <div class="mx-auto max-w-5xl px-4 pb-4 pt-4 sm:px-6 sm:pb-7 sm:pt-6">
       <div class="flex flex-wrap items-center justify-between gap-2">
         <span class="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-bold tracking-wide text-amber-200 backdrop-blur-sm">
@@ -616,7 +635,7 @@
   <!-- 黏性主分頁導覽列 (重要布達公告置頂第一個) -->
   <nav id="main-nav" class="fixed inset-x-0 bottom-0 z-30 border-t border-amber-200 bg-xmas-cream/95 shadow-[0_-4px_14px_rgba(0,0,0,0.08)] backdrop-blur-md sm:sticky sm:inset-x-auto sm:bottom-auto sm:top-0 sm:border-b sm:border-t-0 sm:shadow-sm" style="padding-bottom: env(safe-area-inset-bottom, 0px)">
     <div class="mx-auto max-w-5xl px-1.5 sm:px-6">
-      <div id="main-tabs" class="no-scrollbar flex items-stretch gap-1 py-1.5 sm:items-center sm:gap-1.5 sm:overflow-x-auto sm:py-2.5">
+      <div id="main-tabs" class="no-scrollbar flex items-stretch gap-1 py-1.5 sm:items-center sm:gap-1.5 sm:overflow-x-auto sm:py-2.5 sm:pr-44 lg:pr-0">
         <button data-tab="notices" onclick="switchMainTab('notices')" class="main-tab-btn relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl bg-xmas-red px-1 py-1.5 font-black text-white shadow-sm transition sm:flex-none sm:flex-row sm:gap-1.5 sm:px-3.5 sm:py-2">
           <span class="relative text-xl leading-none sm:text-sm">📢</span>
           <span class="text-[11px] leading-tight sm:text-sm"><span class="sm:hidden">布達</span><span class="hidden sm:inline">重要布達公告</span><span id="notice-badge" class="absolute right-1 top-0.5 whitespace-nowrap rounded-full bg-amber-300 px-1 text-[9px] font-black leading-4 text-xmas-darkred sm:static sm:ml-1.5 sm:px-1.5 sm:py-0.5 sm:text-[10px] sm:leading-normal">NEW</span></span>
@@ -1089,7 +1108,8 @@
       <p class="text-xs font-bold text-gray-600">2026 聖誕跨世代同樂日籌備團隊｜願平安與喜樂常與你同在</p>
 
       <!-- 🎁 聖誕禮物盒專屬全參數後台（開啟後顯示所有可調整參數） -->
-      <div id="organizer-panel" class="mt-5 hidden space-y-6 rounded-3xl border-2 border-amber-400 bg-white p-5 text-left shadow-xl">
+      <div id="organizer-panel" class="-mx-3 mt-5 hidden overflow-hidden rounded-3xl border-2 border-amber-400 bg-white text-left shadow-xl sm:mx-0">
+        <div class="p-4 pb-3 pt-11 sm:p-5 sm:pb-3">
         <div class="flex flex-wrap items-center justify-between gap-2 border-b border-amber-100 pb-3">
           <div class="flex items-center gap-2.5">
             <span class="flex h-10 w-10 items-center justify-center rounded-2xl bg-red-50 text-xl">🎁</span>
@@ -1120,29 +1140,316 @@
           </div>
         </div>
 
-        <!-- 權限與通行碼設定條 -->
-        <div class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-300 bg-amber-50/70 px-4 py-3">
-          <div class="text-xs">
-            <span class="font-black text-amber-950">🔐 管理員權限狀態：已通過驗證</span>
-            <span class="ml-2 text-gray-600">（一般會眾無法未經密碼開啟此後台）</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <input
-              id="admin-new-passcode"
-              type="text"
-              maxlength="16"
-              placeholder="設定新通行碼..."
-              class="w-32 rounded-lg border border-amber-300 bg-white px-2.5 py-1 text-xs font-bold text-gray-800"
-            />
+        </div>
+        <div class="flex border-t border-amber-100">
+          <aside id="admin-rail" class="w-16 shrink-0 space-y-0.5 overflow-y-auto border-r border-amber-100 bg-amber-50/60 p-1 sm:w-52 sm:p-2" style="max-height: min(78vh, 46rem)">
+          <div class="admin-rail-group">即時操作</div>
+          <button data-pane-btn="sysinfo" onclick="showAdminPane('sysinfo')" class="admin-rail-btn" aria-current="false"><span class="ico">🌐</span><span class="sm:hidden">系統</span><span class="hidden sm:inline">系統資訊開關</span></button>
+          <button data-pane-btn="notice" onclick="showAdminPane('notice')" class="admin-rail-btn" aria-current="false"><span class="ico">📢</span><span class="sm:hidden">布達</span><span class="hidden sm:inline">即時發布布達</span></button>
+          <button data-pane-btn="sticky" onclick="showAdminPane('sticky')" class="admin-rail-btn" aria-current="false"><span class="ico">📌</span><span class="sm:hidden">公告</span><span class="hidden sm:inline">常駐公告管理</span></button>
+          <button data-pane-btn="projector" onclick="showAdminPane('projector')" class="admin-rail-btn" aria-current="false"><span class="ico">🖥️</span><span class="sm:hidden">投影</span><span class="hidden sm:inline">大螢幕投影同步</span></button>
+          <div class="admin-rail-sep"></div>
+          <div class="admin-rail-group">運動競賽類</div>
+          <button data-pane-btn="quota" onclick="showAdminPane('quota')" class="admin-rail-btn" aria-current="false"><span class="ico">🏆</span><span class="sm:hidden">人數</span><span class="hidden sm:inline">競賽出賽人數</span></button>
+          <button data-pane-btn="score" onclick="showAdminPane('score')" class="admin-rail-btn" aria-current="false"><span class="ico">📊</span><span class="sm:hidden">積分</span><span class="hidden sm:inline">戰隊與積分</span></button>
+          <div class="admin-rail-sep"></div>
+          <div class="admin-rail-group">資料上傳類</div>
+          <button data-pane-btn="ppt" onclick="showAdminPane('ppt')" class="admin-rail-btn" aria-current="false"><span class="ico">📖</span><span class="sm:hidden">PPT</span><span class="hidden sm:inline">禮拜 PPT 上傳</span></button>
+          <button data-pane-btn="photos" onclick="showAdminPane('photos')" class="admin-rail-btn" aria-current="false"><span class="ico">📸</span><span class="sm:hidden">照片</span><span class="hidden sm:inline">現場照片上傳</span></button>
+          <div class="admin-rail-sep"></div>
+          <div class="admin-rail-group">動畫參數類</div>
+          <button data-pane-btn="snow" onclick="showAdminPane('snow')" class="admin-rail-btn" aria-current="false"><span class="ico">❄️</span><span class="sm:hidden">雪花</span><span class="hidden sm:inline">雪花特效參數</span></button>
+          <div class="admin-rail-sep"></div>
+          <div class="admin-rail-group">互動審核類</div>
+          <button data-pane-btn="danmaku" onclick="showAdminPane('danmaku')" class="admin-rail-btn" aria-current="false"><span class="ico">🛡️</span><span class="sm:hidden">審核</span><span class="hidden sm:inline">彈幕留言審核</span><span id="rail-pending-pill" class="absolute right-0.5 top-0.5 hidden min-w-[16px] rounded-full bg-amber-400 px-1 text-center text-[10px] font-black leading-4 text-xmas-darkred ring-2 ring-white sm:static sm:ml-auto">0</span></button>
+          <div class="admin-rail-sep"></div>
+          <div class="admin-rail-group">系統安全類</div>
+          <button data-pane-btn="security" onclick="showAdminPane('security')" class="admin-rail-btn" aria-current="false"><span class="ico">🔐</span><span class="sm:hidden">密碼</span><span class="hidden sm:inline">通行碼設定</span></button>
+          </aside>
+          <div id="admin-workspace" class="min-w-0 flex-1 overflow-y-auto p-2.5 sm:p-5" style="max-height: min(78vh, 46rem)">
+          <section data-pane="sysinfo" class="admin-pane hidden space-y-4">
+        <!-- 區塊 C：分段倒數開放控制與時程設定 -->
+        <div class="rounded-2xl border border-amber-200 bg-amber-50/40 p-4">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h5 class="text-sm font-black text-amber-950">🌐 系統資訊開關（開啟／關閉）與全天時程設定</h5>
+              <p class="text-[11px] text-gray-600"><b>關閉</b>：手機只顯示活動倒數與集合地點的歡迎介面。<b>開啟</b>：關閉歡迎介面、投放全部活動資訊與功能，各時段時間改以懸浮視窗提醒。開關與時程會同步到所有手機。</p>
+            </div>
             <button
-              onclick="updateAdminPasscode()"
-              class="rounded-lg bg-amber-600 px-3 py-1 text-xs font-black text-white hover:bg-amber-700"
+              id="toggle-stage-open-btn"
+              onclick="toggleStageInfoOpen()"
+              class="rounded-xl bg-gray-800 px-3.5 py-2 text-xs font-black text-white shadow transition"
             >
-              更新通行碼
+              🔒 目前未開放（點擊立即開放現場資訊）
+            </button>
+          </div>
+          <div id="stage-schedule-inputs" class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2"></div>
+          <div class="mt-2.5 flex flex-wrap justify-end gap-2">
+            <button onclick="testStageReminder()" class="rounded-xl border border-amber-300 bg-white px-3 py-1.5 text-xs font-bold text-amber-900 hover:bg-amber-50">
+              🔔 預覽提醒視窗
+            </button>
+            <button onclick="resetStageSchedule()" class="rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-xs font-bold text-gray-600 hover:bg-gray-50">
+              恢復預設時程
+            </button>
+            <button onclick="saveStageSchedule()" class="rounded-xl bg-amber-600 px-4 py-1.5 text-xs font-black text-white shadow hover:bg-amber-700">
+              ✓ 套用並即時同步時程
+            </button>
+          </div>
+          <p id="sysinfo-status" class="mt-2 text-[11px] font-bold text-amber-950"></p>
+        </div>
+
+          </section>
+          <section data-pane="notice" class="admin-pane hidden space-y-4">
+        <!-- 區塊 A：即時發布新重要布達（跨分頁即時推播至使用者畫面） -->
+        <div class="rounded-2xl border border-red-200 bg-red-50/40 p-4">
+          <h5 class="text-sm font-black text-xmas-darkred">📢 即時發布新重要布達（使用者介面將同步跳出展示）</h5>
+          <div class="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-12">
+            <input
+              id="admin-notice-tag"
+              type="text"
+              placeholder="標籤（如：緊急通知）"
+              value="即時新布達"
+              class="rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs sm:col-span-3"
+            />
+            <input
+              id="admin-notice-title"
+              type="text"
+              placeholder="輸入新公告標題（例如：下午趣味競賽提前 10 分鐘集合！）"
+              class="rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs sm:col-span-9"
+            />
+            <textarea
+              id="admin-notice-body"
+              rows="2"
+              placeholder="輸入詳細布達內容..."
+              class="rounded-xl border border-gray-300 bg-white p-3 text-xs sm:col-span-12"
+            ></textarea>
+          </div>
+          <div class="mt-2.5 flex justify-end">
+            <button
+              id="publish-notice-btn" onclick="publishLiveNotice()"
+              class="rounded-xl bg-xmas-red px-4 py-2 text-xs font-black text-white shadow hover:bg-xmas-darkred"
+            >
+              🚀 立即發布並同步推播至所有畫面
+            </button>
+          </div>
+          <div class="mt-2">
+            <button onclick="previewUrgent()" class="w-full rounded-xl border border-red-300 bg-white px-3 py-2 text-xs font-black text-xmas-darkred hover:bg-red-50">
+              👁 預覽全螢幕遮罩（只在你自己的螢幕顯示，不會推播）
+            </button>
+          </div>
+          <div class="mt-3 border-t border-red-200/70 pt-3">
+            <div class="text-xs font-black text-xmas-darkred">🗑️ 已發布的即時公告（可個別刪除，手機約 6 秒內同步移除）</div>
+            <div id="live-admin-list" class="mt-2 space-y-1.5"></div>
+          </div>
+        </div>
+
+          </section>
+          <section data-pane="sticky" class="admin-pane hidden space-y-4">
+        <!-- 區塊 I：常駐公告管理（長期顯示於公告欄，與臨時即時公告分開） -->
+        <div class="rounded-2xl border border-orange-200 bg-orange-50/40 p-4">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h5 class="text-sm font-black text-orange-950">📌 常駐公告管理（長期顯示於公告欄，不會跳出強制已讀視窗）</h5>
+              <p class="text-[11px] text-gray-600">新增、編輯、刪除、調整順序後會立即儲存並同步到所有手機（需已設定 API_URL）。臨時性公告請使用上方「即時發布新重要布達」。</p>
+            </div>
+            <button onclick="resetStickyDefaults()" class="rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-xs font-bold text-gray-600 hover:bg-gray-50">↺ 恢復預設常駐公告</button>
+          </div>
+
+          <div id="sticky-admin-list" class="mt-3 space-y-2"></div>
+
+          <div class="mt-3 rounded-xl border border-orange-200 bg-white p-3">
+            <div id="sticky-form-title" class="text-xs font-black text-orange-950">＋ 新增常駐公告</div>
+            <input type="hidden" id="sticky-edit-id" />
+            <div class="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-12">
+              <input id="sticky-tag" type="text" maxlength="12" placeholder="標籤（如：置頂必讀）" class="rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs sm:col-span-3" />
+              <select id="sticky-color" class="rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs font-bold sm:col-span-3">
+                <option value="red">🔴 紅色（重要）</option>
+                <option value="amber">🟠 橘黃色（提醒）</option>
+                <option value="green">🟢 綠色（活動）</option>
+                <option value="blue">🔵 藍色（資訊）</option>
+                <option value="gray">⚫ 灰色（一般）</option>
+              </select>
+              <input id="sticky-title" type="text" maxlength="80" placeholder="公告標題" class="rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs sm:col-span-6" />
+              <textarea id="sticky-body" rows="3" maxlength="500" placeholder="公告詳細內容（限 500 字）" class="rounded-xl border border-gray-300 bg-white p-3 text-xs sm:col-span-12"></textarea>
+            </div>
+            <div class="mt-2 flex flex-wrap items-center justify-between gap-2">
+              <label class="flex cursor-pointer items-center gap-2 text-xs font-bold text-gray-700">
+                <input id="sticky-expanded" type="checkbox" class="h-4 w-4 rounded border-gray-300" />
+                預設展開內容
+              </label>
+              <div class="flex gap-2">
+                <button onclick="resetStickyForm()" class="rounded-xl bg-gray-100 px-3 py-2 text-xs font-bold text-gray-600 hover:bg-gray-200">清空表單</button>
+                <button onclick="saveStickyForm()" class="rounded-xl bg-orange-600 px-4 py-2 text-xs font-black text-white shadow hover:bg-orange-700">✓ 儲存常駐公告</button>
+              </div>
+            </div>
+          </div>
+          <p id="sticky-status" class="mt-2 text-[11px] font-bold text-orange-900"></p>
+        </div>
+
+          </section>
+          <section data-pane="projector" class="admin-pane hidden space-y-4">
+        <!-- 區塊 G：大螢幕投影與手機同步控制（僅管理端可操作） -->
+        <div class="rounded-2xl border border-indigo-200 bg-indigo-50/40 p-4">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h5 class="text-sm font-black text-indigo-950">🖥️ 大螢幕投影與手機同步控制（僅管理端可操作）</h5>
+              <p class="text-[11px] text-gray-600">
+                開啟「手機同步廣播」後，您在此或在禮拜頁翻頁，全場已開啟「跟隨」的手機會同步翻頁；一般會眾翻頁不會影響他人，也無法控制投影。
+              </p>
+            </div>
+            <button
+              id="sync-master-btn"
+              onclick="toggleSyncMaster()"
+              class="rounded-xl bg-gray-800 px-3.5 py-2 text-xs font-black text-white shadow transition"
+            >
+              🔒 手機同步廣播：關（點擊開啟）
+            </button>
+          </div>
+          <div class="mt-3 flex flex-wrap items-center gap-2">
+            <button onclick="prevSlide()" class="rounded-xl bg-white px-3.5 py-2 text-xs font-black text-gray-700 ring-1 ring-gray-200 hover:bg-gray-100">← 上一頁</button>
+            <span id="admin-sync-slide-label" class="rounded-lg bg-white px-3 py-2 text-xs font-black text-indigo-900 ring-1 ring-indigo-200">目前：第 1 / 4 頁</span>
+            <button onclick="nextSlide()" class="rounded-xl bg-xmas-red px-3.5 py-2 text-xs font-black text-white shadow-sm hover:bg-xmas-darkred">下一頁 →</button>
+            <button onclick="toggleProjectorMode(true)" class="rounded-xl bg-gray-900 px-3.5 py-2 text-xs font-black text-amber-300 shadow hover:bg-black">🖥️ 本視窗滿版投影</button>
+            <button onclick="openIndependentProjectorWindow()" class="rounded-xl bg-xmas-darkred px-3.5 py-2 text-xs font-black text-white shadow hover:bg-red-900">🪟 彈出獨立大螢幕投影視窗</button>
+          </div>
+          <p id="sync-status-text" class="mt-2 text-[11px] font-bold text-indigo-900">目前未廣播：全場手機維持各自翻閱</p>
+        </div>
+
+          </section>
+          <section data-pane="quota" class="admin-pane hidden space-y-4">
+        <!-- 區塊 B：下午趣味競賽各場次出賽人數即時設定 -->
+        <div class="rounded-2xl border border-emerald-200 bg-emerald-50/40 p-4">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <h5 class="text-sm font-black text-xmas-green">🏆 下午趣味競賽：各場次出賽人數即時設定（大看板同步更新）</h5>
+            <select id="admin-game-select" onchange="loadGameQuotaForm()" class="rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-xs font-bold">
+              <option value="0">第一場：跨時代金曲猜猜看</option>
+              <option value="1">第二場：聖誕好禮接力傳</option>
+              <option value="2">第三場：默契比手畫腳大挑戰</option>
+            </select>
+          </div>
+          <div class="mt-3 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+            <div>
+              <label class="block text-[11px] font-bold text-gray-700">每隊總出賽人數</label>
+              <input id="gq-total" type="text" placeholder="如：6 人" class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-xs font-black" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-gray-700">長輩名額</label>
+              <input id="gq-elder" type="text" placeholder="如：3 位長輩" class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-xs font-black" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-gray-700">青年名額</label>
+              <input id="gq-youth" type="text" placeholder="如：3 位青年" class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-xs font-black" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-gray-700">孩童 / 其他名額</label>
+              <input id="gq-other" type="text" placeholder="如：自由加油團" class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-xs font-black" />
+            </div>
+            <div class="col-span-2 sm:col-span-4">
+              <label class="block text-[11px] font-bold text-gray-700">大看板即時召集令 / 補充公告</label>
+              <input id="gq-note" type="text" placeholder="輸入大看板醒目召集提示..." class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-xs" />
+            </div>
+          </div>
+          <div class="mt-2.5 flex justify-end">
+            <button onclick="saveGameQuota()" class="rounded-xl bg-xmas-green px-4 py-2 text-xs font-black text-white shadow hover:bg-green-900">
+              ✓ 套用並即時同步人數公告
             </button>
           </div>
         </div>
 
+          </section>
+          <section data-pane="score" class="admin-pane hidden space-y-4">
+        <!-- 區塊 H：戰隊與積分控制（新增隊伍、自行輸入分數；同步到所有手機） -->
+        <div class="rounded-2xl border border-rose-200 bg-rose-50/40 p-4">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <h5 class="text-sm font-black text-rose-950">📊 戰隊與積分控制（新增隊伍、自行輸入分數，手機即時同步）</h5>
+            <button onclick="resetScores()" class="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-bold text-gray-600 hover:bg-gray-50">全部歸零</button>
+          </div>
+          <div class="mt-3 flex flex-wrap items-end gap-2 rounded-xl border border-rose-200 bg-white p-3">
+            <div class="min-w-[9rem] flex-1">
+              <label class="block text-[11px] font-black text-gray-700">新增隊伍名稱</label>
+              <input id="new-team-name" type="text" maxlength="12" placeholder="例如：以馬內利紫隊" class="mt-1 w-full rounded-lg border border-gray-300 px-2.5 py-2 text-sm font-bold focus:border-xmas-red focus:outline-none" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-black text-gray-700">顏色</label>
+              <select id="new-team-color" class="mt-1 rounded-lg border border-gray-300 px-2 py-2 text-sm font-bold"></select>
+            </div>
+            <button onclick="scoreAddTeam()" class="rounded-xl bg-xmas-red px-4 py-2 text-sm font-black text-white shadow hover:bg-xmas-darkred">＋ 新增隊伍</button>
+          </div>
+          <div class="mt-3 flex flex-wrap items-center gap-2 rounded-xl border border-rose-200 bg-white p-3">
+            <label for="score-step" class="text-xs font-black text-gray-700">每次加／扣分數</label>
+            <input id="score-step" type="number" inputmode="numeric" min="1" max="9999" value="10" oninput="renderScoreAdmin()" class="w-24 rounded-lg border border-gray-300 px-2.5 py-1.5 text-center text-sm font-black focus:border-xmas-red focus:outline-none" />
+            <span class="text-[11px] font-bold text-gray-500">自行輸入後，各隊的「＋加分／－扣分」就用這個分數；也可以直接改各隊分數欄。</span>
+          </div>
+          <div id="admin-score-list" class="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2"></div>
+          <p id="score-sync-status" class="mt-2 text-[11px] font-bold text-rose-950"></p>
+        </div>
+
+          </section>
+          <section data-pane="ppt" class="admin-pane hidden space-y-4">
+        <!-- 區塊 E：上午禮拜 PPT 投影片批量上傳（支援圖片集替換並同步大螢幕） -->
+        <div class="rounded-2xl border border-purple-200 bg-purple-50/40 p-4">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h5 class="text-sm font-black text-purple-950">📖 上午禮拜 PPT 投影片批量上傳（JPG / PNG 圖片集）</h5>
+              <p class="text-[11px] text-gray-600">
+                在 PowerPoint 點選「另存新檔 → JPEG / PNG（匯出全部投影片）」後一次全選上傳，系統將自動依頁碼排序並同步至獨立大螢幕與全場手機。
+              </p>
+            </div>
+            <button
+              onclick="resetCustomPptSlides()"
+              class="rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 hover:bg-gray-100"
+            >
+              ↺ 恢復內建預設簡報
+            </button>
+          </div>
+          <div class="mt-3 grid grid-cols-1 gap-3 md:grid-cols-12">
+            <div class="md:col-span-5">
+              <label class="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-purple-400 bg-white px-4 py-4 text-center transition hover:bg-purple-50">
+                <span class="text-xs font-black text-purple-900">📤 點擊一次全選上傳 PPT 投影片圖片</span>
+                <span class="mt-1 text-[11px] text-gray-500">自動依檔名頁碼排序・自動高畫質輕量壓縮</span>
+                <input id="admin-ppt-upload-input" type="file" accept="image/*" multiple class="hidden" onchange="handleCustomPptUpload(event)" />
+              </label>
+            </div>
+            <div class="md:col-span-7">
+              <div id="admin-ppt-status" class="text-xs font-bold text-purple-900">目前使用：內建預設 4 頁禮拜簡報</div>
+              <div id="admin-ppt-preview-list" class="mt-2 flex flex-wrap gap-2"></div>
+            </div>
+          </div>
+        </div>
+
+          </section>
+          <section data-pane="photos" class="admin-pane hidden space-y-4">
+        <!-- 區塊 F：大會官方照片上傳管理 -->
+        <h5 class="mb-3 text-sm font-black text-gray-900">📸 大會官方照片上傳管理（橫移展示列）</h5>
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-12">
+          <div class="space-y-2.5 md:col-span-5">
+            <label class="block text-xs font-black text-gray-800">📸 大會攝影組：新增橫移展示照片</label>
+            <input
+              id="official-photo-tag"
+              type="text"
+              placeholder="輸入場次標籤（如：羅浮高中運動場）"
+              value="羅浮高中運動場"
+              class="w-full rounded-xl border border-gray-300 px-3 py-2 text-xs"
+            />
+            <input
+              id="official-photo-caption"
+              type="text"
+              placeholder="輸入簡短圖說（如：長輩與青年同心傳接！）"
+              class="w-full rounded-xl border border-gray-300 px-3 py-2 text-xs"
+            />
+            <label class="flex cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-xmas-red/40 bg-red-50/40 px-4 py-3 text-xs font-black text-xmas-red transition hover:bg-red-50">
+              <span>＋ 選取照片（自動輕量化壓縮並加入橫移）</span>
+              <input id="official-photo-input" type="file" accept="image/*" multiple class="hidden" onchange="handleOfficialPhotoUpload(event)" />
+            </label>
+          </div>
+
+          <div class="md:col-span-7">
+            <div class="text-xs font-black text-gray-800">目前橫移展示列照片管理（點擊 × 可移除）：</div>
+            <div id="organizer-photo-list" class="mt-2 flex flex-wrap gap-2"></div>
+          </div>
+        </div>
+          </section>
+          <section data-pane="snow" class="admin-pane hidden space-y-4">
         <!-- 參數區塊 0：全站視覺與投影雪花特效參數 -->
         <div class="rounded-2xl border border-sky-200 bg-sky-50/50 p-4">
           <div class="flex flex-wrap items-center justify-between gap-3">
@@ -1192,118 +1499,8 @@
           </div>
         </div>
 
-        <!-- 區塊 A：即時發布新重要布達（跨分頁即時推播至使用者畫面） -->
-        <div class="rounded-2xl border border-red-200 bg-red-50/40 p-4">
-          <h5 class="text-sm font-black text-xmas-darkred">📢 即時發布新重要布達（使用者介面將同步跳出展示）</h5>
-          <div class="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-12">
-            <input
-              id="admin-notice-tag"
-              type="text"
-              placeholder="標籤（如：緊急通知）"
-              value="即時新布達"
-              class="rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs sm:col-span-3"
-            />
-            <input
-              id="admin-notice-title"
-              type="text"
-              placeholder="輸入新公告標題（例如：下午趣味競賽提前 10 分鐘集合！）"
-              class="rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs sm:col-span-9"
-            />
-            <textarea
-              id="admin-notice-body"
-              rows="2"
-              placeholder="輸入詳細布達內容..."
-              class="rounded-xl border border-gray-300 bg-white p-3 text-xs sm:col-span-12"
-            ></textarea>
-          </div>
-          <div class="mt-2.5 flex justify-end">
-            <button
-              id="publish-notice-btn" onclick="publishLiveNotice()"
-              class="rounded-xl bg-xmas-red px-4 py-2 text-xs font-black text-white shadow hover:bg-xmas-darkred"
-            >
-              🚀 立即發布並同步推播至所有畫面
-            </button>
-          </div>
-          <div class="mt-2">
-            <button onclick="previewUrgent()" class="w-full rounded-xl border border-red-300 bg-white px-3 py-2 text-xs font-black text-xmas-darkred hover:bg-red-50">
-              👁 預覽全螢幕遮罩（只在你自己的螢幕顯示，不會推播）
-            </button>
-          </div>
-          <div class="mt-3 border-t border-red-200/70 pt-3">
-            <div class="text-xs font-black text-xmas-darkred">🗑️ 已發布的即時公告（可個別刪除，手機約 6 秒內同步移除）</div>
-            <div id="live-admin-list" class="mt-2 space-y-1.5"></div>
-          </div>
-        </div>
-
-        <!-- 區塊 B：下午趣味競賽各場次出賽人數即時設定 -->
-        <div class="rounded-2xl border border-emerald-200 bg-emerald-50/40 p-4">
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <h5 class="text-sm font-black text-xmas-green">🏆 下午趣味競賽：各場次出賽人數即時設定（大看板同步更新）</h5>
-            <select id="admin-game-select" onchange="loadGameQuotaForm()" class="rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-xs font-bold">
-              <option value="0">第一場：跨時代金曲猜猜看</option>
-              <option value="1">第二場：聖誕好禮接力傳</option>
-              <option value="2">第三場：默契比手畫腳大挑戰</option>
-            </select>
-          </div>
-          <div class="mt-3 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-            <div>
-              <label class="block text-[11px] font-bold text-gray-700">每隊總出賽人數</label>
-              <input id="gq-total" type="text" placeholder="如：6 人" class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-xs font-black" />
-            </div>
-            <div>
-              <label class="block text-[11px] font-bold text-gray-700">長輩名額</label>
-              <input id="gq-elder" type="text" placeholder="如：3 位長輩" class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-xs font-black" />
-            </div>
-            <div>
-              <label class="block text-[11px] font-bold text-gray-700">青年名額</label>
-              <input id="gq-youth" type="text" placeholder="如：3 位青年" class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-xs font-black" />
-            </div>
-            <div>
-              <label class="block text-[11px] font-bold text-gray-700">孩童 / 其他名額</label>
-              <input id="gq-other" type="text" placeholder="如：自由加油團" class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-xs font-black" />
-            </div>
-            <div class="col-span-2 sm:col-span-4">
-              <label class="block text-[11px] font-bold text-gray-700">大看板即時召集令 / 補充公告</label>
-              <input id="gq-note" type="text" placeholder="輸入大看板醒目召集提示..." class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-xs" />
-            </div>
-          </div>
-          <div class="mt-2.5 flex justify-end">
-            <button onclick="saveGameQuota()" class="rounded-xl bg-xmas-green px-4 py-2 text-xs font-black text-white shadow hover:bg-green-900">
-              ✓ 套用並即時同步人數公告
-            </button>
-          </div>
-        </div>
-
-        <!-- 區塊 C：分段倒數開放控制與時程設定 -->
-        <div class="rounded-2xl border border-amber-200 bg-amber-50/40 p-4">
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <h5 class="text-sm font-black text-amber-950">🌐 系統資訊開關（開啟／關閉）與全天時程設定</h5>
-              <p class="text-[11px] text-gray-600"><b>關閉</b>：手機只顯示活動倒數與集合地點的歡迎介面。<b>開啟</b>：關閉歡迎介面、投放全部活動資訊與功能，各時段時間改以懸浮視窗提醒。開關與時程會同步到所有手機。</p>
-            </div>
-            <button
-              id="toggle-stage-open-btn"
-              onclick="toggleStageInfoOpen()"
-              class="rounded-xl bg-gray-800 px-3.5 py-2 text-xs font-black text-white shadow transition"
-            >
-              🔒 目前未開放（點擊立即開放現場資訊）
-            </button>
-          </div>
-          <div id="stage-schedule-inputs" class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2"></div>
-          <div class="mt-2.5 flex flex-wrap justify-end gap-2">
-            <button onclick="testStageReminder()" class="rounded-xl border border-amber-300 bg-white px-3 py-1.5 text-xs font-bold text-amber-900 hover:bg-amber-50">
-              🔔 預覽提醒視窗
-            </button>
-            <button onclick="resetStageSchedule()" class="rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-xs font-bold text-gray-600 hover:bg-gray-50">
-              恢復預設時程
-            </button>
-            <button onclick="saveStageSchedule()" class="rounded-xl bg-amber-600 px-4 py-1.5 text-xs font-black text-white shadow hover:bg-amber-700">
-              ✓ 套用並即時同步時程
-            </button>
-          </div>
-          <p id="sysinfo-status" class="mt-2 text-[11px] font-bold text-amber-950"></p>
-        </div>
-
+          </section>
+          <section data-pane="danmaku" class="admin-pane hidden space-y-4">
         <!-- 區塊 D：祝福彈幕留言審核佇列（先審後上彈幕 + 已上牆管理） -->
         <div class="rounded-2xl border border-sky-200 bg-sky-50/40 p-4">
           <div class="flex items-center justify-between">
@@ -1318,152 +1515,32 @@
           </div>
         </div>
 
-        <!-- 區塊 I：常駐公告管理（長期顯示於公告欄，與臨時即時公告分開） -->
-        <div class="rounded-2xl border border-orange-200 bg-orange-50/40 p-4">
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <h5 class="text-sm font-black text-orange-950">📌 常駐公告管理（長期顯示於公告欄，不會跳出強制已讀視窗）</h5>
-              <p class="text-[11px] text-gray-600">新增、編輯、刪除、調整順序後會立即儲存並同步到所有手機（需已設定 API_URL）。臨時性公告請使用上方「即時發布新重要布達」。</p>
-            </div>
-            <button onclick="resetStickyDefaults()" class="rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-xs font-bold text-gray-600 hover:bg-gray-50">↺ 恢復預設常駐公告</button>
+          </section>
+          <section data-pane="security" class="admin-pane hidden space-y-4">
+        <!-- 權限與通行碼設定條 -->
+        <div class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-300 bg-amber-50/70 px-4 py-3">
+          <div class="text-xs">
+            <span class="font-black text-amber-950">🔐 管理員權限狀態：已通過驗證</span>
+            <span class="ml-2 text-gray-600">（一般會眾無法未經密碼開啟此後台）</span>
           </div>
-
-          <div id="sticky-admin-list" class="mt-3 space-y-2"></div>
-
-          <div class="mt-3 rounded-xl border border-orange-200 bg-white p-3">
-            <div id="sticky-form-title" class="text-xs font-black text-orange-950">＋ 新增常駐公告</div>
-            <input type="hidden" id="sticky-edit-id" />
-            <div class="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-12">
-              <input id="sticky-tag" type="text" maxlength="12" placeholder="標籤（如：置頂必讀）" class="rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs sm:col-span-3" />
-              <select id="sticky-color" class="rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs font-bold sm:col-span-3">
-                <option value="red">🔴 紅色（重要）</option>
-                <option value="amber">🟠 橘黃色（提醒）</option>
-                <option value="green">🟢 綠色（活動）</option>
-                <option value="blue">🔵 藍色（資訊）</option>
-                <option value="gray">⚫ 灰色（一般）</option>
-              </select>
-              <input id="sticky-title" type="text" maxlength="80" placeholder="公告標題" class="rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs sm:col-span-6" />
-              <textarea id="sticky-body" rows="3" maxlength="500" placeholder="公告詳細內容（限 500 字）" class="rounded-xl border border-gray-300 bg-white p-3 text-xs sm:col-span-12"></textarea>
-            </div>
-            <div class="mt-2 flex flex-wrap items-center justify-between gap-2">
-              <label class="flex cursor-pointer items-center gap-2 text-xs font-bold text-gray-700">
-                <input id="sticky-expanded" type="checkbox" class="h-4 w-4 rounded border-gray-300" />
-                預設展開內容
-              </label>
-              <div class="flex gap-2">
-                <button onclick="resetStickyForm()" class="rounded-xl bg-gray-100 px-3 py-2 text-xs font-bold text-gray-600 hover:bg-gray-200">清空表單</button>
-                <button onclick="saveStickyForm()" class="rounded-xl bg-orange-600 px-4 py-2 text-xs font-black text-white shadow hover:bg-orange-700">✓ 儲存常駐公告</button>
-              </div>
-            </div>
-          </div>
-          <p id="sticky-status" class="mt-2 text-[11px] font-bold text-orange-900"></p>
-        </div>
-
-        <!-- 區塊 G：大螢幕投影與手機同步控制（僅管理端可操作） -->
-        <div class="rounded-2xl border border-indigo-200 bg-indigo-50/40 p-4">
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <h5 class="text-sm font-black text-indigo-950">🖥️ 大螢幕投影與手機同步控制（僅管理端可操作）</h5>
-              <p class="text-[11px] text-gray-600">
-                開啟「手機同步廣播」後，您在此或在禮拜頁翻頁，全場已開啟「跟隨」的手機會同步翻頁；一般會眾翻頁不會影響他人，也無法控制投影。
-              </p>
-            </div>
+          <div class="flex items-center gap-2">
+            <input
+              id="admin-new-passcode"
+              type="text"
+              maxlength="16"
+              placeholder="設定新通行碼..."
+              class="w-32 rounded-lg border border-amber-300 bg-white px-2.5 py-1 text-xs font-bold text-gray-800"
+            />
             <button
-              id="sync-master-btn"
-              onclick="toggleSyncMaster()"
-              class="rounded-xl bg-gray-800 px-3.5 py-2 text-xs font-black text-white shadow transition"
+              onclick="updateAdminPasscode()"
+              class="rounded-lg bg-amber-600 px-3 py-1 text-xs font-black text-white hover:bg-amber-700"
             >
-              🔒 手機同步廣播：關（點擊開啟）
+              更新通行碼
             </button>
           </div>
-          <div class="mt-3 flex flex-wrap items-center gap-2">
-            <button onclick="prevSlide()" class="rounded-xl bg-white px-3.5 py-2 text-xs font-black text-gray-700 ring-1 ring-gray-200 hover:bg-gray-100">← 上一頁</button>
-            <span id="admin-sync-slide-label" class="rounded-lg bg-white px-3 py-2 text-xs font-black text-indigo-900 ring-1 ring-indigo-200">目前：第 1 / 4 頁</span>
-            <button onclick="nextSlide()" class="rounded-xl bg-xmas-red px-3.5 py-2 text-xs font-black text-white shadow-sm hover:bg-xmas-darkred">下一頁 →</button>
-            <button onclick="toggleProjectorMode(true)" class="rounded-xl bg-gray-900 px-3.5 py-2 text-xs font-black text-amber-300 shadow hover:bg-black">🖥️ 本視窗滿版投影</button>
-            <button onclick="openIndependentProjectorWindow()" class="rounded-xl bg-xmas-darkred px-3.5 py-2 text-xs font-black text-white shadow hover:bg-red-900">🪟 彈出獨立大螢幕投影視窗</button>
-          </div>
-          <p id="sync-status-text" class="mt-2 text-[11px] font-bold text-indigo-900">目前未廣播：全場手機維持各自翻閱</p>
         </div>
 
-        <!-- 區塊 H：戰隊與積分控制（可自行新增隊伍、加減分；同步到所有手機） -->
-        <div class="rounded-2xl border border-rose-200 bg-rose-50/40 p-4">
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <h5 class="text-sm font-black text-rose-950">📊 戰隊與積分控制（新增隊伍、加減分，手機即時同步）</h5>
-            <button onclick="resetScores()" class="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-bold text-gray-600 hover:bg-gray-50">全部歸零</button>
-          </div>
-          <div class="mt-3 flex flex-wrap items-end gap-2 rounded-xl border border-rose-200 bg-white p-3">
-            <div class="min-w-[9rem] flex-1">
-              <label class="block text-[11px] font-black text-gray-700">新增隊伍名稱</label>
-              <input id="new-team-name" type="text" maxlength="12" placeholder="例如：以馬內利紫隊" class="mt-1 w-full rounded-lg border border-gray-300 px-2.5 py-2 text-sm font-bold focus:border-xmas-red focus:outline-none" />
-            </div>
-            <div>
-              <label class="block text-[11px] font-black text-gray-700">顏色</label>
-              <select id="new-team-color" class="mt-1 rounded-lg border border-gray-300 px-2 py-2 text-sm font-bold"></select>
-            </div>
-            <button onclick="scoreAddTeam()" class="rounded-xl bg-xmas-red px-4 py-2 text-sm font-black text-white shadow hover:bg-xmas-darkred">＋ 新增隊伍</button>
-          </div>
-          <div id="admin-score-list" class="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2"></div>
-          <p id="score-sync-status" class="mt-2 text-[11px] font-bold text-rose-950"></p>
-        </div>
-
-        <!-- 區塊 E：上午禮拜 PPT 投影片批量上傳（支援圖片集替換並同步大螢幕） -->
-        <div class="rounded-2xl border border-purple-200 bg-purple-50/40 p-4">
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <h5 class="text-sm font-black text-purple-950">📖 上午禮拜 PPT 投影片批量上傳（JPG / PNG 圖片集）</h5>
-              <p class="text-[11px] text-gray-600">
-                在 PowerPoint 點選「另存新檔 → JPEG / PNG（匯出全部投影片）」後一次全選上傳，系統將自動依頁碼排序並同步至獨立大螢幕與全場手機。
-              </p>
-            </div>
-            <button
-              onclick="resetCustomPptSlides()"
-              class="rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 hover:bg-gray-100"
-            >
-              ↺ 恢復內建預設簡報
-            </button>
-          </div>
-          <div class="mt-3 grid grid-cols-1 gap-3 md:grid-cols-12">
-            <div class="md:col-span-5">
-              <label class="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-purple-400 bg-white px-4 py-4 text-center transition hover:bg-purple-50">
-                <span class="text-xs font-black text-purple-900">📤 點擊一次全選上傳 PPT 投影片圖片</span>
-                <span class="mt-1 text-[11px] text-gray-500">自動依檔名頁碼排序・自動高畫質輕量壓縮</span>
-                <input id="admin-ppt-upload-input" type="file" accept="image/*" multiple class="hidden" onchange="handleCustomPptUpload(event)" />
-              </label>
-            </div>
-            <div class="md:col-span-7">
-              <div id="admin-ppt-status" class="text-xs font-bold text-purple-900">目前使用：內建預設 4 頁禮拜簡報</div>
-              <div id="admin-ppt-preview-list" class="mt-2 flex flex-wrap gap-2"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 區塊 F：大會官方照片上傳管理 -->
-        <div class="grid grid-cols-1 gap-4 border-t border-amber-100 pt-4 md:grid-cols-12">
-          <div class="space-y-2.5 md:col-span-5">
-            <label class="block text-xs font-black text-gray-800">📸 大會攝影組：新增橫移展示照片</label>
-            <input
-              id="official-photo-tag"
-              type="text"
-              placeholder="輸入場次標籤（如：羅浮高中運動場）"
-              value="羅浮高中運動場"
-              class="w-full rounded-xl border border-gray-300 px-3 py-2 text-xs"
-            />
-            <input
-              id="official-photo-caption"
-              type="text"
-              placeholder="輸入簡短圖說（如：長輩與青年同心傳接！）"
-              class="w-full rounded-xl border border-gray-300 px-3 py-2 text-xs"
-            />
-            <label class="flex cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-xmas-red/40 bg-red-50/40 px-4 py-3 text-xs font-black text-xmas-red transition hover:bg-red-50">
-              <span>＋ 選取照片（自動輕量化壓縮並加入橫移）</span>
-              <input id="official-photo-input" type="file" accept="image/*" multiple class="hidden" onchange="handleOfficialPhotoUpload(event)" />
-            </label>
-          </div>
-
-          <div class="md:col-span-7">
-            <div class="text-xs font-black text-gray-800">目前橫移展示列照片管理（點擊 × 可移除）：</div>
-            <div id="organizer-photo-list" class="mt-2 flex flex-wrap gap-2"></div>
+          </section>
           </div>
         </div>
       </div>
@@ -1744,6 +1821,7 @@
     function applySystemInfoView() {
       const welcome = isWelcomeMode();
       document.documentElement.classList.toggle('welcome-mode', welcome);
+      document.documentElement.classList.toggle('sysinfo-open', !!isStageInfoOpen);
       const fl = document.getElementById('stage-float');
       if (fl) fl.classList.toggle('hidden', welcome || !isStageInfoOpen);
       if (welcome) hideStageReminder();
@@ -3685,6 +3763,12 @@
       renderScoreAdmin();
     }
 
+    function scoreStep() {
+      const el = document.getElementById('score-step');
+      const v = Math.floor(Math.abs(Number(el && el.value)));
+      return v >= 1 ? Math.min(9999, v) : 10;
+    }
+
     function renderScoreAdmin() {
       const sel = document.getElementById('new-team-color');
       if (sel && !sel.options.length) {
@@ -3692,6 +3776,7 @@
       }
       const box = document.getElementById('admin-score-list');
       if (!box) return;
+      const step = scoreStep();
       box.innerHTML = scoreboard.teams
         .map(t => {
           const c = scoreColor(t.color);
@@ -3704,20 +3789,55 @@
                 <button onclick="scoreRemove('${id}')" class="rounded-md bg-red-50 px-2 py-0.5 text-[11px] font-bold text-xmas-red hover:bg-red-100">刪除</button>
               </div>
             </div>
-            <div class="my-1.5 text-center text-3xl font-black text-gray-900">${t.score}</div>
-            <div class="flex justify-center gap-1.5">
-              ${[-10, -5, 5, 10]
-                .map(d => `<button onclick="updateScore('${id}', ${d})" class="rounded-lg px-2.5 py-1 text-xs font-black ${d > 0 ? 'bg-xmas-red text-white' : 'bg-white text-gray-700 ring-1 ring-gray-200'}">${d > 0 ? '+' : ''}${d}</button>`)
-                .join('')}
+            <div class="mt-2 flex items-center justify-center gap-1.5">
+              <span class="text-[11px] font-bold text-gray-500">目前分數</span>
+              <input id="score-val-${id}" type="number" inputmode="numeric" min="0" max="99999" value="${t.score}" title="直接輸入分數後按 Enter 或點到別處即可儲存"
+                onchange="scoreSet('${id}', this.value)" onkeydown="if(event.key==='Enter')this.blur()"
+                class="w-24 rounded-lg border-2 border-gray-200 px-2 py-1.5 text-center text-2xl font-black text-gray-900 focus:border-xmas-red focus:outline-none" />
             </div>
-            <div class="mt-2 flex items-center gap-1.5">
-              <input id="score-custom-${id}" type="number" inputmode="numeric" min="1" placeholder="自訂分數" class="min-w-0 flex-1 rounded-lg border border-gray-300 px-2 py-1.5 text-sm font-bold focus:border-xmas-red focus:outline-none" />
-              <button onclick="scoreCustom('${id}', 1)" class="shrink-0 rounded-lg bg-xmas-green px-2.5 py-1.5 text-xs font-black text-white">加分</button>
-              <button onclick="scoreCustom('${id}', -1)" class="shrink-0 rounded-lg bg-gray-700 px-2.5 py-1.5 text-xs font-black text-white">扣分</button>
+            <div class="mt-2 grid grid-cols-2 gap-1.5">
+              <button onclick="updateScore('${id}', -${step})" class="rounded-lg bg-gray-700 px-2 py-2 text-sm font-black text-white hover:bg-gray-800">－ 扣 ${step}</button>
+              <button onclick="updateScore('${id}', ${step})" class="rounded-lg bg-xmas-green px-2 py-2 text-sm font-black text-white hover:bg-green-900">＋ 加 ${step}</button>
             </div>
           </div>`;
         })
         .join('');
+    }
+
+    // 直接輸入該隊分數（覆蓋）
+    function scoreSet(id, raw) {
+      if (!requireScoreAdmin()) return;
+      const t = scoreboard.teams.find(x => x.id === id);
+      if (!t) return;
+      const n = Number(raw);
+      if (raw === '' || !Number.isFinite(n)) {
+        renderScoreAdmin();
+        showToast('請輸入數字');
+        return;
+      }
+      const v = Math.min(99999, Math.max(0, Math.floor(n)));
+      if (v === t.score) return renderScoreAdmin();
+      t.score = v;
+      commitScoreboard();
+    }
+
+    /* ---- 後台兩欄：左側功能頁籤切換 ---- */
+    const ADMIN_PANE_KEY = 'xmas2026_admin_pane';
+    function showAdminPane(key) {
+      let found = false;
+      document.querySelectorAll('.admin-pane').forEach(p => {
+        const on = p.dataset.pane === key;
+        p.classList.toggle('hidden', !on);
+        if (on) found = true;
+      });
+      if (!found) return key === 'sysinfo' ? null : showAdminPane('sysinfo');
+      document.querySelectorAll('.admin-rail-btn').forEach(b => b.setAttribute('aria-current', b.dataset.paneBtn === key ? 'true' : 'false'));
+      try {
+        sessionStorage.setItem(ADMIN_PANE_KEY, key);
+      } catch (e) {}
+      const w = document.getElementById('admin-workspace');
+      if (w) w.scrollTop = 0;
+      if (key === 'score') renderScoreAdmin();
     }
 
     function requireScoreAdmin() {
@@ -3783,17 +3903,6 @@
       if (!t) return;
       t.score = Math.min(99999, Math.max(0, (Number(t.score) || 0) + delta));
       commitScoreboard();
-    }
-
-    function scoreCustom(id, sign) {
-      if (!requireScoreAdmin()) return;
-      const input = document.getElementById('score-custom-' + id);
-      const v = Math.floor(Math.abs(Number(input && input.value)));
-      if (!v) {
-        showToast('請先輸入要加／扣的分數');
-        return;
-      }
-      updateScore(id, sign * v);
     }
 
     function scoreAddTeam() {
@@ -3956,6 +4065,11 @@
       if (pill) {
         pill.classList.toggle('hidden', count === 0);
         pill.textContent = `${count}`;
+      }
+      const railPill = document.getElementById('rail-pending-pill');
+      if (railPill) {
+        railPill.classList.toggle('hidden', count === 0);
+        railPill.textContent = `${count}`;
       }
 
       const summary = document.getElementById('admin-pending-summary');
@@ -4183,7 +4297,10 @@
       renderNotices();
       renderLiveAdminList();
       // 入口在頁首右上角、面板在頁尾：開啟後自動帶到面板，不必自己往下找
-      if (isEditMode) setTimeout(() => panel.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
+      if (isEditMode) {
+        showAdminPane(sessionStorage.getItem(ADMIN_PANE_KEY) || 'sysinfo');
+        setTimeout(() => panel.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
+      }
     }
 
     function toggleEditMode() {
