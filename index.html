@@ -1398,7 +1398,6 @@
           <div class="admin-rail-sep"></div>
           <div class="admin-rail-group">場地導覽類</div>
           <button data-pane-btn="booths" onclick="showAdminPane('booths')" class="admin-rail-btn" aria-current="false"><span class="ico">🗺️</span><span class="sm:hidden">場名</span><span class="hidden sm:inline">場配名稱編輯</span></button>
-          <button data-pane-btn="routelink" onclick="showAdminPane('routelink')" class="admin-rail-btn" aria-current="false"><span class="ico">🔗</span><span class="sm:hidden">連結</span><span class="hidden sm:inline">導覽連結產生器</span></button>
           <div class="admin-rail-sep"></div>
           <div class="admin-rail-group">資料上傳類</div>
           <button data-pane-btn="ppt" onclick="showAdminPane('ppt')" class="admin-rail-btn" aria-current="false"><span class="ico">📖</span><span class="sm:hidden">PPT</span><span class="hidden sm:inline">禮拜 PPT 上傳</span></button>
@@ -1804,35 +1803,6 @@
           </div>
           <p id="luofu-sync-status" class="mt-2 text-[11px] font-bold text-indigo-950"></p>
           <div id="luofu-grid" class="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2"></div>
-        </div>
-          </section>
-          <section data-pane="routelink" class="admin-pane hidden space-y-4">
-        <!-- 區塊 L2：導覽連結產生器（來自「後台.html」模組；網址改指向本頁的場配導覽分頁） -->
-        <div class="rounded-2xl border border-emerald-200 bg-emerald-50/40 p-4">
-          <h5 class="text-sm font-black text-emerald-950">🔗 「下一場活動休息區」導覽連結產生器</h5>
-          <p class="mt-1 text-[11px] font-bold text-gray-600">產生專屬網址或 iframe 語法，貼到公告、群組或其他網站；點開會直接進入場配導覽並規劃好路線。</p>
-          <div class="mt-3 grid grid-cols-1 gap-3">
-            <div>
-              <label class="block text-[11px] font-black text-gray-700">1. 預設出發點</label>
-              <select id="luofu-from" onchange="luofuUpdateUrl()" class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm font-bold"></select>
-            </div>
-            <div>
-              <label class="block text-[11px] font-black text-gray-700">2. 下一場目標休息區／教學場地</label>
-              <select id="luofu-target" onchange="luofuUpdateUrl()" class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm font-bold"></select>
-            </div>
-            <div>
-              <label class="block text-[11px] font-black text-gray-700">3. 活動場次標籤（選填）</label>
-              <input id="luofu-session" type="text" oninput="luofuUpdateUrl()" placeholder="例如：第二場次小組休息區" class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm font-bold focus:border-emerald-600 focus:outline-none" />
-            </div>
-          </div>
-          <div class="mt-3 rounded-xl bg-slate-900 p-3 text-xs">
-            <div id="luofu-url" class="select-all break-all font-mono text-emerald-300"></div>
-            <div class="mt-2.5 flex flex-wrap gap-2">
-              <button onclick="luofuCopyUrl()" class="rounded-lg bg-emerald-600 px-3 py-1.5 font-bold text-white hover:bg-emerald-500">複製網址</button>
-              <button onclick="luofuCopyIframe()" class="rounded-lg bg-slate-700 px-3 py-1.5 font-bold text-white hover:bg-slate-600">複製 iframe 語法</button>
-              <a id="luofu-open" href="#" target="_blank" rel="noopener" class="rounded-lg bg-white/10 px-3 py-1.5 font-bold text-white hover:bg-white/20">在新分頁預覽</a>
-            </div>
-          </div>
         </div>
           </section>
           </div>
@@ -4127,81 +4097,11 @@
       ).join('');
     }
 
-    function populateLuofuSelectors() {
-      const opts = [
-        ...LUOFU_SPECIAL.map(v => ({ id: v.id, text: v.label })),
-        ...LUOFU_META.map(b => ({
-          id: b.id,
-          text: ['A', 'B', 'C'].includes(b.id) ? `${luofuNames[b.id] || LUOFU_DEFAULT_NAMES[b.id]} (${b.id})` : `${b.id}號 ${luofuNames[b.id] || '休息區'}`
-        }))
-      ];
-      const fromSel = document.getElementById('luofu-from');
-      const tgtSel = document.getElementById('luofu-target');
-      if (!fromSel || !tgtSel) return;
-      const keepFrom = fromSel.value || 'MAIN_GATE';
-      const keepTgt = tgtSel.value || '1';
-      const html = opts.map(o => `<option value="${escapeAttr(o.id)}">${escapeHtml(o.text)}</option>`).join('');
-      fromSel.innerHTML = html;
-      tgtSel.innerHTML = html;
-      fromSel.value = keepFrom;
-      tgtSel.value = keepTgt;
-    }
-
-    function luofuBuildUrl() {
-      const from = document.getElementById('luofu-from').value;
-      const target = document.getElementById('luofu-target').value;
-      const session = document.getElementById('luofu-session').value.trim();
-      const p = new URLSearchParams();
-      p.set('tab', 'map');
-      if (from && from !== 'MAIN_GATE') p.set('from', from);
-      p.set('target', target);
-      if (session) p.set('session', session);
-      return location.href.split(/[?#]/)[0] + '?' + p.toString();
-    }
-
-    function luofuUpdateUrl() {
-      const el = document.getElementById('luofu-url');
-      if (!el) return;
-      const url = luofuBuildUrl();
-      el.textContent = url;
-      const a = document.getElementById('luofu-open');
-      if (a) a.href = url;
-    }
-
-    function luofuCopy(text, okMsg) {
-      const done = () => showToast(okMsg);
-      if (navigator.clipboard && window.isSecureContext) {
-        navigator.clipboard.writeText(text).then(done, () => luofuCopyFallback(text, done));
-      } else {
-        luofuCopyFallback(text, done);
-      }
-    }
-    function luofuCopyFallback(text, done) {
-      const ta = document.createElement('textarea');
-      ta.value = text;
-      ta.style.cssText = 'position:fixed;opacity:0';
-      document.body.appendChild(ta);
-      ta.select();
-      try {
-        document.execCommand('copy');
-      } catch (e) {}
-      document.body.removeChild(ta);
-      done();
-    }
-    function luofuCopyUrl() {
-      luofuCopy(luofuBuildUrl(), '已複製導覽連結！');
-    }
-    function luofuCopyIframe() {
-      luofuCopy(`<iframe src="${luofuBuildUrl()}" width="100%" height="680" style="border:0;border-radius:16px;" loading="lazy"></iframe>`, '已複製 iframe 嵌入語法！');
-    }
-
     // 套用名稱：寫入本機、更新後台畫面、推送給 3D 模組
     function luofuCommit(names, fromServer) {
       luofuNames = { ...LUOFU_DEFAULT_NAMES, ...names };
       localStorage.setItem(LUOFU_KEY, JSON.stringify(luofuNames));
       renderLuofuGrid();
-      populateLuofuSelectors();
-      luofuUpdateUrl();
       postToMap({ type: 'LUOFU_BOOTHS', names: luofuNames });
       if (!fromServer) {
         luofuDirty = true;
@@ -4296,8 +4196,6 @@
       luofuNames = merged;
       localStorage.setItem(LUOFU_KEY, JSON.stringify(luofuNames));
       if (!typing) renderLuofuGrid();
-      populateLuofuSelectors();
-      luofuUpdateUrl();
       postToMap({ type: 'LUOFU_BOOTHS', names: luofuNames });
     }
 
@@ -6394,8 +6292,6 @@
       renderStickyAdmin();
       renderLiveAdminList();
       renderLuofuGrid();
-      populateLuofuSelectors();
-      luofuUpdateUrl();
       initWelcomeTextSave();
       startLiveStatePolling();
 
