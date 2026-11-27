@@ -117,6 +117,19 @@
       padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px));
     }
 
+    /* 活動流程時間軸：左欄（時間軸）窄、右欄（活動資訊）寬 */
+    .tl-row { display: flex; align-items: stretch; gap: 0.75rem; }
+    .tl-row.hidden { display: none; }
+    .tl-left { position: relative; flex: 0 0 6.2rem; padding-bottom: 0.25rem; }
+    .tl-left::before { content: ''; position: absolute; left: 50%; top: 3.6rem; bottom: -1.1rem; width: 2px; margin-left: -1px; background: repeating-linear-gradient(to bottom, #FCD34D 0 6px, transparent 6px 10px); }
+    .tl-row:last-child .tl-left::before { display: none; }
+    .tl-card { flex: 1; min-width: 0; }
+    .tl-card > h3:first-child { margin-top: 0; }
+    @media (min-width: 640px) {
+      .tl-row { gap: 1.25rem; }
+      .tl-left { flex-basis: 9rem; }
+    }
+
     /* ===== 系統資訊關閉時的標題區：墨綠金色質感版（文字與地點在上、倒數在下） ===== */
     html:not(.sysinfo-open) header {
       background:
@@ -931,13 +944,14 @@
         </div>
       </div>
 
-      <div id="timeline-container" class="space-y-4">
+      <div id="timeline-container" class="space-y-5">
         <!-- 時段 1 -->
-        <div data-period="morning" class="tl-item rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
-          <div class="flex flex-wrap items-center gap-2">
-            <span class="rounded-full bg-xmas-darkred px-3 py-1 text-xs font-black text-white">08:30 - 09:00</span>
-            <span class="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-bold text-amber-900">📍 羅浮國小 / 羅浮高中 雙校入口</span>
+        <div data-period="morning" class="tl-item tl-row">
+          <div class="tl-left">
+            <span class="rounded-xl bg-xmas-darkred px-2 py-1.5 text-[11px] sm:text-xs font-black text-white block w-full text-center">08:30 - 09:00</span>
+            <span class="rounded-xl bg-amber-100 px-2 py-1 text-[10px] sm:text-xs font-bold text-amber-900 mt-1.5 block w-full text-center leading-snug">📍 羅浮國小 / 羅浮高中 雙校入口</span>
           </div>
+          <div class="tl-card rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
           <h3 data-editable class="mt-2.5 text-base font-black text-gray-900 sm:text-lg">迎賓報到與跨世代分流引導</h3>
           <p data-editable class="mt-1 text-sm leading-relaxed text-gray-600">
             各區會友抵達後領取分隊色帶與長輩紙本手冊，依年齡層分流進入主日禮拜或兒童主日學場地。
@@ -954,14 +968,16 @@
               </ul>
             </div>
           </div>
+          </div>
         </div>
 
         <!-- 時段 2：雙軌禮拜 -->
-        <div data-period="morning" class="tl-item rounded-2xl border-2 border-red-200 bg-white p-4 shadow-sm sm:p-5">
-          <div class="flex flex-wrap items-center gap-2">
-            <span class="rounded-full bg-xmas-red px-3 py-1 text-xs font-black text-white">09:00 - 10:50</span>
-            <span class="rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-bold text-xmas-darkred">⛪ 上午雙校同步禮拜</span>
+        <div data-period="morning" class="tl-item tl-row">
+          <div class="tl-left">
+            <span class="rounded-xl bg-xmas-red px-2 py-1.5 text-[11px] sm:text-xs font-black text-white block w-full text-center">09:00 - 10:50</span>
+            <span class="rounded-xl bg-red-100 px-2 py-1 text-[10px] sm:text-xs font-bold text-xmas-darkred mt-1.5 block w-full text-center leading-snug">⛪ 上午雙校同步禮拜</span>
           </div>
+          <div class="tl-card rounded-2xl border-2 border-red-200 bg-white p-4 shadow-sm sm:p-5">
           <h3 data-editable class="mt-2.5 text-base font-black text-gray-900 sm:text-lg">聖誕感恩主日禮拜 ＆ 兒童主日學歡慶</h3>
           <p data-editable class="mt-1 text-sm leading-relaxed text-gray-600">
             兩校區同步進行聖誕敬拜讚美、信息分享與獻詩感恩，青年與長輩同心領受聖誕祝福。
@@ -997,14 +1013,16 @@
               </div>
             </div>
           </div>
+          </div>
         </div>
 
         <!-- 時段 3 -->
-        <div data-period="morning" class="tl-item rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
-          <div class="flex flex-wrap items-center gap-2">
-            <span class="rounded-full bg-amber-600 px-3 py-1 text-xs font-black text-white">11:00 - 12:45</span>
-            <span class="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-bold text-amber-900">🍱 全體匯合・聖誕愛宴午餐</span>
+        <div data-period="morning" class="tl-item tl-row">
+          <div class="tl-left">
+            <span class="rounded-xl bg-amber-600 px-2 py-1.5 text-[11px] sm:text-xs font-black text-white block w-full text-center">11:00 - 12:45</span>
+            <span class="rounded-xl bg-amber-100 px-2 py-1 text-[10px] sm:text-xs font-bold text-amber-900 mt-1.5 block w-full text-center leading-snug">🍱 全體匯合・聖誕愛宴午餐</span>
           </div>
+          <div class="tl-card rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
           <h3 data-editable class="mt-2.5 text-base font-black text-gray-900 sm:text-lg">千人聖誕愛宴與跨代桌邊團契</h3>
           <p data-editable class="mt-1 text-sm leading-relaxed text-gray-600">
             兩校區會眾匯合享用部落風味與聖誕佳餚，餐後稍作休息並整隊準備下午競賽。
@@ -1021,14 +1039,16 @@
               </ul>
             </div>
           </div>
+          </div>
         </div>
 
         <!-- 時段 4 -->
-        <div data-period="afternoon" class="tl-item rounded-2xl border border-emerald-200 bg-white p-4 shadow-sm sm:p-5">
-          <div class="flex flex-wrap items-center gap-2">
-            <span class="rounded-full bg-xmas-green px-3 py-1 text-xs font-black text-white">13:00 - 15:30</span>
-            <span class="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-bold text-xmas-green">🏆 羅浮高中運動場</span>
+        <div data-period="afternoon" class="tl-item tl-row">
+          <div class="tl-left">
+            <span class="rounded-xl bg-xmas-green px-2 py-1.5 text-[11px] sm:text-xs font-black text-white block w-full text-center">13:00 - 15:30</span>
+            <span class="rounded-xl bg-emerald-100 px-2 py-1 text-[10px] sm:text-xs font-bold text-xmas-green mt-1.5 block w-full text-center leading-snug">🏆 羅浮高中運動場</span>
           </div>
+          <div class="tl-card rounded-2xl border border-emerald-200 bg-white p-4 shadow-sm sm:p-5">
           <h3 data-editable class="mt-2.5 text-base font-black text-gray-900 sm:text-lg">跨世代聖誕趣味競賽（三大場次）</h3>
           <p data-editable class="mt-1 text-sm leading-relaxed text-gray-600">
             四色戰隊依序進行《跨時代金曲猜猜看》、《聖誕好禮接力傳》與《默契比手畫腳大挑戰》，老少合作爭取最高榮譽。
@@ -1045,14 +1065,16 @@
               </ul>
             </div>
           </div>
+          </div>
         </div>
 
         <!-- 時段 5 -->
-        <div data-period="afternoon" class="tl-item rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
-          <div class="flex flex-wrap items-center gap-2">
-            <span class="rounded-full bg-gray-800 px-3 py-1 text-xs font-black text-white">15:30 - 16:10</span>
-            <span class="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-bold text-amber-900">📸 羅浮高中運動場主舞台</span>
+        <div data-period="afternoon" class="tl-item tl-row">
+          <div class="tl-left">
+            <span class="rounded-xl bg-gray-800 px-2 py-1.5 text-[11px] sm:text-xs font-black text-white block w-full text-center">15:30 - 16:10</span>
+            <span class="rounded-xl bg-amber-100 px-2 py-1 text-[10px] sm:text-xs font-bold text-amber-900 mt-1.5 block w-full text-center leading-snug">📸 羅浮高中運動場主舞台</span>
           </div>
+          <div class="tl-card rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
           <h3 data-editable class="mt-2.5 text-base font-black text-gray-900 sm:text-lg">頒獎典禮、千人大合照與平安賦歸</h3>
           <p data-editable class="mt-1 text-sm leading-relaxed text-gray-600">
             頒發跨代同心獎與精神總錦標，拍攝全體聖誕大合照後祝福禱告賦歸。
@@ -1065,6 +1087,7 @@
             <div class="note-content mt-2 hidden rounded-xl border border-amber-200 bg-amber-50/50 p-3 text-xs leading-relaxed text-gray-700">
               <p data-editable>大合照由大會官方攝影組統一拍攝後上傳至頂部橫移展示牆，散場時請協助確認長輩隨身物品與接駁車班次。</p>
             </div>
+          </div>
           </div>
         </div>
       </div>
@@ -5955,29 +5978,6 @@
     const APPROVED_DANMAKU_KEY = 'xmas2026_approved_danmaku';
     const PENDING_DANMAKU_KEY = 'xmas2026_pending_danmaku';
 
-    const defaultDanmaku = [
-      {
-        id: 'd1',
-        name: '青年詩班 小雅',
-        text: '今天看到松年長輩跟我們青年一起站在台上唱《榮耀歸於至高真神》，阿嬤唱到眼眶泛淚，那一刻真的深深感受到跨世代合一的感動！'
-      },
-      {
-        id: 'd2',
-        name: '兒主同工 阿哲',
-        text: '小朋友在羅浮高中做完祝福卡後，中午一看到阿公就衝過去抱住他送上卡片，全場都暖起來了！'
-      },
-      {
-        id: 'd3',
-        name: '橄欖山綠隊 小恩',
-        text: '下午金曲猜猜看長輩們前奏一秒就猜出聖詩歌名，直接帶我們整隊逆轉勝，太神啦！'
-      },
-      {
-        id: 'd4',
-        name: '復興青年 阿豪',
-        text: '謝謝籌備團隊把長輩的紙本手冊跟我們的手機網頁設計得這麼貼心，整天陪阿公跑場超順利！'
-      }
-    ];
-
     function updateCharCount() {
       const textarea = document.getElementById('ref-text');
       const len = textarea.value.length;
@@ -5989,7 +5989,7 @@
 
     function getApprovedDanmaku() {
       const approved = JSON.parse(localStorage.getItem(APPROVED_DANMAKU_KEY) || '[]');
-      return [...approved, ...defaultDanmaku];
+      return approved;
     }
 
     function renderDanmakuWall() {
@@ -6020,6 +6020,13 @@
 
       const t1 = document.getElementById('danmaku-track-1');
       const t2 = document.getElementById('danmaku-track-2');
+      if (!list.length) {
+        const empty = '<div class="w-full px-4 py-3 text-center text-sm font-bold text-amber-100/80">還沒有祝福彈幕，成為第一個留言的人吧！</div>';
+        if (t1) { t1.innerHTML = empty; t1.style.animation = 'none'; t1.style.width = '100%'; }
+        if (t2) { t2.innerHTML = ''; t2.style.animation = 'none'; }
+        return;
+      }
+      [t1, t2].forEach(t => { if (t) { t.style.animation = ''; t.style.width = ''; } });
       if (t1) t1.innerHTML = buildTrackHtml(row1);
       if (t2) t2.innerHTML = buildTrackHtml(row2);
     }
@@ -6103,7 +6110,7 @@
       if (approvedListEl) {
         const approved = JSON.parse(localStorage.getItem(APPROVED_DANMAKU_KEY) || '[]');
         if (approved.length === 0) {
-          approvedListEl.innerHTML = `<div class="text-[11px] text-gray-400">目前僅顯示內建預設祝福彈幕</div>`;
+          approvedListEl.innerHTML = `<div class="text-[11px] text-gray-400">目前沒有已上牆的祝福彈幕</div>`;
         } else {
           approvedListEl.innerHTML = approved
             .map(
