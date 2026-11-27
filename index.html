@@ -1354,6 +1354,7 @@
               ✓ 套用並即時同步人數公告
             </button>
           </div>
+          <p id="gq-sync-status" class="mt-2 text-[11px] font-bold text-emerald-900"></p>
         </div>
 
           </section>
@@ -2529,6 +2530,7 @@
         applySystemInfoFromServer(live.systemInfo);
         applyLiveNotices(live.notices, live.latestNoticeId, initial);
         applyScoreboardFromServer(live.scoreboard);
+        applyGameQuotasFromServer(live.gameQuotas, initial);
         applyStickyFromServer(live.sticky);
         updateWelcomeStatus(`已連線・${nowHMS()} 更新`);
       } finally {
@@ -3666,6 +3668,83 @@
       document.getElementById('gq-note').value = g.note;
     }
 
+    /* ---- 出賽人數同步（管理員設定 → 後端 → 所有手機） ---- */
+    const QUOTA_FIELDS = ['total', 'elder', 'youth', 'other', 'note'];
+    let gqDirty = false;
+    let gqBusy = false;
+    let gqTimer = null;
+
+    function quotaView(list) {
+      return (list || []).map(g => {
+        const o = {};
+        QUOTA_FIELDS.forEach(k => (o[k] = String((g && g[k]) || '')));
+        return o;
+      });
+    }
+
+    function setGqStatus(msg) {
+      const el = document.getElementById('gq-sync-status');
+      if (el) el.textContent = msg;
+    }
+
+    function commitGameQuotas() {
+      localStorage.setItem(GAME_QUOTA_KEY, JSON.stringify(gamesData));
+      gqDirty = true;
+      setGqStatus(API_URL ? '⏳ 同步中…' : '⚠️ 尚未設定 API_URL：只有此瀏覽器看得到，手機收不到');
+      clearTimeout(gqTimer);
+      gqTimer = setTimeout(pushGameQuotas, 200);
+    }
+
+    async function pushGameQuotas() {
+      if (!API_URL) {
+        gqDirty = false;
+        return;
+      }
+      if (gqBusy) {
+        gqTimer = setTimeout(pushGameQuotas, 300);
+        return;
+      }
+      const code = sessionStorage.getItem(ADMIN_CODE_SESSION_KEY);
+      if (!code) {
+        setGqStatus('⚠️ 找不到管理員驗證資訊，請鎖定後重新登入');
+        return;
+      }
+      gqBusy = true;
+      const view = quotaView(gamesData);
+      const snapshot = JSON.stringify(view);
+      const res = await apiPost({ action: 'setGameQuotas', adminPasscode: code, quotas: view });
+      gqBusy = false;
+      if (res && res.ok) {
+        if (JSON.stringify(quotaView(gamesData)) === snapshot) gqDirty = false;
+        setGqStatus(`✅ 已同步到手機（${nowHMS()}）`);
+        showToast('✅ 出賽人數已同步到所有手機');
+      } else {
+        setGqStatus('❌ 同步失敗：' + syncErrText(res) + '（5 秒後自動重試）');
+        showToast('❌ 出賽人數同步失敗：' + syncErrText(res), 4500);
+        clearTimeout(gqTimer);
+        gqTimer = setTimeout(pushGameQuotas, 5000);
+      }
+    }
+
+    // 後端 → 本機：只更新「人數與召集令」五個欄位，其餘（標題、規則）維持原樣
+    function applyGameQuotasFromServer(gq, initial) {
+      if (!gq || !Array.isArray(gq.quotas) || !gq.quotas.length || gqBusy || gqDirty) return;
+      const merged = gamesData.map((g, i) => {
+        const sv = gq.quotas[i];
+        if (!sv) return g;
+        const o = { ...g };
+        QUOTA_FIELDS.forEach(k => {
+          if (sv[k]) o[k] = String(sv[k]);
+        });
+        return o;
+      });
+      if (JSON.stringify(quotaView(merged)) === JSON.stringify(quotaView(gamesData))) return;
+      gamesData = merged;
+      localStorage.setItem(GAME_QUOTA_KEY, JSON.stringify(gamesData));
+      renderCurrentGamePanel();
+      if (!initial && !isAdminAuthorized) showToast('🏆 下午競賽出賽人數已更新', 3500);
+    }
+
     function saveGameQuota() {
       const idx = Number(document.getElementById('admin-game-select').value || 0);
       gamesData[idx] = {
@@ -3676,10 +3755,9 @@
         other: document.getElementById('gq-other').value.trim() || gamesData[idx].other,
         note: document.getElementById('gq-note').value.trim() || gamesData[idx].note
       };
-      localStorage.setItem(GAME_QUOTA_KEY, JSON.stringify(gamesData));
       selectGame(idx);
       broadcastSync('GAME_QUOTA_UPDATE', { idx });
-      showToast('已更新並即時同步該場次出賽人數公告！');
+      commitGameQuotas();
     }
 
     const SCORE_KEY = 'xmas2026_team_scores'; // 舊版固定四隊（僅用來搬移舊資料）
@@ -4337,6 +4415,11 @@
       selectGame(0);
       loadScoreboard();
       renderScores();
+      // 出賽人數與計分板已同步到後端：一併把預設值送出，否則下一次輪詢會把舊資料換回來
+      if (isAdminAuthorized && API_URL) {
+        commitGameQuotas();
+        commitScoreboard();
+      }
       broadcastSync('SNOW_UPDATE', {});
       broadcastSync('STAGE_UPDATE', {});
       broadcastSync('GAME_QUOTA_UPDATE', {});
