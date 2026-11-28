@@ -1499,6 +1499,7 @@
           <button data-pane-btn="prophecy" onclick="showAdminPane('prophecy')" class="admin-rail-btn" aria-current="false"><span class="ico">🔮</span><span class="sm:hidden">競猜</span><span class="hidden sm:inline">聖誕先知競猜</span></button>
           <div class="admin-rail-sep"></div>
           <div class="admin-rail-group">系統安全類</div>
+          <button data-pane-btn="backup" onclick="showAdminPane('backup')" class="admin-rail-btn" aria-current="false"><span class="ico">💾</span><span class="sm:hidden">備份</span><span class="hidden sm:inline">資料備份與還原</span></button>
           <button data-pane-btn="security" onclick="showAdminPane('security')" class="admin-rail-btn" aria-current="false"><span class="ico">🔐</span><span class="sm:hidden">密碼</span><span class="hidden sm:inline">通行碼設定</span></button>
           </aside>
           <div id="admin-workspace" class="min-w-0 flex-1 overflow-y-auto p-2.5 sm:p-5" style="max-height: min(78vh, 46rem)">
@@ -1901,6 +1902,32 @@
                 </div>
               </div>
               <p id="pa-status-msg" class="mt-2 text-[11px] font-bold text-purple-900"></p>
+            </div>
+          </section>
+
+          <section data-pane="backup" class="admin-pane hidden space-y-4">
+            <div class="rounded-2xl border border-sky-200 bg-sky-50/50 p-4">
+              <h5 class="text-sm font-black text-sky-900">💾 資料備份與還原</h5>
+              <p class="mt-0.5 text-[11px] leading-relaxed text-gray-600">備份檔包含：後端同步的資料（公告、競賽場次、積分板、場配名稱、活動流程與標題文字、競猜與答題名單、系統資訊開關）以及這個瀏覽器裡的設定（雪花、上傳的 PPT 與彈幕等）。建議活動前、活動中重要修改後各備份一次。</p>
+
+              <div class="mt-3 rounded-xl border border-sky-200 bg-white p-3">
+                <div class="text-xs font-black text-sky-900">① 下載備份</div>
+                <p id="bk-last" class="mt-1 text-[11px] text-gray-500"></p>
+                <div class="mt-2 flex flex-wrap gap-2">
+                  <button onclick="exportBackup()" class="rounded-xl bg-sky-700 px-4 py-2 text-xs font-black text-white shadow hover:bg-sky-900">💾 下載完整備份檔（.json）</button>
+                  <button onclick="exportCleanHtml()" class="rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs font-bold text-gray-700 hover:bg-gray-50">📄 匯出目前網頁 HTML</button>
+                </div>
+                <p class="mt-1.5 text-[11px] text-gray-500">只改在畫面上、沒有自動儲存的文字（例如其他頁面的靜態說明），要用「匯出目前網頁 HTML」才會保留。</p>
+              </div>
+
+              <div class="mt-3 rounded-xl border border-amber-200 bg-white p-3">
+                <div class="text-xs font-black text-amber-900">② 從備份檔還原</div>
+                <input id="bk-file" type="file" accept=".json,application/json" onchange="previewBackupFile(this)" class="mt-2 block w-full text-xs file:mr-3 file:rounded-lg file:border-0 file:bg-amber-100 file:px-3 file:py-1.5 file:text-xs file:font-black file:text-amber-900" />
+                <div id="bk-preview" class="mt-2 text-xs text-gray-700"></div>
+                <button id="bk-restore-btn" onclick="confirmRestoreBackup()" class="mt-2 hidden rounded-xl bg-amber-600 px-4 py-2 text-xs font-black text-white shadow hover:bg-amber-700">⚠️ 確認還原（會覆蓋目前資料）</button>
+                <p class="mt-1.5 text-[11px] text-gray-500">還原前會先自動下載一份「目前資料」的備份，萬一還錯可以再還原回來。還原後頁面會自動重新整理。</p>
+              </div>
+              <p id="bk-msg" class="mt-2 text-[11px] font-bold text-sky-900"></p>
             </div>
           </section>
 
@@ -4270,6 +4297,117 @@
       if (prev && ver && prev.updatedAt === ver) return;
       localStorage.setItem(TIMELINE_TEXTS_KEY, JSON.stringify({ texts: t.texts, updatedAt: ver }));
       tlApply(t.texts);
+    }
+
+    /* ==================== 資料備份與還原 ==================== */
+    const BACKUP_LOCAL_KEYS = [
+      'xmas2026_welcome_texts', 'xmas2026_timeline_texts', 'xmas2026_game_quotas', 'xmas2026_scoreboard', 'xmas2026_team_scores',
+      'xmas2026_sticky_notices', 'xmas2026_live_notices', 'xmas2026_stage_schedule', 'xmas2026_snow_enabled', 'xmas2026_snow_count',
+      'xmas2026_ppt_custom_slides', 'xmas2026_pending_danmaku', 'xmas2026_approved_danmaku', 'luofu_campus_booths_v6'
+    ];
+    const BACKUP_LAST_KEY = 'xmas2026_last_backup';
+    let pendingBackup = null;
+
+    function setBkMsg(msg) {
+      const el = document.getElementById('bk-msg');
+      if (el) el.textContent = msg;
+    }
+    function renderBackupStatus() {
+      const el = document.getElementById('bk-last');
+      if (!el) return;
+      let t = null;
+      try { t = localStorage.getItem(BACKUP_LAST_KEY); } catch (e) {}
+      el.textContent = t ? '上次在這個瀏覽器下載備份：' + new Date(t).toLocaleString('zh-TW', { hour12: false }) : '這個瀏覽器還沒有下載過備份。';
+    }
+    function bkStamp(d) {
+      const z = n => String(n).padStart(2, '0');
+      return `${d.getFullYear()}${z(d.getMonth() + 1)}${z(d.getDate())}-${z(d.getHours())}${z(d.getMinutes())}`;
+    }
+
+    async function exportBackup(prefix) {
+      const local = {};
+      BACKUP_LOCAL_KEYS.forEach(k => {
+        try {
+          const v = localStorage.getItem(k);
+          if (v !== null) local[k] = v;
+        } catch (e) {}
+      });
+      let server = null;
+      let serverNote = '';
+      if (API_URL && isAdminAuthorized && sessionStorage.getItem(ADMIN_CODE_SESSION_KEY)) {
+        setBkMsg('⏳ 正在讀取後端資料…');
+        const res = await apiPost({ action: 'exportBackup', adminPasscode: sessionStorage.getItem(ADMIN_CODE_SESSION_KEY) });
+        if (res && res.ok) server = res.backup;
+        else serverNote = '（後端資料讀取失敗：' + ((res && res.error) || '未知錯誤') + '，只備份了這個瀏覽器的資料；請確認 Code.gs 已重新部署）';
+      } else if (!API_URL) {
+        serverNote = '（尚未設定 API_URL，只備份這個瀏覽器的資料）';
+      }
+      const now = new Date();
+      const data = { format: 'xmas2026-backup', version: 1, createdAt: now.toISOString(), local, server };
+      const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `xmas2026-${prefix || 'backup'}-${bkStamp(now)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+      try { localStorage.setItem(BACKUP_LAST_KEY, now.toISOString()); } catch (e) {}
+      renderBackupStatus();
+      const n = server && server.state ? Object.keys(server.state).length : 0;
+      setBkMsg(`✅ 已下載備份檔：後端 ${n} 項資料、本機 ${Object.keys(local).length} 項設定 ${serverNote}`);
+      return true;
+    }
+
+    function previewBackupFile(input) {
+      pendingBackup = null;
+      const box = document.getElementById('bk-preview');
+      const btn = document.getElementById('bk-restore-btn');
+      if (btn) btn.classList.add('hidden');
+      const f = input.files && input.files[0];
+      if (!f) { box.textContent = ''; return; }
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const d = JSON.parse(String(reader.result));
+          if (!d || d.format !== 'xmas2026-backup' || !d.local) throw new Error('不是本網頁產生的備份檔');
+          pendingBackup = d;
+          const sKeys = d.server && d.server.state ? Object.keys(d.server.state) : [];
+          box.innerHTML = `
+            <div class="rounded-lg bg-amber-50 p-2.5 ring-1 ring-amber-200">
+              <div class="font-black text-amber-900">備份時間：${escapeHtml(new Date(d.createdAt).toLocaleString('zh-TW', { hour12: false }))}</div>
+              <div>後端資料：${sKeys.length ? sKeys.length + ' 項（' + escapeHtml(sKeys.join('、')) + '）' : '<span class="font-bold text-red-700">沒有（這份備份只含本機資料）</span>'}</div>
+              <div>本機設定：${Object.keys(d.local).length} 項</div>
+            </div>`;
+          if (btn) btn.classList.remove('hidden');
+        } catch (e) {
+          box.innerHTML = '<span class="font-bold text-red-700">❌ 無法讀取：' + escapeHtml(e.message || '檔案格式錯誤') + '</span>';
+        }
+      };
+      reader.readAsText(f);
+    }
+
+    async function confirmRestoreBackup() {
+      const d = pendingBackup;
+      if (!d) return;
+      if (!isAdminAuthorized) return showToast('⚠️ 請先登入管理員');
+      const hasServer = !!(d.server && d.server.state && Object.keys(d.server.state).length);
+      if (!confirm('確定還原？\n・目前的資料會被備份檔覆蓋\n・' + (hasServer ? '後端資料也會一起還原，所有手機會跟著更新' : '這份備份沒有後端資料，只還原這個瀏覽器的設定') + '\n\n還原前會先自動下載一份目前資料的備份。')) return;
+      await exportBackup('before-restore');
+      Object.keys(d.local).forEach(k => {
+        if (BACKUP_LOCAL_KEYS.indexOf(k) < 0) return;
+        try { localStorage.setItem(k, d.local[k]); } catch (e) {}
+      });
+      let msg = '✅ 已還原這個瀏覽器的設定';
+      if (hasServer) {
+        const code = sessionStorage.getItem(ADMIN_CODE_SESSION_KEY);
+        const res = code ? await apiPost({ action: 'restoreBackup', adminPasscode: code, state: d.server.state }) : null;
+        if (res && res.ok) msg = `✅ 已還原後端 ${res.restored.length} 項資料與本機設定`;
+        else { setBkMsg('❌ 後端還原失敗：' + ((res && res.error) || '請確認 Code.gs 已重新部署，且仍在管理員登入狀態') + '（本機設定已還原）'); return; }
+      }
+      setBkMsg(msg + '，即將重新整理頁面…');
+      setTimeout(() => location.reload(), 1600);
     }
 
     /* ==================== 聖誕先知大考驗（競猜＋隨機抽獎） ==================== */
@@ -6691,6 +6829,7 @@
       const w = document.getElementById('admin-workspace');
       if (w) w.scrollTop = 0;
       if (key === 'score') renderScoreAdmin();
+      if (key === 'backup') renderBackupStatus();
       if (key === 'prophecy') { renderProphecyAdmin(); refreshProphecyAdmin(true); }
     }
 
