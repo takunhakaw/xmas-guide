@@ -4634,7 +4634,7 @@
             const res = body.querySelector('#pt-result');
             if (!res) return;
             res.innerHTML = isMe
-              ? `<div class="p-pop text-2xl font-black text-emerald-300">🎉 恭喜你！就是你！</div><div class="mt-1 text-base font-bold text-amber-200">請向大會工作人員領取${p.prize ? '「' + escapeHtml(p.prize) + '」' : '小禮物'}</div>`
+              ? `<div class="p-pop text-2xl font-black text-emerald-300">🎉 恭喜你！就是你！</div><div class="mt-1 text-base font-bold text-amber-200">請到"報到台"向工作人員領取"聖誕人工作式的秘密禮物"${p.prize ? '「' + escapeHtml(p.prize) + '」' : '小禮物'}</div>`
               : `<div class="p-pop text-xl font-black text-amber-200">🎉 恭喜 ${escapeHtml(p.winner.name)}！</div>${p.prize ? `<div class="mt-1 text-sm font-bold text-purple-200">獎品：${escapeHtml(p.prize)}</div>` : ''}`;
             spawnConfetti(el, 28);
             btn.disabled = false;
