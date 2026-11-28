@@ -130,6 +130,15 @@
       #game-tabs .tl-row, #timeline-container .tl-row { gap: 1rem; }
       #game-tabs .tl-left, #timeline-container .tl-left { flex-basis: 5.5rem; }
     }
+    /* 聖誕先知大考驗：水晶球與抽獎動畫 */
+    @keyframes pfloat { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-8px) } }
+    @keyframes ppop { 0% { transform: scale(0.4); opacity: 0 } 60% { transform: scale(1.12); opacity: 1 } 100% { transform: scale(1) } }
+    @keyframes pfall { 0% { transform: translateY(-10vh) rotate(0); opacity: 0 } 10% { opacity: 1 } 100% { transform: translateY(105vh) rotate(360deg); opacity: 0.9 } }
+    @keyframes pglow { 0%, 100% { box-shadow: 0 0 18px rgba(251, 191, 36, 0.5) } 50% { box-shadow: 0 0 42px rgba(251, 191, 36, 0.95) } }
+    .p-float { animation: pfloat 2.6s ease-in-out infinite; }
+    .p-pop { animation: ppop 0.7s cubic-bezier(0.2, 1.2, 0.4, 1) both; }
+    .p-glow { animation: pglow 1.6s ease-in-out infinite; }
+    .p-fall { position: absolute; top: 0; animation: pfall linear forwards; pointer-events: none; }
     /* 活動流程卡片：預覽只顯示兩行，完整內容在點選後的視窗中 */
     #timeline-container .tl-card[role="button"] { cursor: pointer; }
     #timeline-container .tl-card[role="button"]:active { opacity: 0.85; }
@@ -895,6 +904,10 @@
           <span class="relative text-xl leading-none sm:text-sm">✍️</span>
           <span class="text-[11px] leading-tight sm:text-sm"><span class="sm:hidden">心得</span><span class="hidden sm:inline">心得分享與感動</span></span>
         </button>
+        <button data-tab="prophecy" onclick="switchMainTab('prophecy')" class="main-tab-btn relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl bg-white px-1 py-1.5 font-bold text-gray-700 ring-1 ring-gray-200 transition hover:bg-amber-50 sm:flex-none sm:flex-row sm:gap-1.5 sm:px-3.5 sm:py-2">
+          <span class="relative text-xl leading-none sm:text-sm">🔮<span id="prophecy-dot" class="absolute -right-1 -top-0.5 hidden h-2.5 w-2.5 rounded-full bg-amber-400 ring-2 ring-white"></span></span>
+          <span class="text-[11px] leading-tight sm:text-sm"><span class="sm:hidden">先知</span><span class="hidden sm:inline">聖誕先知大考驗</span></span>
+        </button>
         <button data-tab="map" onclick="switchMainTab('map')" class="main-tab-btn relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl bg-white px-1 py-1.5 font-bold text-gray-700 ring-1 ring-gray-200 transition hover:bg-amber-50 sm:flex-none sm:flex-row sm:gap-1.5 sm:px-3.5 sm:py-2">
           <span class="relative text-xl leading-none sm:text-sm">🗺️</span>
           <span class="text-[11px] leading-tight sm:text-sm"><span class="sm:hidden">場配</span><span class="hidden sm:inline">場配與路線導覽</span></span>
@@ -1403,6 +1416,15 @@
         </form>
       </div>
     </section>
+    <!-- ==================== 分頁：聖誕先知大考驗（競猜與抽獎） ==================== -->
+    <section id="panel-prophecy" class="tab-panel hidden space-y-4">
+      <div class="rounded-2xl border border-purple-300 bg-gradient-to-br from-indigo-950 via-purple-900 to-indigo-900 p-4 text-white shadow-md sm:p-5">
+        <h2 class="text-lg font-black sm:text-xl">🔮 聖誕先知大考驗</h2>
+        <p class="mt-1 text-xs leading-relaxed text-purple-100 sm:text-sm">大會會隨時派發競猜題目。猜對並留下姓名與教會，就有機會被抽中幸運兒，獲得大會準備的小禮物！</p>
+      </div>
+      <div id="prophecy-box"></div>
+    </section>
+
     <!-- ==================== 分頁 6：場配與互動路線導覽（3D） ==================== -->
     <section id="panel-map" class="tab-panel hidden">
       <iframe id="map-frame" title="羅浮校園 3D 場配與路線導覽" allow="fullscreen"></iframe>
@@ -1472,6 +1494,9 @@
           <div class="admin-rail-sep"></div>
           <div class="admin-rail-group">互動審核類</div>
           <button data-pane-btn="danmaku" onclick="showAdminPane('danmaku')" class="admin-rail-btn" aria-current="false"><span class="ico">🛡️</span><span class="sm:hidden">審核</span><span class="hidden sm:inline">彈幕留言審核</span><span id="rail-pending-pill" class="absolute right-0.5 top-0.5 hidden min-w-[16px] rounded-full bg-amber-400 px-1 text-center text-[10px] font-black leading-4 text-xmas-darkred ring-2 ring-white sm:static sm:ml-auto">0</span></button>
+          <div class="admin-rail-sep"></div>
+          <div class="admin-rail-group">競猜抽獎類</div>
+          <button data-pane-btn="prophecy" onclick="showAdminPane('prophecy')" class="admin-rail-btn" aria-current="false"><span class="ico">🔮</span><span class="sm:hidden">競猜</span><span class="hidden sm:inline">聖誕先知競猜</span></button>
           <div class="admin-rail-sep"></div>
           <div class="admin-rail-group">系統安全類</div>
           <button data-pane-btn="security" onclick="showAdminPane('security')" class="admin-rail-btn" aria-current="false"><span class="ico">🔐</span><span class="sm:hidden">密碼</span><span class="hidden sm:inline">通行碼設定</span></button>
@@ -1856,6 +1881,29 @@
         </div>
 
           </section>
+          <section data-pane="prophecy" class="admin-pane hidden space-y-4">
+            <div class="rounded-2xl border border-purple-200 bg-purple-50/50 p-4">
+              <h5 class="text-sm font-black text-purple-900">🔮 聖誕先知大考驗：派發競猜、公布答案、隨機抽出幸運兒</h5>
+              <p class="mt-0.5 text-[11px] text-gray-600">流程：① 派發題目（會眾手機開始作答）→ ② 截止作答 → ③ 公布正確答案 → ④ 從答對的人中隨機抽 1 位。派發新題目會取代目前這一題。</p>
+
+              <div id="pa-summary" class="mt-3"></div>
+
+              <div class="mt-3 rounded-xl border border-purple-200 bg-white p-3">
+                <div class="text-xs font-black text-purple-900">📣 派發新競猜</div>
+                <label class="mt-2 block text-[11px] font-bold text-gray-700">題目</label>
+                <textarea id="pa-title" rows="2" maxlength="120" placeholder="如：下一組出場的隊伍會得到第幾名？" class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-xs font-bold"></textarea>
+                <label class="mt-2 block text-[11px] font-bold text-gray-700">選項（一行一個，2～6 個）</label>
+                <textarea id="pa-options" rows="4" maxlength="400" placeholder="第一名&#10;第二名&#10;第三名&#10;第四名" class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-xs"></textarea>
+                <label class="mt-2 block text-[11px] font-bold text-gray-700">小禮物說明（選填，會顯示給會眾）</label>
+                <input id="pa-prize" type="text" maxlength="80" placeholder="如：聖誕小禮物一份" class="mt-1 w-full rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-xs" />
+                <div class="mt-2.5 flex justify-end">
+                  <button onclick="startProphecy()" class="rounded-xl bg-purple-700 px-4 py-2 text-xs font-black text-white shadow hover:bg-purple-900">📣 派發競猜（開放作答）</button>
+                </div>
+              </div>
+              <p id="pa-status-msg" class="mt-2 text-[11px] font-bold text-purple-900"></p>
+            </div>
+          </section>
+
           <section data-pane="security" class="admin-pane hidden space-y-4">
         <!-- 權限與通行碼設定條 -->
         <div class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-300 bg-amber-50/70 px-4 py-3">
@@ -4224,6 +4272,402 @@
       tlApply(t.texts);
     }
 
+    /* ==================== 聖誕先知大考驗（競猜＋隨機抽獎） ==================== */
+    const PROPHECY_MINE_KEY = 'xmas2026_prophecy_mine'; // 這支手機送出的答案 { qid, choice, name, church }
+    const PROPHECY_PROFILE_KEY = 'xmas2026_prophecy_profile'; // 記住姓名與教會，下次不用重填
+    const PROPHECY_SEEN_KEY = 'xmas2026_prophecy_seen_draw'; // 已看過的抽獎動畫
+    let prophecyState = null;
+    let prophecySig = '';
+    let prophecyGuesses = [];
+    let prophecyToastedId = '';
+
+    function lsGet(key) {
+      try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch (e) { return null; }
+    }
+    function lsSet(key, val) {
+      try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {}
+    }
+    function prophecyMine() {
+      const m = lsGet(PROPHECY_MINE_KEY);
+      return m && prophecyState && m.qid === prophecyState.id ? m : null;
+    }
+    function pKey(name, church) {
+      return (String(name || '').trim() + '|' + String(church || '').trim()).toLowerCase();
+    }
+
+    // 後端 → 本機（輪詢與管理動作的回應都走這裡）
+    function applyProphecyFromServer(p, initial) {
+      if (p === undefined) return; // 舊版後端沒有這個欄位
+      prophecyState = p || null;
+      const sig = JSON.stringify(p ? [p.id, p.status, p.answer, p.drawSeq, p.title, (p.options || []).join('|'), p.prize] : null);
+      if (sig === prophecySig) return;
+      prophecySig = sig;
+      renderProphecyPublic();
+      renderProphecyAdmin();
+      const dot = document.getElementById('prophecy-dot');
+      if (dot) dot.classList.toggle('hidden', !(p && p.status === 'open' && !prophecyMine()));
+      if (p && p.status === 'open' && !initial && !isAdminAuthorized && prophecyToastedId !== p.id && !prophecyMine()) {
+        showToast('🔮 大會派發了新的競猜！到「先知」頁籤作答', 4500);
+      }
+      if (p) prophecyToastedId = p.id;
+    }
+
+    function prophecyStatusBadge(st) {
+      return {
+        open: ['🟢 作答中', 'bg-emerald-100 text-emerald-800'],
+        closed: ['🟡 已截止，等待公布答案', 'bg-amber-100 text-amber-800'],
+        revealed: ['🔵 答案已公布', 'bg-blue-100 text-blue-800'],
+        drawn: ['🎉 已抽出幸運兒', 'bg-pink-100 text-pink-800']
+      }[st] || ['', ''];
+    }
+
+    function renderProphecyPublic() {
+      const box = document.getElementById('prophecy-box');
+      if (!box) return;
+      const p = prophecyState;
+      if (!p) {
+        box.innerHTML = `
+          <div class="rounded-2xl border border-purple-200 bg-white p-8 text-center shadow-sm">
+            <div class="p-float text-6xl">🔮</div>
+            <div class="mt-3 text-base font-black text-gray-900">先知正在凝視水晶球…</div>
+            <p class="mt-1 text-xs text-gray-500">目前沒有競猜題目，大會派發後這裡會自動出現，記得回來看看！</p>
+          </div>`;
+        return;
+      }
+      const mine = prophecyMine();
+      const [badgeText, badgeCls] = prophecyStatusBadge(p.status);
+      const profile = lsGet(PROPHECY_PROFILE_KEY) || {};
+      const revealed = p.status === 'revealed' || p.status === 'drawn';
+      const head = `
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <span class="rounded-full px-2.5 py-1 text-xs font-black ${badgeCls}">${badgeText}</span>
+          ${p.prize ? `<span class="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-black text-amber-900">🎁 ${escapeHtml(p.prize)}</span>` : ''}
+        </div>
+        <h3 class="mt-3 text-lg font-black leading-snug text-gray-900 sm:text-xl">${escapeHtml(p.title)}</h3>`;
+
+      let body = '';
+      if (p.status === 'open' && !mine) {
+        body = `
+          <div class="mt-3 space-y-2" id="prophecy-options">
+            ${p.options
+              .map(
+                (o, i) => `
+              <label class="flex cursor-pointer items-center gap-3 rounded-xl border-2 border-gray-200 bg-white px-3.5 py-3 text-sm font-bold text-gray-800 transition has-[:checked]:border-purple-500 has-[:checked]:bg-purple-50">
+                <input type="radio" name="prophecy-opt" value="${i}" class="h-4 w-4 accent-purple-600" />
+                <span class="flex-1">${escapeHtml(o)}</span>
+              </label>`
+              )
+              .join('')}
+          </div>
+          <div class="mt-3 grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[11px] font-bold text-gray-700">姓名（必填）</label>
+              <input id="prophecy-name" type="text" maxlength="20" value="${escapeHtml(profile.name || '')}" placeholder="你的名字" class="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-gray-700">教會（必填）</label>
+              <input id="prophecy-church" type="text" maxlength="30" value="${escapeHtml(profile.church || '')}" placeholder="所屬教會" class="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm" />
+            </div>
+          </div>
+          <button id="prophecy-submit" onclick="submitProphecyGuess()" class="mt-3 w-full rounded-xl bg-purple-700 py-3 text-sm font-black text-white shadow transition hover:bg-purple-900 active:scale-[0.99]">🔮 送出我的預言</button>
+          <p class="mt-2 text-center text-[11px] text-gray-500">每組姓名＋教會每題只能猜一次，送出後無法修改。</p>`;
+      } else {
+        const chosen = mine ? p.options[mine.choice] : null;
+        const lines = [];
+        if (mine) lines.push(`<div class="rounded-xl bg-purple-50 px-3.5 py-2.5 text-sm font-bold text-purple-900 ring-1 ring-purple-200">✅ 你的預言：<span class="font-black">${escapeHtml(chosen || '')}</span>（${escapeHtml(mine.name)}／${escapeHtml(mine.church)}）</div>`);
+        else if (p.status === 'open') lines.push('');
+        else lines.push('<div class="rounded-xl bg-gray-50 px-3.5 py-2.5 text-sm font-bold text-gray-600 ring-1 ring-gray-200">這支手機沒有參加本題。</div>');
+
+        if (p.status === 'closed') lines.push('<div class="rounded-xl bg-amber-50 px-3.5 py-3 text-center text-sm font-black text-amber-900">⏳ 作答已截止，等待先知公布答案…</div>');
+        if (revealed) {
+          const ok = mine && mine.choice === p.answer;
+          lines.push(`<div class="rounded-xl bg-blue-50 px-3.5 py-3 text-sm font-bold text-blue-900 ring-1 ring-blue-200">📜 正確答案：<span class="font-black">${escapeHtml(p.options[p.answer] || '')}</span></div>`);
+          if (mine) lines.push(ok
+            ? '<div class="rounded-xl bg-emerald-50 px-3.5 py-3 text-center text-sm font-black text-emerald-800 ring-1 ring-emerald-200">🎉 你猜對了！等待大會抽出幸運兒…</div>'
+            : '<div class="rounded-xl bg-gray-50 px-3.5 py-3 text-center text-sm font-bold text-gray-600 ring-1 ring-gray-200">這次沒有猜中，下一題再接再厲！</div>');
+        }
+        if (p.status === 'open' && mine) lines.push('<div class="rounded-xl bg-emerald-50 px-3.5 py-3 text-center text-sm font-black text-emerald-800">🌟 已送出！請等待大會截止與公布答案。</div>');
+        if (p.status === 'drawn' && p.winner) lines.push('<div id="prophecy-draw-stage"></div>');
+        body = `<div class="mt-3 space-y-2.5">${lines.join('')}</div>`;
+      }
+      box.innerHTML = `<div class="rounded-2xl border border-purple-200 bg-white p-4 shadow-sm sm:p-5">${head}${body}</div>`;
+      if (p.status === 'drawn' && p.winner) playPhoneDraw(p);
+    }
+
+    async function submitProphecyGuess() {
+      const p = prophecyState;
+      if (!p || p.status !== 'open') return;
+      const sel = document.querySelector('input[name="prophecy-opt"]:checked');
+      const name = (document.getElementById('prophecy-name').value || '').trim();
+      const church = (document.getElementById('prophecy-church').value || '').trim();
+      if (!sel) return showToast('請先選一個答案');
+      if (!name || !church) return showToast('請填寫姓名與教會');
+      const btn = document.getElementById('prophecy-submit');
+      if (btn) { btn.disabled = true; btn.textContent = '送出中…'; }
+      const res = await apiPost({ action: 'submitGuess', qid: p.id, name, church, choice: Number(sel.value) });
+      if (res && res.ok) {
+        lsSet(PROPHECY_MINE_KEY, { qid: p.id, choice: Number(sel.value), name, church });
+        lsSet(PROPHECY_PROFILE_KEY, { name, church });
+        prophecySig = '';
+        applyProphecyFromServer(prophecyState);
+        showToast('🔮 預言已送出！');
+      } else {
+        if (btn) { btn.disabled = false; btn.textContent = '🔮 送出我的預言'; }
+        showToast('❌ ' + ((res && res.error) === 'NO_API' ? '尚未連線到後端' : (res && res.error) || '送出失敗，請稍後再試'), 4000);
+      }
+    }
+
+    // 手機端抽獎揭曉：第一次看到才播放轉動動畫，之後直接顯示結果
+    function playPhoneDraw(p) {
+      const stage = document.getElementById('prophecy-draw-stage');
+      if (!stage || !p.winner) return;
+      const seenKey = p.id + ':' + p.drawSeq;
+      const mine = lsGet(PROPHECY_MINE_KEY);
+      const isMe = !!(mine && mine.qid === p.id && pKey(mine.name, mine.church) === pKey(p.winner.name, p.winner.church));
+      const reveal = () => {
+        stage.innerHTML = `
+          <div class="p-pop rounded-2xl bg-gradient-to-br from-amber-100 via-yellow-50 to-amber-100 p-4 text-center ring-2 ring-amber-400 ${isMe ? 'p-glow' : ''}">
+            <div class="text-xs font-black text-amber-800">🎁 本題幸運兒</div>
+            <div class="mt-1 text-3xl font-black text-xmas-darkred">${escapeHtml(p.winner.name)}</div>
+            <div class="mt-0.5 text-sm font-bold text-gray-700">${escapeHtml(p.winner.church)}</div>
+            ${isMe ? `<div class="mt-2 text-sm font-black text-emerald-700">🎉 恭喜你！就是你！請向大會工作人員領取${p.prize ? '「' + escapeHtml(p.prize) + '」' : '小禮物'}</div>` : (p.prize ? `<div class="mt-2 text-xs font-bold text-amber-900">獎品：${escapeHtml(p.prize)}</div>` : '')}
+          </div>`;
+      };
+      if (localStorage.getItem(PROPHECY_SEEN_KEY) === seenKey) return reveal();
+      try { localStorage.setItem(PROPHECY_SEEN_KEY, seenKey); } catch (e) {}
+      const icons = ['🎁', '🎄', '⭐', '🔔', '🦌', '🍬', '⛄', '🧦', '🎅'];
+      let n = 0;
+      stage.innerHTML = '<div class="rounded-2xl bg-indigo-950 p-5 text-center text-white"><div id="pp-spin" class="text-6xl">🎁</div><div class="mt-2 text-sm font-black text-amber-200">🎰 先知正在抽出幸運兒…</div></div>';
+      const timer = setInterval(() => {
+        const el = document.getElementById('pp-spin');
+        if (!el) return clearInterval(timer);
+        el.textContent = icons[n++ % icons.length];
+      }, 110);
+      setTimeout(() => {
+        clearInterval(timer);
+        if (document.getElementById('prophecy-draw-stage') === stage) reveal();
+      }, 3400);
+    }
+
+    /* ---------- 後台 ---------- */
+    function prophecyAdminCode() {
+      return sessionStorage.getItem(ADMIN_CODE_SESSION_KEY);
+    }
+    async function prophecyAdminCall(payload) {
+      if (!isAdminAuthorized) { showToast('⚠️ 請先登入管理員'); return null; }
+      const code = prophecyAdminCode();
+      if (!code) { showToast('⚠️ 找不到管理員驗證資訊，請鎖定後重新登入'); return null; }
+      const res = await apiPost({ ...payload, adminPasscode: code });
+      if (!res || !res.ok) {
+        showToast('❌ ' + ((res && res.error) === 'NO_API' ? '尚未連線到後端' : (res && res.error) || '操作失敗'), 4500);
+        return null;
+      }
+      if (res.prophecy !== undefined) {
+        prophecySig = '';
+        applyProphecyFromServer(res.prophecy);
+      }
+      return res;
+    }
+    function setPaMsg(msg) {
+      const el = document.getElementById('pa-status-msg');
+      if (el) el.textContent = msg;
+    }
+
+    async function startProphecy() {
+      const title = document.getElementById('pa-title').value.trim();
+      const options = document.getElementById('pa-options').value.split('\n').map(x => x.trim()).filter(Boolean);
+      const prize = document.getElementById('pa-prize').value.trim();
+      if (!title) return showToast('請輸入題目');
+      if (options.length < 2 || options.length > 6) return showToast('選項需要 2～6 個（一行一個）');
+      if (prophecyState && !confirm('派發新題目會取代目前這一題（含答題名單的顯示），確定嗎？')) return;
+      const res = await prophecyAdminCall({ action: 'startProphecy', id: 'q' + Date.now(), title, options, prize });
+      if (res) {
+        prophecyGuesses = [];
+        document.getElementById('pa-title').value = '';
+        document.getElementById('pa-options').value = '';
+        renderProphecyAdmin();
+        setPaMsg('✅ 已派發，會眾手機會在幾秒內看到');
+      }
+    }
+    async function setProphecyStatus(st) {
+      const res = await prophecyAdminCall({ action: 'setProphecyStatus', status: st });
+      if (res) setPaMsg(st === 'closed' ? '🟡 已截止作答' : '🟢 已重新開放作答');
+    }
+    async function revealProphecy() {
+      const sel = document.getElementById('pa-answer');
+      if (!sel || sel.value === '') return showToast('請先選擇正確答案');
+      const label = prophecyState.options[Number(sel.value)];
+      if (!confirm(`確定公布正確答案為「${label}」？公布後會眾手機會立刻看到。`)) return;
+      await refreshProphecyAdmin(true);
+      const res = await prophecyAdminCall({ action: 'revealProphecy', answer: Number(sel.value) });
+      if (res) { setPaMsg('🔵 已公布答案'); refreshProphecyAdmin(true); }
+    }
+    async function clearProphecy() {
+      if (!confirm('確定清除目前的競猜？手機端會回到「沒有競猜」。')) return;
+      const res = await prophecyAdminCall({ action: 'clearProphecy' });
+      if (res) { prophecyGuesses = []; prophecyState = null; prophecySig = ''; applyProphecyFromServer(null); setPaMsg('已清除競猜'); }
+    }
+
+    async function refreshProphecyAdmin(silent) {
+      if (!isAdminAuthorized || !API_URL) return;
+      const code = prophecyAdminCode();
+      if (!code) return;
+      const res = await apiPost({ action: 'listProphecyGuesses', adminPasscode: code });
+      if (res && res.ok) {
+        prophecyGuesses = Array.isArray(res.guesses) ? res.guesses : [];
+        if (res.prophecy !== undefined && res.prophecy) {
+          // 後台拿到的是完整版本（含答案），只用來畫後台
+          prophecyState = res.prophecy;
+        }
+        renderProphecyAdmin();
+      } else if (!silent) {
+        showToast('❌ 讀取答題名單失敗：' + ((res && res.error) || ''), 4000);
+      }
+    }
+
+    function renderProphecyAdmin() {
+      const box = document.getElementById('pa-summary');
+      if (!box) return;
+      const p = prophecyState;
+      if (!p) {
+        box.innerHTML = '<div class="rounded-xl border border-dashed border-purple-200 bg-white p-3 text-center text-xs text-gray-500">目前沒有進行中的競猜，請在下方派發新題目。</div>';
+        return;
+      }
+      const [badgeText, badgeCls] = prophecyStatusBadge(p.status);
+      const total = prophecyGuesses.length;
+      const counts = p.options.map((_, i) => prophecyGuesses.filter(g => g.choice === i).length);
+      const revealed = p.status === 'revealed' || p.status === 'drawn';
+      const correct = revealed ? prophecyGuesses.filter(g => g.choice === p.answer) : [];
+      const winners = Array.isArray(p.winners) ? p.winners : p.winner ? [p.winner] : [];
+      const bars = p.options
+        .map((o, i) => {
+          const pct = total ? Math.round((counts[i] / total) * 100) : 0;
+          const isAns = revealed && i === p.answer;
+          return `<div class="mt-1.5">
+            <div class="flex justify-between text-[11px] font-bold ${isAns ? 'text-emerald-700' : 'text-gray-700'}"><span>${isAns ? '✅ ' : ''}${escapeHtml(o)}</span><span>${counts[i]} 人（${pct}%）</span></div>
+            <div class="mt-0.5 h-2 overflow-hidden rounded-full bg-gray-100"><div class="h-full rounded-full ${isAns ? 'bg-emerald-500' : 'bg-purple-400'}" style="width:${pct}%"></div></div>
+          </div>`;
+        })
+        .join('');
+      const canClose = p.status === 'open';
+      const canReopen = p.status === 'closed';
+      const canReveal = p.status === 'open' || p.status === 'closed' || p.status === 'revealed';
+      const canDraw = revealed;
+      box.innerHTML = `
+        <div class="rounded-xl border border-purple-200 bg-white p-3">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <span class="rounded-full px-2.5 py-1 text-[11px] font-black ${badgeCls}">${badgeText}</span>
+            <button onclick="refreshProphecyAdmin()" class="rounded-lg bg-gray-100 px-2.5 py-1 text-[11px] font-bold text-gray-700 hover:bg-gray-200">🔄 更新答題人數</button>
+          </div>
+          <div class="mt-2 text-sm font-black text-gray-900">${escapeHtml(p.title)}</div>
+          ${p.prize ? `<div class="text-[11px] font-bold text-amber-800">🎁 ${escapeHtml(p.prize)}</div>` : ''}
+          <div class="mt-2 text-[11px] font-black text-purple-900">已作答 ${total} 人${revealed ? `｜答對 ${correct.length} 人` : ''}</div>
+          ${bars}
+          <div class="mt-3 flex flex-wrap items-center gap-2">
+            ${canClose ? '<button onclick="setProphecyStatus(\'closed\')" class="rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-black text-white hover:bg-amber-600">⏹ 截止作答</button>' : ''}
+            ${canReopen ? '<button onclick="setProphecyStatus(\'open\')" class="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-black text-white hover:bg-emerald-700">▶ 重新開放</button>' : ''}
+            ${canReveal && p.status !== 'drawn' ? `
+              <select id="pa-answer" class="rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-xs font-bold">
+                <option value="">選擇正確答案…</option>
+                ${p.options.map((o, i) => `<option value="${i}" ${revealed && i === p.answer ? 'selected' : ''}>${escapeHtml(o)}</option>`).join('')}
+              </select>
+              <button onclick="revealProphecy()" class="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-black text-white hover:bg-blue-700">📜 公布答案</button>` : ''}
+            ${canDraw ? `<button onclick="startProphecyDraw()" class="rounded-lg bg-pink-600 px-3 py-1.5 text-xs font-black text-white shadow hover:bg-pink-700">🎰 ${winners.length ? '再抽一位' : '抽出幸運兒'}</button>` : ''}
+            <button onclick="clearProphecy()" class="ml-auto rounded-lg bg-red-100 px-3 py-1.5 text-xs font-black text-xmas-red hover:bg-red-200">🗑 清除競猜</button>
+          </div>
+          ${winners.length ? `<div class="mt-3 rounded-lg bg-pink-50 p-2.5 text-xs font-bold text-pink-900 ring-1 ring-pink-200">🎉 幸運兒：${winners.map((w, i) => `${i + 1}. ${escapeHtml(w.name)}（${escapeHtml(w.church)}）`).join('　')}</div>` : ''}
+          ${revealed ? `<details class="mt-3"><summary class="cursor-pointer text-xs font-black text-emerald-800">✅ 答對名單（${correct.length} 人）</summary>
+            <div class="mt-1.5 max-h-40 overflow-y-auto rounded-lg bg-emerald-50/60 p-2 text-xs text-gray-800">${correct.length ? correct.map(g => `<div>${escapeHtml(g.name)}（${escapeHtml(g.church)}）</div>`).join('') : '沒有人答對'}</div></details>` : ''}
+        </div>`;
+    }
+
+    /* 抽獎動畫（大會手機／大螢幕）：先快速轉動人名，再逐漸減速，停在系統隨機抽出的幸運兒 */
+    let pdTimer = null;
+    function closeProphecyDraw() {
+      clearTimeout(pdTimer);
+      const o = document.getElementById('prophecy-draw-overlay');
+      if (o) o.remove();
+      document.body.style.overflow = '';
+    }
+    async function startProphecyDraw() {
+      const p = prophecyState;
+      if (!p || (p.status !== 'revealed' && p.status !== 'drawn')) return showToast('請先公布正確答案');
+      await refreshProphecyAdmin(true);
+      const used = new Set((prophecyState.winners || []).map(w => pKey(w.name, w.church)));
+      const pool = prophecyGuesses.filter(g => g.choice === prophecyState.answer && !used.has(pKey(g.name, g.church)));
+      if (!pool.length) return showToast('沒有可抽的答對者（無人答對，或已全部抽過）', 4000);
+
+      closeProphecyDraw();
+      const o = document.createElement('div');
+      o.id = 'prophecy-draw-overlay';
+      o.className = 'fixed inset-0 z-[60] flex flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-indigo-950 via-purple-900 to-indigo-950 px-4 text-center text-white';
+      o.innerHTML = `
+        <div class="absolute right-3 top-3"><button onclick="closeProphecyDraw()" class="rounded-full bg-white/15 px-3 py-1.5 text-sm font-black hover:bg-white/25">✕ 關閉</button></div>
+        <div class="text-sm font-black tracking-widest text-amber-200">🔮 聖誕先知大考驗</div>
+        <div class="mt-1 max-w-xl text-base font-bold text-purple-100">${escapeHtml(p.title)}</div>
+        <div class="mt-1 text-sm font-black text-emerald-300">正確答案：${escapeHtml(p.options[p.answer] || '')}（${pool.length} 人參與抽獎）</div>
+        <div class="p-float mt-6 text-7xl" id="pd-icon">🎰</div>
+        <div id="pd-name" class="mt-4 min-h-[4.5rem] text-5xl font-black text-amber-300 sm:text-6xl">…</div>
+        <div id="pd-church" class="mt-1 min-h-[1.75rem] text-lg font-bold text-purple-100"></div>
+        <div id="pd-actions" class="mt-8 hidden gap-3"></div>`;
+      document.body.appendChild(o);
+      document.body.style.overflow = 'hidden';
+
+      const nameEl = o.querySelector('#pd-name');
+      const churchEl = o.querySelector('#pd-church');
+      const show = g => { nameEl.textContent = g.name; churchEl.textContent = g.church; };
+      const rand = () => pool[Math.floor(Math.random() * pool.length)];
+      const t0 = Date.now();
+      let result = null;
+      let failed = false;
+      prophecyAdminCall({ action: 'drawProphecy' }).then(r => {
+        if (r && r.winner) result = r.winner;
+        else failed = true;
+      });
+
+      const finish = () => {
+        show(result);
+        nameEl.classList.add('p-pop');
+        o.querySelector('#pd-icon').textContent = '🎉';
+        const act = o.querySelector('#pd-actions');
+        act.classList.remove('hidden');
+        act.classList.add('flex');
+        act.innerHTML = `<button onclick="startProphecyDraw()" class="rounded-xl bg-pink-600 px-4 py-2 text-sm font-black shadow hover:bg-pink-700">🎰 再抽一位</button><button onclick="closeProphecyDraw()" class="rounded-xl bg-white/15 px-4 py-2 text-sm font-black hover:bg-white/25">完成</button>`;
+        const em = ['🎄', '⭐', '🎁', '❄️', '🔔', '🎉'];
+        for (let i = 0; i < 26; i++) {
+          const s = document.createElement('span');
+          s.className = 'p-fall text-2xl';
+          s.textContent = em[i % em.length];
+          s.style.left = Math.random() * 100 + '%';
+          s.style.animationDuration = 2.4 + Math.random() * 2.4 + 's';
+          s.style.animationDelay = Math.random() * 1.2 + 's';
+          o.appendChild(s);
+        }
+      };
+      const slow = (i, delays) => {
+        if (i >= delays.length) return finish();
+        show(rand());
+        pdTimer = setTimeout(() => slow(i + 1, delays), delays[i]);
+      };
+      const tick = () => {
+        if (!document.getElementById('prophecy-draw-overlay')) return;
+        if (failed) return closeProphecyDraw();
+        if (!result || Date.now() - t0 < 3200) {
+          show(rand());
+          pdTimer = setTimeout(tick, 70);
+          return;
+        }
+        slow(0, [110, 140, 180, 230, 300, 400, 550, 750]);
+      };
+      tick();
+    }
+    // 後台開著競猜頁時，每 10 秒自動更新答題人數
+    setInterval(() => {
+      if (!isAdminAuthorized || document.hidden) return;
+      const pane = document.querySelector('[data-pane="prophecy"]');
+      if (pane && !pane.classList.contains('hidden') && !document.getElementById('prophecy-draw-overlay')) refreshProphecyAdmin(true);
+    }, 10000);
+
     /* ==================== 場配與互動路線導覽（3D 模組）＋ 後台管理 ==================== */
     const LUOFU_KEY = 'luofu_campus_booths_v6'; // 與原模組相同的金鑰
     const LUOFU_DEFAULT_NAMES = (() => {
@@ -4580,6 +5024,7 @@
         applyStickyFromServer(live.sticky);
         applyWelcomeFromServer(live.welcome);
         applyTimelineFromServer(live.timeline);
+        applyProphecyFromServer(live.prophecy, initial);
         updateWelcomeStatus(`已連線・${nowHMS()} 更新`);
       } finally {
         livePolling = false;
@@ -6246,6 +6691,7 @@
       const w = document.getElementById('admin-workspace');
       if (w) w.scrollTop = 0;
       if (key === 'score') renderScoreAdmin();
+      if (key === 'prophecy') { renderProphecyAdmin(); refreshProphecyAdmin(true); }
     }
 
     function requireScoreAdmin() {
