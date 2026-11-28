@@ -1420,7 +1420,7 @@
     <section id="panel-prophecy" class="tab-panel hidden space-y-4">
       <div class="rounded-2xl border border-purple-300 bg-gradient-to-br from-indigo-950 via-purple-900 to-indigo-900 p-4 text-white shadow-md sm:p-5">
         <h2 class="text-lg font-black sm:text-xl">🔮 聖誕先知大考驗</h2>
-        <p class="mt-1 text-xs leading-relaxed text-purple-100 sm:text-sm">聖誕老人工作室會隨時派發競猜題目。猜對並留下姓名與教會，就有機會被抽中幸運兒，獲得聖誕老人工作室的小禮物喲！</p>
+        <p class="mt-1 text-xs leading-relaxed text-purple-100 sm:text-sm">聖誕老人工作室會隨時派發競猜題目。猜對並留下姓名與教會，就有機會被抽中幸運兒，獲得聖誕老人準備的小禮物喲！</p>
       </div>
       <div id="prophecy-box"></div>
     </section>
@@ -1734,6 +1734,10 @@
             <div class="min-w-[9rem] flex-1">
               <label class="block text-[11px] font-black text-gray-700">新增隊伍名稱</label>
               <input id="new-team-name" type="text" maxlength="12" placeholder="例如：以馬內利紫隊" class="mt-1 w-full rounded-lg border border-gray-300 px-2.5 py-2 text-sm font-bold focus:border-xmas-red focus:outline-none" />
+            </div>
+            <div class="min-w-[12rem] flex-[2]">
+              <label class="block text-[11px] font-black text-gray-700">隊伍備註（選填，例如聯隊的教會）</label>
+              <input id="new-team-note" type="text" maxlength="120" placeholder="例如：羅浮、巴陵、卡拉教會 聯隊" class="mt-1 w-full rounded-lg border border-gray-300 px-2.5 py-2 text-sm focus:border-xmas-red focus:outline-none" />
             </div>
             <div>
               <label class="block text-[11px] font-black text-gray-700">顏色</label>
@@ -7015,6 +7019,7 @@
             const medal = t.score > 0 && rank <= 3 ? ['🥇 第 1 名', '🥈 第 2 名', '🥉 第 3 名'][rank - 1] : '';
             return `<div class="rounded-2xl border-2 p-3.5 text-center" style="border-color:${c.border};background:${c.bg}">
               <div class="text-xs font-black" style="color:${c.text}">${c.emoji} ${escapeHtml(t.name)}</div>
+              ${t.note ? `<div class="mt-1 whitespace-pre-wrap text-[11px] font-bold leading-snug text-gray-600">${escapeHtml(t.note)}</div>` : ''}
               <div class="my-2 text-3xl font-black text-gray-900">${t.score}</div>
               <div class="h-4 text-[11px] font-black" style="color:${c.text}">${medal}</div>
             </div>`;
@@ -7050,6 +7055,12 @@
                 <button onclick="scoreRemove('${id}')" class="rounded-md bg-red-50 px-2 py-0.5 text-[11px] font-bold text-xmas-red hover:bg-red-100">刪除</button>
               </div>
             </div>
+            <div class="mt-2">
+              <label class="block text-[11px] font-bold text-gray-500">隊伍備註（聯隊的教會，輸入後點到別處即儲存）</label>
+              <textarea id="score-note-${id}" rows="2" maxlength="120" placeholder="例如：羅浮、巴陵、卡拉教會 聯隊"
+                onchange="scoreNoteSet('${id}', this.value)"
+                class="mt-1 w-full rounded-lg border border-gray-300 px-2 py-1.5 text-xs focus:border-xmas-red focus:outline-none">${escapeHtml(t.note || '')}</textarea>
+            </div>
             <div class="mt-2 flex items-center justify-center gap-1.5">
               <span class="text-[11px] font-bold text-gray-500">目前分數</span>
               <input id="score-val-${id}" type="number" inputmode="numeric" min="0" max="99999" value="${t.score}" title="直接輸入分數後按 Enter 或點到別處即可儲存"
@@ -7063,6 +7074,17 @@
           </div>`;
         })
         .join('');
+    }
+
+    // 隊伍備註（例如聯隊的教會）：可分行
+    function scoreNoteSet(id, raw) {
+      if (!requireScoreAdmin()) return;
+      const t = scoreboard.teams.find(x => x.id === id);
+      if (!t) return;
+      const v = String(raw || '').replace(/\r/g, '').trim().slice(0, 120);
+      if (v === (t.note || '')) return;
+      t.note = v;
+      commitScoreboard();
     }
 
     // 直接輸入該隊分數（覆蓋）
@@ -7185,8 +7207,11 @@
         return;
       }
       const color = document.getElementById('new-team-color').value || 'gray';
-      scoreboard.teams.push({ id: 't' + Date.now().toString(36) + Math.floor(Math.random() * 100), name, color, score: 0 });
+      const noteEl = document.getElementById('new-team-note');
+      const note = noteEl ? noteEl.value.trim().slice(0, 120) : '';
+      scoreboard.teams.push({ id: 't' + Date.now().toString(36) + Math.floor(Math.random() * 100), name, color, score: 0, note });
       nameEl.value = '';
+      if (noteEl) noteEl.value = '';
       commitScoreboard();
       showToast(`已新增「${name}」`);
     }
