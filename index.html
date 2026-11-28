@@ -123,7 +123,13 @@
     .tl-left { position: relative; flex: 0 0 6.2rem; padding-bottom: 0.25rem; }
     .tl-left::before { content: ''; position: absolute; left: 50%; top: 3.6rem; bottom: -1.1rem; width: 2px; margin-left: -1px; background: repeating-linear-gradient(to bottom, #FCD34D 0 6px, transparent 6px 10px); }
     .tl-row:last-child .tl-left::before { display: none; }
-    #game-tabs .tl-left::before { top: 2.7rem; bottom: -1.25rem; }
+    #game-tabs .tl-row { gap: 0.5rem; }
+    #game-tabs .tl-left { flex: 0 0 3.4rem; }
+    #game-tabs .tl-left::before { top: 4rem; bottom: -1rem; }
+    @media (min-width: 640px) {
+      #game-tabs .tl-row { gap: 1rem; }
+      #game-tabs .tl-left { flex-basis: 5.5rem; }
+    }
     .tl-card { flex: 1; min-width: 0; }
     .tl-card > h3:first-child { margin-top: 0; }
     @media (min-width: 640px) {
@@ -1252,7 +1258,7 @@
       </div>
 
       <!-- 三場競賽切換與大版面人數看板 -->
-      <div class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
+      <div class="rounded-2xl border border-gray-200 bg-white p-3 shadow-sm sm:p-5">
         <div id="game-tabs"></div>
 
         <div id="game-detail-box" class="mt-4 hidden rounded-2xl border border-emerald-200 bg-emerald-50/40 p-4 sm:p-5">
@@ -5482,8 +5488,23 @@
       return GAME_DETAIL_KEYS.some(k => g && g[k]);
     }
 
-    // 下午賽程時間軸：左欄時間、右欄比賽名稱（點選後在卡片內展開活動明細）
+    // 下午賽程時間軸：左欄時間（窄）、右欄比賽名稱（點選後以視窗顯示活動明細）
     const GAME_ICONS = ['🎄', '🎁', '⛄', '🔔', '🦌', '🌟', '🍬', '🧦', '🎅', '❄️'];
+    const GAME_EMOJI_START = /^\s*(\p{Extended_Pictographic})/u;
+
+    function gameIconOf(g, i) {
+      const m = GAME_EMOJI_START.exec(g.title || '');
+      return m ? m[1] : GAME_ICONS[i % GAME_ICONS.length];
+    }
+    function gameTitleOf(g) {
+      return (g.title || '未命名').replace(GAME_EMOJI_START, '').trim() || '未命名';
+    }
+    // 「13:10-13:50」在窄欄位拆成兩行顯示；其他格式維持原樣
+    function gameTimeLabel(t) {
+      const m = /^\s*(\d{1,2}:\d{2})\s*[-~–—－～]\s*(\d{1,2}:\d{2})\s*$/.exec(t || '');
+      return m ? `${m[1]}\n│\n${m[2]}` : t || '';
+    }
+
     function renderGameTabs() {
       const box = document.getElementById('game-tabs');
       if (!box) return;
@@ -5497,45 +5518,39 @@
         if (last && g.time && last.time === g.time) last.items.push({ g, i });
         else groups.push({ time: g.time || '', items: [{ g, i }] });
       });
-      const emojiStart = /^\s*(\p{Extended_Pictographic})/u;
       const rows = groups
         .map(grp => {
           const cards = grp.items
             .map(({ g, i }) => {
               const clickable = gameHasDetail(g);
-              const active = i === currentGameIdx;
-              const m = emojiStart.exec(g.title || '');
-              const icon = m ? m[1] : GAME_ICONS[i % GAME_ICONS.length];
-              const titleText = m ? (g.title || '').replace(emojiStart, '').trim() : (g.title || '未命名');
               const tone = i % 2 === 0 ? 'border-red-200' : 'border-emerald-200';
               const iconBg = i % 2 === 0 ? 'bg-red-50 ring-red-200' : 'bg-emerald-50 ring-emerald-200';
               const head = `
-                <div class="flex items-start gap-3">
-                  <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-2xl ring-2 ${iconBg}">${icon}</div>
+                <div class="flex items-start gap-2 sm:gap-3">
+                  <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xl ring-2 sm:h-11 sm:w-11 sm:text-2xl ${iconBg}">${gameIconOf(g, i)}</div>
                   <div class="min-w-0 flex-1 text-left">
-                    <div class="text-base font-black leading-snug text-gray-900 sm:text-lg">${escapeHtml(titleText)}</div>
+                    <div class="text-[15px] font-black leading-snug text-gray-900 sm:text-lg">${escapeHtml(gameTitleOf(g))}</div>
                     ${g.session ? `<div class="mt-1"><span class="inline-block whitespace-pre-wrap rounded-md bg-yellow-200 px-1.5 py-0.5 text-xs font-black text-gray-900">${escapeHtml(g.session)}</span></div>` : ''}
-                    ${g.arrange ? `<p class="mt-1.5 whitespace-pre-wrap text-xs leading-relaxed text-gray-600 sm:text-sm">${escapeHtml(g.arrange)}</p>` : ''}
+                    ${g.arrange ? `<p class="mt-1 whitespace-pre-wrap text-xs leading-relaxed text-gray-600 sm:text-sm">${escapeHtml(g.arrange)}</p>` : ''}
                   </div>
-                  ${clickable ? `<span class="mt-1 shrink-0 rounded-full ${active ? 'bg-xmas-green text-white' : 'bg-amber-100 text-amber-900'} px-2 py-0.5 text-[10px] font-black">${active ? '收合 ▲' : '明細 ▼'}</span>` : ''}
-                </div>`;
+                </div>
+                ${clickable ? '<div class="mt-1.5 text-right text-[11px] font-black text-amber-700">查看活動明細 ›</div>' : ''}`;
               return `
-                <div id="game-card-${i}" class="tl-card relative overflow-hidden rounded-2xl border ${active ? 'border-2 border-xmas-green' : tone} bg-white p-3.5 shadow-sm sm:p-4">
+                <div id="game-card-${i}" class="tl-card relative overflow-hidden rounded-2xl border ${tone} bg-white p-2.5 shadow-sm sm:p-4">
                   <span class="pointer-events-none absolute -right-1 -top-1 select-none text-lg opacity-30">❄️</span>
                   ${clickable
-                    ? `<button type="button" onclick="selectGame(${i}, true)" class="block w-full text-left">${head}</button>`
+                    ? `<button type="button" onclick="openGameModal(${i})" class="block w-full text-left active:opacity-80">${head}</button>`
                     : head}
-                  ${active ? `<div class="mt-3 border-t border-dashed border-gray-200 pt-3">${gameDetailHtml(g)}</div>` : ''}
                 </div>`;
             })
             .join('');
           const timeChip = grp.time
-            ? `<span class="block w-full whitespace-pre-wrap rounded-xl bg-xmas-darkred px-2 py-1.5 text-center text-[11px] font-black leading-snug text-white sm:text-xs">${escapeHtml(grp.time)}</span>`
-            : `<span class="block w-full rounded-xl bg-gray-200 px-2 py-1.5 text-center text-[11px] font-black text-gray-500 sm:text-xs">🎄</span>`;
+            ? `<span class="block w-full whitespace-pre-wrap rounded-xl bg-xmas-darkred px-1 py-1.5 text-center text-[11px] font-black leading-tight text-white sm:px-2 sm:text-xs">${escapeHtml(gameTimeLabel(grp.time))}</span>`
+            : `<span class="block w-full rounded-xl bg-gray-200 px-1 py-1.5 text-center text-[11px] font-black text-gray-500 sm:text-xs">🎄</span>`;
           return `
             <div class="tl-row">
               <div class="tl-left">${timeChip}</div>
-              <div class="min-w-0 flex-1 space-y-2.5">${cards}</div>
+              <div class="min-w-0 flex-1 space-y-2">${cards}</div>
             </div>`;
         })
         .join('');
@@ -5544,20 +5559,58 @@
           <div class="text-sm font-black text-gray-900">📅 下午賽程</div>
           <div class="text-[11px] font-bold text-gray-500">👆 點選項目查看活動明細</div>
         </div>
-        <div class="space-y-5">${rows}</div>`;
+        <div class="space-y-4">${rows}</div>`;
     }
+
+    /* ---- 活動明細視窗（手機為底部彈出，電腦置中） ---- */
+    function openGameModal(i) {
+      const g = gamesData[i];
+      if (!g) return;
+      closeGameModal(true);
+      const el = document.createElement('div');
+      el.id = 'game-modal';
+      el.className = 'fixed inset-0 z-[45] flex items-end justify-center bg-black/55 sm:items-center sm:p-4';
+      el.innerHTML = `
+        <div class="flex max-h-[88vh] w-full max-w-xl flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl sm:rounded-3xl" role="dialog" aria-modal="true">
+          <div class="flex items-start gap-3 border-b border-amber-200 bg-gradient-to-r from-red-50 to-emerald-50 px-4 py-3">
+            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-2xl ring-2 ring-amber-200">${gameIconOf(g, i)}</div>
+            <div class="min-w-0 flex-1">
+              <div class="text-base font-black leading-snug text-gray-900 sm:text-lg">${escapeHtml(gameTitleOf(g))}</div>
+              ${g.time ? `<div class="mt-0.5 whitespace-pre-wrap text-xs font-black text-xmas-darkred">🕐 ${escapeHtml(g.time)}</div>` : ''}
+              ${g.session ? `<div class="mt-1"><span class="inline-block whitespace-pre-wrap rounded-md bg-yellow-200 px-1.5 py-0.5 text-xs font-black text-gray-900">${escapeHtml(g.session)}</span></div>` : ''}
+            </div>
+            <button type="button" onclick="closeGameModal()" aria-label="關閉" class="shrink-0 rounded-full bg-white px-3 py-1.5 text-sm font-black text-gray-600 shadow ring-1 ring-gray-200 hover:bg-gray-100">✕</button>
+          </div>
+          <div class="overflow-y-auto px-4 py-4" style="padding-bottom:max(1rem, env(safe-area-inset-bottom, 0px))">
+            ${g.arrange ? `<div class="mb-3 whitespace-pre-wrap rounded-xl bg-gray-50 p-3 text-sm leading-relaxed text-gray-700 ring-1 ring-gray-200">${escapeHtml(g.arrange)}</div>` : ''}
+            ${gameDetailHtml(g)}
+          </div>
+        </div>`;
+      el.addEventListener('click', e => {
+        if (e.target === el) closeGameModal();
+      });
+      document.body.appendChild(el);
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeGameModal(keepScrollLock) {
+      const el = document.getElementById('game-modal');
+      if (el) el.remove();
+      if (!keepScrollLock) document.body.style.overflow = '';
+    }
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeGameModal();
+    });
 
     function selectGame(idx, fromClick) {
       idx = Number(idx);
-      if (!Number.isFinite(idx)) idx = -1;
-      if (fromClick && idx === currentGameIdx) idx = -1; // 再點一次收合
-      currentGameIdx = idx >= 0 && idx < gamesData.length ? idx : -1;
+      if (fromClick && Number.isFinite(idx) && idx >= 0) {
+        openGameModal(idx);
+        return;
+      }
+      currentGameIdx = -1;
       renderGameTabs();
       renderCurrentGamePanel();
-      if (fromClick && currentGameIdx >= 0) {
-        const card = document.getElementById('game-card-' + currentGameIdx);
-        if (card) card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      }
     }
 
     function renderCurrentGamePanel() {
