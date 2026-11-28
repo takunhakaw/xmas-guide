@@ -4099,6 +4099,131 @@
       applyWelcomeTexts(w.texts);
     }
 
+    /* ==================== 活動流程時間軸文字：編輯後自動儲存並同步到所有手機 ==================== */
+    const TIMELINE_TEXTS_KEY = 'xmas2026_timeline_texts';
+    let tlDefaults = {}; // 網頁內建文字（只把「與內建不同」的欄位當成修改存起來）
+    let tlDirty = false;
+    let tlBusy = false;
+    let tlTimer = null;
+
+    function tlEls() {
+      return Array.from(document.querySelectorAll('#timeline-container [data-editable]'));
+    }
+    function tlRead(el) {
+      if (el.tagName === 'UL') {
+        return Array.from(el.querySelectorAll(':scope > li'))
+          .map(li => li.textContent.replace(/\s+/g, ' ').trim())
+          .filter(Boolean)
+          .join('\n');
+      }
+      return el.textContent.replace(/\s+/g, ' ').trim();
+    }
+    function tlWrite(el, val) {
+      if (el.tagName === 'UL') {
+        el.innerHTML = '';
+        String(val).split('\n').forEach(t => {
+          if (!t) return;
+          const li = document.createElement('li');
+          li.textContent = t;
+          el.appendChild(li);
+        });
+      } else {
+        el.textContent = val;
+      }
+    }
+    function tlOverrides() {
+      const o = {};
+      tlEls().forEach(el => {
+        const k = el.dataset.tlKey;
+        const v = tlRead(el).slice(0, 600);
+        if (k && v !== tlDefaults[k]) o[k] = v;
+      });
+      return o;
+    }
+    function tlApply(overrides) {
+      tlEls().forEach(el => {
+        const k = el.dataset.tlKey;
+        if (!k) return;
+        const want = Object.prototype.hasOwnProperty.call(overrides || {}, k) ? overrides[k] : tlDefaults[k];
+        if (typeof want === 'string' && tlRead(el) !== want) tlWrite(el, want);
+      });
+    }
+    function tlStored() {
+      try { return JSON.parse(localStorage.getItem(TIMELINE_TEXTS_KEY) || 'null'); } catch (e) { return null; }
+    }
+
+    function initTimelineSave() {
+      const box = document.getElementById('timeline-container');
+      if (!box) return;
+      tlEls().forEach((el, i) => {
+        el.dataset.tlKey = 'tl' + i;
+        tlDefaults['tl' + i] = tlRead(el);
+      });
+      const saved = tlStored();
+      if (saved && saved.texts) tlApply(saved.texts);
+      box.addEventListener('input', () => {
+        if (!isAdminAuthorized) return;
+        clearTimeout(tlTimer);
+        tlTimer = setTimeout(commitTimelineTexts, 700);
+      });
+      box.addEventListener('focusout', () => {
+        if (!isAdminAuthorized) return;
+        clearTimeout(tlTimer);
+        commitTimelineTexts();
+      });
+    }
+
+    function commitTimelineTexts() {
+      if (!isAdminAuthorized) return;
+      const texts = tlOverrides();
+      const prev = tlStored();
+      if (prev && JSON.stringify(prev.texts || {}) === JSON.stringify(texts)) return;
+      localStorage.setItem(TIMELINE_TEXTS_KEY, JSON.stringify({ texts, updatedAt: prev ? prev.updatedAt || '' : '' }));
+      tlDirty = true;
+      clearTimeout(tlTimer);
+      tlTimer = setTimeout(pushTimelineTexts, 200);
+    }
+
+    async function pushTimelineTexts() {
+      if (!API_URL) {
+        tlDirty = false;
+        return;
+      }
+      if (tlBusy) {
+        tlTimer = setTimeout(pushTimelineTexts, 300);
+        return;
+      }
+      const code = sessionStorage.getItem(ADMIN_CODE_SESSION_KEY);
+      if (!code) return;
+      tlBusy = true;
+      const texts = tlOverrides();
+      const snapshot = JSON.stringify(texts);
+      const res = await apiPost({ action: 'setTimelineTexts', adminPasscode: code, texts });
+      tlBusy = false;
+      if (res && res.ok) {
+        if (JSON.stringify(tlOverrides()) === snapshot) tlDirty = false;
+        const ver = (res.timeline && res.timeline.updatedAt) || '';
+        localStorage.setItem(TIMELINE_TEXTS_KEY, JSON.stringify({ texts, updatedAt: ver }));
+        showToast('✅ 活動流程已儲存並同步到所有手機');
+      } else {
+        showToast('❌ 活動流程同步失敗：' + syncErrText(res) + '（已先存在此瀏覽器）', 4500);
+        clearTimeout(tlTimer);
+        tlTimer = setTimeout(pushTimelineTexts, 8000);
+      }
+    }
+
+    // 後端 → 本機（管理員正在編輯或有尚未送出的修改時略過）
+    function applyTimelineFromServer(t) {
+      if (!t || !t.texts || typeof t.texts !== 'object' || tlBusy || tlDirty) return;
+      const ae = document.activeElement;
+      if (ae && ae.closest && ae.closest('#timeline-container')) return;
+      const prev = tlStored();
+      const ver = String(t.updatedAt || '');
+      if (prev && ver && prev.updatedAt === ver) return;
+      localStorage.setItem(TIMELINE_TEXTS_KEY, JSON.stringify({ texts: t.texts, updatedAt: ver }));
+      tlApply(t.texts);
+    }
+
     /* ==================== 場配與互動路線導覽（3D 模組）＋ 後台管理 ==================== */
     const LUOFU_KEY = 'luofu_campus_booths_v6'; // 與原模組相同的金鑰
     const LUOFU_DEFAULT_NAMES = (() => {
@@ -4454,6 +4579,7 @@
         applyBoothsFromServer(live.booths);
         applyStickyFromServer(live.sticky);
         applyWelcomeFromServer(live.welcome);
+        applyTimelineFromServer(live.timeline);
         updateWelcomeStatus(`已連線・${nowHMS()} 更新`);
       } finally {
         livePolling = false;
@@ -6662,6 +6788,7 @@
       renderLiveAdminList();
       renderLuofuGrid();
       initWelcomeTextSave();
+      initTimelineSave();
       startLiveStatePolling();
 
       if (isProjectorReceiver || window.__FORCE_PROJECTOR_RECEIVER) {
