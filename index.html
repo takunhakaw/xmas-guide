@@ -123,13 +123,20 @@
     .tl-left { position: relative; flex: 0 0 6.2rem; padding-bottom: 0.25rem; }
     .tl-left::before { content: ''; position: absolute; left: 50%; top: 3.6rem; bottom: -1.1rem; width: 2px; margin-left: -1px; background: repeating-linear-gradient(to bottom, #FCD34D 0 6px, transparent 6px 10px); }
     .tl-row:last-child .tl-left::before { display: none; }
-    #game-tabs .tl-row { gap: 0.5rem; }
-    #game-tabs .tl-left { flex: 0 0 3.4rem; }
-    #game-tabs .tl-left::before { top: 4rem; bottom: -1rem; }
+    #game-tabs .tl-row, #timeline-container .tl-row { gap: 0.5rem; }
+    #game-tabs .tl-left, #timeline-container .tl-left { flex: 0 0 3.4rem; }
+    #game-tabs .tl-left::before, #timeline-container .tl-left::before { top: 4rem; bottom: -1.25rem; }
     @media (min-width: 640px) {
-      #game-tabs .tl-row { gap: 1rem; }
-      #game-tabs .tl-left { flex-basis: 5.5rem; }
+      #game-tabs .tl-row, #timeline-container .tl-row { gap: 1rem; }
+      #game-tabs .tl-left, #timeline-container .tl-left { flex-basis: 5.5rem; }
     }
+    /* 活動流程卡片：預覽只顯示兩行，完整內容在點選後的視窗中 */
+    #timeline-container .tl-card[role="button"] { cursor: pointer; }
+    #timeline-container .tl-card[role="button"]:active { opacity: 0.85; }
+    .tl-clamp { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+    .tl-detail { display: none; }
+    body.edit-mode .tl-detail { display: block; margin-top: 0.75rem; }
+    body.edit-mode .tl-clamp { display: block; -webkit-line-clamp: unset; }
     .tl-card { flex: 1; min-width: 0; }
     .tl-card > h3:first-child { margin-top: 0; }
     @media (min-width: 640px) {
@@ -934,7 +941,7 @@
       <div class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-white p-4 shadow-sm">
         <div>
           <h2 class="text-lg font-black text-gray-900 sm:text-xl">📅 活動流程時間軸</h2>
-          <p class="mt-0.5 text-xs text-gray-500">看看是哪位聖誕精靈正在操控雪橇與裝置！點擊任一⚠️公告卡片可展開詳細內容。</p>
+          <p class="mt-0.5 text-xs text-gray-500">看看是哪位聖誕精靈正在操控雪橇與裝置！點選任一項目可查看詳細內容與注意事項。</p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
           <div class="flex rounded-xl bg-gray-100 p-1 text-xs font-bold">
@@ -942,12 +949,6 @@
             <button onclick="filterTimeline('morning')" data-tfilter="morning" class="tl-filter-btn rounded-lg px-2.5 py-1 text-gray-600">上午禮拜</button>
             <button onclick="filterTimeline('afternoon')" data-tfilter="afternoon" class="tl-filter-btn rounded-lg px-2.5 py-1 text-gray-600">下午競賽</button>
           </div>
-          <button onclick="toggleAllTimelineNotes(true)" class="rounded-lg border border-amber-300 bg-amber-50 px-2.5 py-1.5 text-xs font-bold text-amber-900 hover:bg-amber-100">
-            展開全部注意事項
-          </button>
-          <button onclick="toggleAllTimelineNotes(false)" class="rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-bold text-gray-600 hover:bg-gray-50">
-            全部收合
-          </button>
         </div>
       </div>
 
@@ -955,14 +956,24 @@
         <!-- 時段 1 -->
         <div data-period="morning" class="tl-item tl-row">
           <div class="tl-left">
-            <span class="rounded-xl bg-xmas-darkred px-2 py-1.5 text-[11px] sm:text-xs font-black text-white block w-full text-center">08:30 - 09:00</span>
-            <span class="rounded-xl bg-amber-100 px-2 py-1 text-[10px] sm:text-xs font-bold text-amber-900 mt-1.5 block w-full text-center leading-snug">📍 羅浮國小 / 羅浮高中 雙校入口</span>
+            <span class="block w-full whitespace-pre-wrap rounded-xl bg-xmas-darkred px-1 py-1.5 text-center text-[11px] font-black leading-tight text-white sm:px-2 sm:text-xs">08:30
+│
+09:00</span>
           </div>
-          <div class="tl-card rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
-          <h3 data-editable class="mt-2.5 text-base font-black text-gray-900 sm:text-lg">迎賓報到與跨世代分流引導</h3>
-          <p data-editable class="mt-1 text-sm leading-relaxed text-gray-600">
+          <div class="tl-card relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-2.5 shadow-sm sm:p-4" data-icon="🎅" data-time="08:30 - 09:00" data-place="📍 羅浮國小 / 羅浮高中 雙校入口" onclick="openTlModal(this, event)" role="button" tabindex="0">
+          <span class="pointer-events-none absolute -right-1 -top-1 select-none text-lg opacity-30">❄️</span>
+          <div class="flex items-start gap-2 sm:gap-3">
+            <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-xl ring-2 ring-amber-200 sm:h-11 sm:w-11 sm:text-2xl">🎅</div>
+            <div class="min-w-0 flex-1 text-left">
+              <h3 data-editable class="text-[15px] font-black leading-snug text-gray-900 sm:text-lg">迎賓報到與跨世代分流引導</h3>
+              <div class="mt-1"><span class="inline-block rounded-md bg-yellow-200 px-1.5 py-0.5 text-[11px] font-black text-gray-900 sm:text-xs">📍 羅浮國小 / 羅浮高中 雙校入口</span> <span class="rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-black text-amber-900">⚠️ 含注意事項</span></div>
+              <p data-editable class="tl-desc tl-clamp mt-1 text-xs leading-relaxed text-gray-600 sm:text-sm">
             各區會友抵達後領取分隊色帶與長輩紙本手冊，依年齡層分流進入主日禮拜或兒童主日學場地。
           </p>
+            </div>
+          </div>
+          <div class="mt-1.5 text-right text-[11px] font-black text-amber-700">查看詳情 ›</div>
+          <div class="tl-detail">
           <div class="mt-3 border-t border-dashed border-gray-200 pt-2.5">
             <button onclick="toggleNoteBox(this)" class="flex w-full items-center justify-between rounded-xl bg-amber-50 px-3 py-2 text-left text-xs font-black text-amber-900 transition hover:bg-amber-100">
               <span>⚠️ 注意事項（點擊展開）</span>
@@ -976,19 +987,30 @@
             </div>
           </div>
           </div>
+          </div>
         </div>
 
         <!-- 時段 2：雙軌禮拜 -->
         <div data-period="morning" class="tl-item tl-row">
           <div class="tl-left">
-            <span class="rounded-xl bg-xmas-red px-2 py-1.5 text-[11px] sm:text-xs font-black text-white block w-full text-center">09:00 - 10:50</span>
-            <span class="rounded-xl bg-red-100 px-2 py-1 text-[10px] sm:text-xs font-bold text-xmas-darkred mt-1.5 block w-full text-center leading-snug">⛪ 上午雙校同步禮拜</span>
+            <span class="block w-full whitespace-pre-wrap rounded-xl bg-xmas-red px-1 py-1.5 text-center text-[11px] font-black leading-tight text-white sm:px-2 sm:text-xs">09:00
+│
+10:50</span>
           </div>
-          <div class="tl-card rounded-2xl border-2 border-red-200 bg-white p-4 shadow-sm sm:p-5">
-          <h3 data-editable class="mt-2.5 text-base font-black text-gray-900 sm:text-lg">聖誕感恩主日禮拜 ＆ 兒童主日學歡慶</h3>
-          <p data-editable class="mt-1 text-sm leading-relaxed text-gray-600">
+          <div class="tl-card relative overflow-hidden rounded-2xl border-2 border-red-200 bg-white p-2.5 shadow-sm sm:p-4" data-icon="⛪" data-time="09:00 - 10:50" data-place="⛪ 上午雙校同步禮拜" onclick="openTlModal(this, event)" role="button" tabindex="0">
+          <span class="pointer-events-none absolute -right-1 -top-1 select-none text-lg opacity-30">❄️</span>
+          <div class="flex items-start gap-2 sm:gap-3">
+            <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-xl ring-2 ring-amber-200 sm:h-11 sm:w-11 sm:text-2xl">⛪</div>
+            <div class="min-w-0 flex-1 text-left">
+              <h3 data-editable class="text-[15px] font-black leading-snug text-gray-900 sm:text-lg">聖誕感恩主日禮拜 ＆ 兒童主日學歡慶</h3>
+              <div class="mt-1"><span class="inline-block rounded-md bg-yellow-200 px-1.5 py-0.5 text-[11px] font-black text-gray-900 sm:text-xs">⛪ 上午雙校同步禮拜</span> <span class="rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-black text-amber-900">⚠️ 含注意事項</span></div>
+              <p data-editable class="tl-desc tl-clamp mt-1 text-xs leading-relaxed text-gray-600 sm:text-sm">
             兩校區同步進行聖誕敬拜讚美、信息分享與獻詩感恩，青年與長輩同心領受聖誕祝福。
           </p>
+            </div>
+          </div>
+          <div class="mt-1.5 text-right text-[11px] font-black text-amber-700">查看詳情 ›</div>
+          <div class="tl-detail">
 
           <!-- 雙軌並排卡片，各自有獨立可收合注意事項 -->
           <div class="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -1021,19 +1043,30 @@
             </div>
           </div>
           </div>
+          </div>
         </div>
 
         <!-- 時段 3 -->
         <div data-period="morning" class="tl-item tl-row">
           <div class="tl-left">
-            <span class="rounded-xl bg-amber-600 px-2 py-1.5 text-[11px] sm:text-xs font-black text-white block w-full text-center">11:00 - 12:45</span>
-            <span class="rounded-xl bg-amber-100 px-2 py-1 text-[10px] sm:text-xs font-bold text-amber-900 mt-1.5 block w-full text-center leading-snug">🍱 全體匯合・聖誕愛宴午餐</span>
+            <span class="block w-full whitespace-pre-wrap rounded-xl bg-amber-600 px-1 py-1.5 text-center text-[11px] font-black leading-tight text-white sm:px-2 sm:text-xs">11:00
+│
+12:45</span>
           </div>
-          <div class="tl-card rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
-          <h3 data-editable class="mt-2.5 text-base font-black text-gray-900 sm:text-lg">千人聖誕愛宴與跨代桌邊團契</h3>
-          <p data-editable class="mt-1 text-sm leading-relaxed text-gray-600">
+          <div class="tl-card relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-2.5 shadow-sm sm:p-4" data-icon="🍱" data-time="11:00 - 12:45" data-place="🍱 全體匯合・聖誕愛宴午餐" onclick="openTlModal(this, event)" role="button" tabindex="0">
+          <span class="pointer-events-none absolute -right-1 -top-1 select-none text-lg opacity-30">❄️</span>
+          <div class="flex items-start gap-2 sm:gap-3">
+            <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-xl ring-2 ring-amber-200 sm:h-11 sm:w-11 sm:text-2xl">🍱</div>
+            <div class="min-w-0 flex-1 text-left">
+              <h3 data-editable class="text-[15px] font-black leading-snug text-gray-900 sm:text-lg">千人聖誕愛宴與跨代桌邊團契</h3>
+              <div class="mt-1"><span class="inline-block rounded-md bg-yellow-200 px-1.5 py-0.5 text-[11px] font-black text-gray-900 sm:text-xs">🍱 全體匯合・聖誕愛宴午餐</span> <span class="rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-black text-amber-900">⚠️ 含注意事項</span></div>
+              <p data-editable class="tl-desc tl-clamp mt-1 text-xs leading-relaxed text-gray-600 sm:text-sm">
             兩校區會眾匯合享用部落風味與聖誕佳餚，餐後稍作休息並整隊準備下午競賽。
           </p>
+            </div>
+          </div>
+          <div class="mt-1.5 text-right text-[11px] font-black text-amber-700">查看詳情 ›</div>
+          <div class="tl-detail">
           <div class="mt-3 border-t border-dashed border-gray-200 pt-2.5">
             <button onclick="toggleNoteBox(this)" class="flex w-full items-center justify-between rounded-xl bg-amber-50 px-3 py-2 text-left text-xs font-black text-amber-900 transition hover:bg-amber-100">
               <span>⚠️ 注意事項（點擊展開）</span>
@@ -1047,19 +1080,30 @@
             </div>
           </div>
           </div>
+          </div>
         </div>
 
         <!-- 時段 4 -->
         <div data-period="afternoon" class="tl-item tl-row">
           <div class="tl-left">
-            <span class="rounded-xl bg-xmas-green px-2 py-1.5 text-[11px] sm:text-xs font-black text-white block w-full text-center">13:00 - 14:55</span>
-            <span class="rounded-xl bg-emerald-100 px-2 py-1 text-[10px] sm:text-xs font-bold text-xmas-green mt-1.5 block w-full text-center leading-snug">🏆 羅浮高中運動場</span>
+            <span class="block w-full whitespace-pre-wrap rounded-xl bg-xmas-green px-1 py-1.5 text-center text-[11px] font-black leading-tight text-white sm:px-2 sm:text-xs">13:00
+│
+14:55</span>
           </div>
-          <div class="tl-card rounded-2xl border border-emerald-200 bg-white p-4 shadow-sm sm:p-5">
-          <h3 data-editable class="mt-2.5 text-base font-black text-gray-900 sm:text-lg">跨世代聖誕趣味競賽（三大場次）</h3>
-          <p data-editable class="mt-1 text-sm leading-relaxed text-gray-600">
+          <div class="tl-card relative overflow-hidden rounded-2xl border border-emerald-200 bg-white p-2.5 shadow-sm sm:p-4" data-icon="🏆" data-time="13:00 - 14:55" data-place="🏆 羅浮高中運動場" onclick="openTlModal(this, event)" role="button" tabindex="0">
+          <span class="pointer-events-none absolute -right-1 -top-1 select-none text-lg opacity-30">❄️</span>
+          <div class="flex items-start gap-2 sm:gap-3">
+            <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-xl ring-2 ring-amber-200 sm:h-11 sm:w-11 sm:text-2xl">🏆</div>
+            <div class="min-w-0 flex-1 text-left">
+              <h3 data-editable class="text-[15px] font-black leading-snug text-gray-900 sm:text-lg">跨世代聖誕趣味競賽（三大場次）</h3>
+              <div class="mt-1"><span class="inline-block rounded-md bg-yellow-200 px-1.5 py-0.5 text-[11px] font-black text-gray-900 sm:text-xs">🏆 羅浮高中運動場</span> <span class="rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-black text-amber-900">⚠️ 含注意事項</span></div>
+              <p data-editable class="tl-desc tl-clamp mt-1 text-xs leading-relaxed text-gray-600 sm:text-sm">
             四色戰隊依序進行《跨時代金曲猜猜看》、《聖誕好禮接力傳》與《默契比手畫腳大挑戰》，老少合作爭取最高榮譽。
           </p>
+            </div>
+          </div>
+          <div class="mt-1.5 text-right text-[11px] font-black text-amber-700">查看詳情 ›</div>
+          <div class="tl-detail">
           <div class="mt-3 border-t border-dashed border-gray-200 pt-2.5">
             <button onclick="toggleNoteBox(this)" class="flex w-full items-center justify-between rounded-xl bg-emerald-50 px-3 py-2 text-left text-xs font-black text-xmas-green transition hover:bg-emerald-100">
               <span>⚠️ 注意事項（點擊展開）</span>
@@ -1073,33 +1117,53 @@
             </div>
           </div>
           </div>
+          </div>
         </div>
 
         <!-- 時段 4.5：成績統計與頒獎 -->
         <div data-period="afternoon" class="tl-item tl-row">
           <div class="tl-left">
-            <span class="rounded-xl bg-gray-800 px-2 py-1.5 text-[11px] sm:text-xs font-black text-white block w-full text-center">14:55 - 15:00</span>
-            <span class="rounded-xl bg-amber-100 px-2 py-1 text-[10px] sm:text-xs font-bold text-amber-900 mt-1.5 block w-full text-center leading-snug">🏅 羅浮高中運動場</span>
+            <span class="block w-full whitespace-pre-wrap rounded-xl bg-gray-800 px-1 py-1.5 text-center text-[11px] font-black leading-tight text-white sm:px-2 sm:text-xs">14:55
+│
+15:00</span>
           </div>
-          <div class="tl-card rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
-          <h3 data-editable class="mt-2.5 text-base font-black text-gray-900 sm:text-lg">成績統計、頒獎</h3>
-          <p data-editable class="mt-1 text-sm leading-relaxed text-gray-600">
+          <div class="tl-card relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-2.5 shadow-sm sm:p-4" data-icon="🏅" data-time="14:55 - 15:00" data-place="🏅 羅浮高中運動場">
+          <span class="pointer-events-none absolute -right-1 -top-1 select-none text-lg opacity-30">❄️</span>
+          <div class="flex items-start gap-2 sm:gap-3">
+            <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-xl ring-2 ring-amber-200 sm:h-11 sm:w-11 sm:text-2xl">🏅</div>
+            <div class="min-w-0 flex-1 text-left">
+              <h3 data-editable class="text-[15px] font-black leading-snug text-gray-900 sm:text-lg">成績統計、頒獎</h3>
+              <div class="mt-1"><span class="inline-block rounded-md bg-yellow-200 px-1.5 py-0.5 text-[11px] font-black text-gray-900 sm:text-xs">🏅 羅浮高中運動場</span></div>
+              <p data-editable class="tl-desc tl-clamp mt-1 text-xs leading-relaxed text-gray-600 sm:text-sm">
             各項競賽結束後，大會統計各隊成績並進行頒獎。
           </p>
+            </div>
+          </div>
+          
           </div>
         </div>
 
         <!-- 時段 5 -->
         <div data-period="afternoon" class="tl-item tl-row">
           <div class="tl-left">
-            <span class="rounded-xl bg-gray-800 px-2 py-1.5 text-[11px] sm:text-xs font-black text-white block w-full text-center">15:30 - 16:10</span>
-            <span class="rounded-xl bg-amber-100 px-2 py-1 text-[10px] sm:text-xs font-bold text-amber-900 mt-1.5 block w-full text-center leading-snug">📸 羅浮高中運動場主舞台</span>
+            <span class="block w-full whitespace-pre-wrap rounded-xl bg-gray-800 px-1 py-1.5 text-center text-[11px] font-black leading-tight text-white sm:px-2 sm:text-xs">15:30
+│
+16:10</span>
           </div>
-          <div class="tl-card rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
-          <h3 data-editable class="mt-2.5 text-base font-black text-gray-900 sm:text-lg">頒獎典禮、千人大合照與平安賦歸</h3>
-          <p data-editable class="mt-1 text-sm leading-relaxed text-gray-600">
+          <div class="tl-card relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-2.5 shadow-sm sm:p-4" data-icon="📸" data-time="15:30 - 16:10" data-place="📸 羅浮高中運動場主舞台" onclick="openTlModal(this, event)" role="button" tabindex="0">
+          <span class="pointer-events-none absolute -right-1 -top-1 select-none text-lg opacity-30">❄️</span>
+          <div class="flex items-start gap-2 sm:gap-3">
+            <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-xl ring-2 ring-amber-200 sm:h-11 sm:w-11 sm:text-2xl">📸</div>
+            <div class="min-w-0 flex-1 text-left">
+              <h3 data-editable class="text-[15px] font-black leading-snug text-gray-900 sm:text-lg">頒獎典禮、千人大合照與平安賦歸</h3>
+              <div class="mt-1"><span class="inline-block rounded-md bg-yellow-200 px-1.5 py-0.5 text-[11px] font-black text-gray-900 sm:text-xs">📸 羅浮高中運動場主舞台</span> <span class="rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-black text-amber-900">⚠️ 含注意事項</span></div>
+              <p data-editable class="tl-desc tl-clamp mt-1 text-xs leading-relaxed text-gray-600 sm:text-sm">
             頒發跨代同心獎與精神總錦標，拍攝全體聖誕大合照後祝福禱告賦歸。
           </p>
+            </div>
+          </div>
+          <div class="mt-1.5 text-right text-[11px] font-black text-amber-700">查看詳情 ›</div>
+          <div class="tl-detail">
           <div class="mt-3 border-t border-dashed border-gray-200 pt-2.5">
             <button onclick="toggleNoteBox(this)" class="flex w-full items-center justify-between rounded-xl bg-amber-50 px-3 py-2 text-left text-xs font-black text-amber-900 transition hover:bg-amber-100">
               <span>⚠️ 注意事項（點擊展開）</span>
@@ -1108,6 +1172,7 @@
             <div class="note-content mt-2 hidden rounded-xl border border-amber-200 bg-amber-50/50 p-3 text-xs leading-relaxed text-gray-700">
               <p data-editable>大合照由大會官方攝影組統一拍攝後上傳至頂部橫移展示牆，散場時請協助確認長輩隨身物品與接駁車班次。</p>
             </div>
+          </div>
           </div>
           </div>
         </div>
@@ -4921,6 +4986,53 @@
       });
     }
 
+    /* 活動流程：點選卡片，以視窗顯示完整內容（手機底部彈出、電腦置中） */
+    function openTlModal(card, ev) {
+      if (document.body.classList.contains('edit-mode')) return; // 編輯模式下直接編輯文字
+      if (ev && ev.target && ev.target.closest && ev.target.closest('[data-skip-modal]')) return;
+      const detailSrc = card.querySelector('.tl-detail');
+      if (!detailSrc) return;
+      closeTlModal(true);
+      const body = detailSrc.cloneNode(true);
+      body.removeAttribute('class');
+      body.querySelectorAll('[data-editable]').forEach(e => e.removeAttribute('data-editable'));
+      body.querySelectorAll('.note-content').forEach(e => e.classList.remove('hidden')); // 注意事項在視窗內預設展開
+      body.querySelectorAll('.note-chevron').forEach(e => (e.textContent = '▲'));
+      const title = card.querySelector('h3') ? card.querySelector('h3').textContent.trim() : '';
+      const descEl = card.querySelector('.tl-desc');
+      const el = document.createElement('div');
+      el.id = 'tl-modal';
+      el.className = 'fixed inset-0 z-[45] flex items-end justify-center bg-black/55 sm:items-center sm:p-4';
+      el.innerHTML = `
+        <div class="flex max-h-[88vh] w-full max-w-xl flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl sm:rounded-3xl" role="dialog" aria-modal="true">
+          <div class="flex items-start gap-3 border-b border-amber-200 bg-gradient-to-r from-red-50 to-emerald-50 px-4 py-3">
+            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-2xl ring-2 ring-amber-200">${card.dataset.icon || '🎄'}</div>
+            <div class="min-w-0 flex-1">
+              <div class="text-base font-black leading-snug text-gray-900 sm:text-lg">${escapeHtml(title)}</div>
+              <div class="mt-0.5 text-xs font-black text-xmas-darkred">🕐 ${escapeHtml(card.dataset.time || '')}</div>
+              <div class="mt-1"><span class="inline-block rounded-md bg-yellow-200 px-1.5 py-0.5 text-xs font-black text-gray-900">${escapeHtml(card.dataset.place || '')}</span></div>
+            </div>
+            <button type="button" onclick="closeTlModal()" aria-label="關閉" class="shrink-0 rounded-full bg-white px-3 py-1.5 text-sm font-black text-gray-600 shadow ring-1 ring-gray-200 hover:bg-gray-100">✕</button>
+          </div>
+          <div id="tl-modal-body" class="overflow-y-auto px-4 py-4" style="padding-bottom:max(1rem, env(safe-area-inset-bottom, 0px))">
+            ${descEl ? `<p class="mb-3 text-sm leading-relaxed text-gray-700">${escapeHtml(descEl.textContent.trim())}</p>` : ''}
+          </div>
+        </div>`;
+      el.querySelector('#tl-modal-body').appendChild(body);
+      el.addEventListener('click', e => {
+        if (e.target === el) closeTlModal();
+      });
+      document.body.appendChild(el);
+      document.body.style.overflow = 'hidden';
+    }
+    function closeTlModal(keepScrollLock) {
+      const el = document.getElementById('tl-modal');
+      if (el) el.remove();
+      if (!keepScrollLock) document.body.style.overflow = '';
+    }
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeTlModal();
+    });
     function filterTimeline(period) {
       document.querySelectorAll('.tl-filter-btn').forEach(b => {
         b.className =
